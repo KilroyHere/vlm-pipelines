@@ -85,9 +85,9 @@ them.
 |---|---|---|---|---|
 | SAM 3D quality too low on real room photos | Lose the novelty feature | WS-B / EXT | Spike with go/no-go rubric; fallback: catalog retrieval, Object Capture | open |
 | SAM 3D license blocks commercial use | Must swap generator | EXT | License text has no non-commercial clause; counsel to confirm. Generator boundary (ADR-0004) keeps a swap cheap | open: needs legal confirmation |
-| Hugging Face checkpoint approval delay | M2b blocked | EXT | Request access now (manual approval; asks for legal name, DOB, organization) | open: **needs owner action** |
+| Hugging Face checkpoint approval delay | M2b blocked | EXT | Access requested 2026-10-16; prepare photos + masks while waiting | open: awaiting approval |
 | Front heuristic wrong on real (blobby/hallucinated) meshes | Assets face the wall | WS-B | Contact sheets for VLM/user confirmation; `front_confidence` surfaced in the schema | open |
-| No GPU available for the spike | M2b blocked | EXT | Rent a ≥ 32 GB NVIDIA card hourly (48 GB ≈ $0.6–1.1/h); everything else runs on CPU | open: **needs owner action** |
+| No GPU available for the spike | M2b blocked | EXT | Vast.ai A6000 (~$0.28/h) or RunPod Community A40/A6000 (~$0.45–0.5/h); **no Blackwell** (torch 2.5.1+cu121) | open: rent after HF approval |
 | Layouts satisfy rules but look bad | Core value | WS-A / M3 | Confirmed cause: under-specified constraints. Rule library emits implied relations (M3); visual review; VLM critic later | open: understood |
 | Wrong furniture size | Silently wrong layouts | WS-B | Measured dimensions always win (ADR-0004); mismatch report | mitigated by design |
 | Schema churn between workstreams | Integration rework | Lead | Single owner, version bumps, integration test | mitigated |
@@ -103,3 +103,5 @@ them.
 - 2026-10-16: WS-A delivered v0.3.0 solver support (`elevation`, solve stats, immovable assets).
   Lead review: fast + slow suites green, renders checked. **M1 and M2a closed; M2b waits on EXT**
   (Hugging Face checkpoint access, GPU, license confirmation). Next: M3 constraints + rule library.
+- 2026-10-16: HF checkpoint access requested. GPU plan: 48 GB Ampere/Ada card on Vast.ai or RunPod Community;
+  Blackwell excluded (SAM 3D's torch 2.5.1+cu121 has no sm_120 kernels).

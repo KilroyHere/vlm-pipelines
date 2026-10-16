@@ -47,29 +47,46 @@ paper (arXiv 2511.16624v2).
 - **Commercial use**: our reading of the license text above is that it's allowed, but that's
   not a legal opinion. **Product owner / counsel must confirm** (risk register). Also unknown:
   whether Meta's online demo terms differ (don't use the demo for product data).
-- Whether 48 GB cards (L40S / RTX 6000 Ada / A6000) work. They exceed the stated 32 GB, but
-  Meta doesn't name tested GPUs. RTX 5090 (32 GB) is at the limit: avoid.
+- Whether 48 GB cards (L40S / RTX 6000 Ada / A6000 / A40) work. They exceed the stated 32 GB,
+  but Meta doesn't name tested GPUs.
+- **Do not use Blackwell GPUs** (RTX 5090, RTX PRO 6000 Blackwell, B200). SAM 3D pins
+  torch 2.5.1+cu121, which has no sm_120/sm_100 kernels; Blackwell needs a CUDA 12.8+ build
+  ([PyTorch forum](https://discuss.pytorch.org/t/nvidia-geforce-rtx-5090/218954)).
+  Ampere (A6000, A40, A100), Ada (L40S, 6000 Ada) and Hopper (H100) are fine.
 
 ## 2. GPU and cost
 
-On-demand prices read from the providers' pricing pages on 2026-10-16 (they change often):
+Prices change weekly. Check the live page before renting. Snapshot (Sept–Oct 2026):
 
-| GPU (VRAM) | RunPod | Lambda (1x) | fit |
-|---|---|---|---|
-| RTX A6000 (48 GB) | $0.59/h | $1.09/h | first choice (cheap, 48 GB headroom) |
-| RTX 6000 Ada (48 GB) | $0.99/h | – | good |
-| L40S (48 GB) | $1.09/h | – | good |
-| A100 PCIe/SXM (80 GB) | $1.79/h | 40 GB: $1.99/h | fallback if 48 GB OOMs |
-| H100 PCIe (80 GB) | $2.89/h | $3.29/h | overkill |
+| GPU (VRAM) | Vast.ai (marketplace) | RunPod Community | RunPod Secure | Lambda | fit |
+|---|---|---|---|---|---|
+| RTX A6000 (48 GB) | from ~$0.28/h | ~$0.49/h | ~$0.76/h | $1.09/h | **first choice** |
+| A40 (48 GB) | varies | ~$0.44–0.49/h | | – | equally good |
+| L40S (48 GB) | from ~$0.47/h | ~$0.86–0.89/h | ~$1.09–1.19/h | – | good |
+| A100 (80 GB) | varies | | $1.79/h | | fallback if 48 GB OOMs |
+| RTX 5090 / Blackwell | | | | | **incompatible** (see above) |
 
-Budget: env build ~45-60 min (pytorch3d compiles from source), checkpoint download, and
-~20 items. Even at several minutes per item it's **3-4 GPU hours, under $10**. Use a
-persistent volume so a restart doesn't rebuild the env.
+Sources: [Hostinger comparison, Sept 2026](https://www.hostinger.com/tutorials/?p=158956),
+[RunPod pricing](https://www.runpod.io/gpu-cloud/pricing),
+[RunPod price changes, Sept 2026](https://pricingsaas.com/companies/runpod/diffs/2026W37).
+
+**Cheapest:** Vast.ai A6000. It's a marketplace of third-party hosts, so filter for
+*verified* hosts with reliability ≥ 99%, ≥ 100 GB disk and good download bandwidth (the
+checkpoints are large). Vast also bills disk while an instance is stopped, so **destroy**
+it when done. **Least hassle:** RunPod Community A40/A6000 at roughly double the price,
+with a persistent network volume so a restart doesn't rebuild the env. Either way, pick a
+CUDA **12.1 devel** image (e.g. `pytorch/pytorch:2.5.1-cuda12.1-cudnn9-devel`): pytorch3d
+compiles from source and needs `nvcc`.
+
+Budget: env build ~45–60 min (pytorch3d compile), checkpoint download, then ~20 items.
+About **3–4 GPU-hours: ~$1–2 on Vast, ~$2–4 on RunPod Community**. Prepare photos and
+masks on your laptop first (section 3) so no GPU time is spent on prep.
 
 ## 3. Before renting the GPU (laptop, CPU)
 
-1. **Request checkpoint access** on Hugging Face now (manual approval can take time). Use an
+1. **Request checkpoint access** on Hugging Face (manual approval can take time). Use an
    HF account in the company's name, with the full legal org name as required.
+   *(Status 2026-10-16: requested by the product owner, awaiting approval.)*
 2. **Collect the test set** per [EVAL.md](EVAL.md): photos, tape-measured W/D/H, condition tags.
 3. **Prepare items and masks** with `make_mask.py` (needs numpy, Pillow, matplotlib):
 
