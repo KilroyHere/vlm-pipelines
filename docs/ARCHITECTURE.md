@@ -12,6 +12,48 @@ engine.
 
 ---
 
+## v1 scope (build this first)
+
+v1 keeps the novel part (**your own furniture, generated in 3D**) and the core value
+(**good layouts**), and defers the hardest research pieces. The full pipeline below
+remains the long-term target.
+
+```
+RoomPlan scan ─► room (walls/doors/windows, meters) + labeled furniture boxes (meters)
+                                    │
+photo per item (scan frame or product photo) ─► SAM 3D Objects ─► mesh
+                                    │
+              fit mesh to its RoomPlan box (or listing dims) ─► metric, oriented asset
+                                    │
+user rules ─► VLM (one call) ─► constraint JSON ─► simulated annealing ─► ~10 layouts
+                                    │
+                    3D dollhouse view with generated meshes + top-down plan
+```
+
+| Stage | v1 | Deferred to later |
+|---|---|---|
+| 0 + 1b Room | **Apple RoomPlan** (iOS, LiDAR): walls, doors, windows, and furniture as labeled boxes, all in meters | Video SfM, plane fitting, non-LiDAR devices |
+| 1a Photoreal room | Clean "dollhouse" render of the RoomPlan geometry | 3DGS + GOR-IS |
+| 2 Asset generation | **SAM 3D Objects** on a GPU server. Input is the best scan frame of the item (cropped by its RoomPlan box), or a product photo for new purchases. | Object Capture, LGM |
+| 3 Asset processing | **Scale and orient the mesh to fit its RoomPlan box** (or the listing's dimensions). The front is chosen by VLM on renders and confirmed by the user. Cleanup + decimation. Footprint = the mesh projected onto the floor. | Convex decomposition, mass/inertia, height-banded footprints (chair-under-table) |
+| 4 Constraints | One VLM call → fixed-schema JSON + deterministic rule library | — |
+| 5 Search | Simulated annealing on (x, y, yaw) using mesh footprints, yaw snapped to 90°, many restarts, diverse top-k | CP-SAT, gradient refinement |
+| 6 Validation | Footprint overlap + clearance check (part of search) | MuJoCo settle (needed only for stacking or a simulatable twin) |
+| 7 Present | Dollhouse 3D + floor plan, generated meshes placed in it | Splat compositing, relighting, VLM critic |
+
+Why it works:
+- **RoomPlan removes the scale risk.** A generated mesh is never trusted for size;
+  it is fitted to a measured box.
+- **Mesh footprints beat boxes** (L-sofas, round tables) at no extra cost.
+- **Only one GPU dependency** (SAM 3D inference, seconds per item). No research
+  training code.
+
+v1 costs: iOS + LiDAR only (a manual floor-plan entry is the fallback); the room
+isn't photoreal yet; SAM 3D guesses hidden sides (users see a turntable preview
+and can approve or retake).
+
+---
+
 ## Pipeline overview
 
 | # | Stage | Input | Core engine | Output |
@@ -230,14 +272,15 @@ Meta 3D Gen is text-to-3D and is not used for reconstruction.
 
 ## Suggested build order
 
-De-risk the core value (layout search) before the expensive perception work.
+M1–M4 make up v1. Solver and assets are independent and can be built in parallel.
 
-1. **M1 — Solver core:** hand-authored room polygon + box assets + hand-written
-   constraint JSON → Stage 5 + Stage 6 static check. Proves layouts are good.
-2. **M2 — Constraints:** Stage 4 VLM → schema, plus the rule library and an eval set
+1. **M1 — Solver core:** hand-authored room + footprint polygons + hand-written
+   constraint JSON → annealing search. Proves layouts are good.
+2. **M2 — Assets:** SAM 3D Objects service + fit-to-box scaling + footprint
+   extraction, tested on sample RoomPlan exports.
+3. **M3 — Constraints:** Stage 4 VLM → schema, plus the rule library and an eval set
    of user prompts.
-3. **M3 — Assets:** Stages 2–3 with SAM 3D Objects + CoACD; MuJoCo settle.
-4. **M4 — Room:** Stages 0 + 1b (ARKit capture → planes) replace the hand-authored room.
-5. **M5 — Visual:** Stage 1a 3DGS + GOR-IS, Stage 7 compositing and VLM critic.
-   A GOR-IS spike (benchmark on released data + one of our captures) can run in
-   parallel with M1 because it's independent of the solver.
+4. **M4 — App:** RoomPlan capture → assets → solver → dollhouse view, end to end.
+5. **M5 — Beyond v1:** MuJoCo + convex decomposition (stacking/twin), video capture
+   for non-LiDAR devices, 3DGS + GOR-IS photoreal room (start with a benchmark
+   spike).
