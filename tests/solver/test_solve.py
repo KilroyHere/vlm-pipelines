@@ -53,7 +53,8 @@ def _small_problem():
 
 def _strip_time(r: SolveResult) -> dict:
     d = r.model_dump()
-    d["stats"].pop("seconds")
+    d["stats"].pop("seconds")  # wall-clock
+    d["stats"].pop("time_to_first_feasible_s")
     return d
 
 
@@ -73,6 +74,10 @@ def test_result_is_consistent_with_independent_evaluation():
     r = out.result
     assert r.layouts and r.layouts[0].feasible
     assert out.diagnostics.time_to_first_feasible_s is not None
+    st = r.stats  # contract v0.3.0 fields mirror the diagnostics
+    assert st.restarts == out.diagnostics.restarts == FIXED_WORK["max_restarts"]
+    assert st.time_to_first_feasible_s == out.diagnostics.time_to_first_feasible_s
+    assert st.time_limited is False
     costs = [lay.cost for lay in r.layouts]
     feas = [lay.feasible for lay in r.layouts]
     assert feas == sorted(feas, reverse=True)

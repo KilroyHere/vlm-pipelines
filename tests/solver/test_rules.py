@@ -147,9 +147,16 @@ def test_wall_mount():
     assert not ok and not res["implicit:wall_mount"].satisfied
     res, ok = results(p, {"tv": (2, 1.5, FACE_N)})  # floating mid-room
     assert not ok
-    pw = make_problem([tv], room=box_room(openings=[window()]))
-    res, ok = results(pw, {"tv": (2, 0.05, FACE_N)})  # hung on the window
-    assert not ok and res["implicit:wall_mount"].violation == pytest.approx(1.0)
+    # window glass spans [0.9, 1.9] m: a TV hung at 1.2 m would be on the glass
+    for elevation, blocked in ((1.2, True), (0.1, False), (2.0, False)):
+        pw = make_problem(
+            [box("tv", 1.0, 0.1, 0.6, mount="wall", elevation=elevation)],
+            room=box_room(openings=[window()]),
+        )
+        res, ok = results(pw, {"tv": (2, 0.05, FACE_N)})
+        assert ok is not blocked
+        if blocked:
+            assert res["implicit:wall_mount"].violation == pytest.approx(1.0)
 
 
 # ----------------------------------------------------------------------------- vocabulary
@@ -365,3 +372,64 @@ def test_zone_through_the_wall_behind_the_asset_is_clipped():
     res, ok = results(p, {"cab": (0.5, 0.3, FACE_N)})  # pushed into the SW corner
     assert not ok  # the margin's left side is cut off by the west wall
     assert res["implicit:clearance_zones"].violation == pytest.approx(0.2 * 1.1)
+
+
+# ----------------------------------------------------------------------------- elevation
+
+
+def test_elevated_tv_above_console_does_not_overlap():
+    """Contract v0.3.0: footprints only conflict when vertical extents overlap."""
+    tv = box("tv", 1.2, 0.08, 0.7, mount="wall", elevation=1.0)
+    console = box("console", 1.6, 0.4, 0.5)
+    p = make_problem([tv, console])
+    poses = {"tv": (2, 0.04, FACE_N), "console": (2, 0.2, FACE_N)}
+    res, ok = results(p, poses)
+    assert ok and res["implicit:no_overlap"].satisfied
+    low = make_problem([box("tv", 1.2, 0.08, 0.7, mount="wall", elevation=0.3), console])
+    res, ok = results(low, poses)  # [0.3, 1.0] overlaps the console's [0, 0.5]
+    assert not ok and res["implicit:no_overlap"].violation == pytest.approx(1.2 * 0.08)
+
+
+def test_clearance_zones_ignore_assets_above_walker_height():
+    zone_owner = box("desk", 1.2, 0.6, zones=[front_zone(1.2, 0.6, 0.8)])
+    poses = {"desk": (2, 0.3, FACE_N), "shelf": (2, 0.8, FACE_N)}
+    for elevation, ok_expected in ((1.9, True), (1.0, False)):
+        p = make_problem([zone_owner, box("shelf", 0.6, 0.3, 0.3, elevation=elevation)])
+        res, ok = results(p, poses)
+        assert ok is ok_expected
+        assert res["implicit:clearance_zones"].satisfied is ok_expected
+
+
+def test_obstacle_and_door_swing_respect_elevation():
+    room = box_room(
+        openings=[door()],
+        obstacles=[
+            {"id": "rad", "label": "radiator", "height": 0.6, "footprint": rect(2.0, 0.0, 3.0, 0.1)}
+        ],
+    )
+    for elevation, ok_expected in ((1.0, True), (0.4, False)):
+        p = make_problem([box("cab", 0.8, 0.3, 0.5, elevation=elevation)], room=room)
+        res, ok = results(p, {"cab": (2.5, 0.15, FACE_N)})  # over the radiator
+        assert res["implicit:clear_of_obstacles"].satisfied is ok_expected
+    # door leaf is 2.0 m tall; a shelf mounted at 2.05 m above the swing is fine
+    for elevation, ok_expected in ((2.05, True), (1.0, False)):
+        p = make_problem([box("s", 0.2, 0.2, 0.3, elevation=elevation)], room=room)
+        res, _ = results(p, {"s": (0.8, 0.3, 0)})
+        assert res["implicit:door_swing"].satisfied is ok_expected
+
+
+def test_window_keep_clear_uses_asset_top():
+    room = box_room(openings=[window(offset=2.0, wall="w_n", sill=0.9)])
+    kc = [{"type": "keep_clear", "id": "kw", "opening_id": "win", "distance": 0.5}]
+    for elevation, height, clear in ((0.0, 0.8, True), (0.5, 0.8, False), (0.0, 1.2, False)):
+        p = make_problem([box("a", 0.4, 0.4, height, elevation=elevation)], kc, room=room)
+        res, _ = results(p, {"a": (2, 2.7, 0)})
+        assert res["kw"].satisfied is clear
+
+
+def test_walkway_ignores_assets_above_walker_height():
+    p, poses = _corridor(blocker=True)
+    data = p.model_dump()
+    data["assets"][1]["elevation"] = 1.9  # wall cabinet above head height
+    res, ok = results(type(p).model_validate(data), poses)
+    assert ok and res["ww"].satisfied
