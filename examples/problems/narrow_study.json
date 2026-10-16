@@ -1,5 +1,5 @@
 {
- "schema_version": "0.1.0",
+ "schema_version": "0.2.0",
  "id": "narrow_study",
  "room": {
   "id": "room_narrow_study",
@@ -108,7 +108,37 @@
     "depth": 0.6,
     "height": 0.75
    },
-   "label": "desk"
+   "label": "desk",
+   "clearance_zones": [
+    {
+     "name": "chair_zone",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.6,
+        0.3
+       ],
+       [
+        0.6,
+        0.3
+       ],
+       [
+        0.6,
+        1.05
+       ],
+       [
+        -0.6,
+        1.05
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    }
+   ],
+   "subtype": "desk"
   },
   {
    "id": "desk_chair",

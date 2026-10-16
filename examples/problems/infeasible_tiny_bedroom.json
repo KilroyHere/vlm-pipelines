@@ -1,5 +1,5 @@
 {
- "schema_version": "0.1.0",
+ "schema_version": "0.2.0",
  "id": "infeasible_tiny_bedroom",
  "room": {
   "id": "room_infeasible_tiny_bedroom",
@@ -195,7 +195,37 @@
     "depth": 0.55,
     "height": 0.75
    },
-   "label": "desk"
+   "label": "desk",
+   "clearance_zones": [
+    {
+     "name": "chair_zone",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.5,
+        0.275
+       ],
+       [
+        0.5,
+        0.275
+       ],
+       [
+        0.5,
+        1.025
+       ],
+       [
+        -0.5,
+        1.025
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    }
+   ],
+   "subtype": "desk"
   }
  ],
  "constraints": [

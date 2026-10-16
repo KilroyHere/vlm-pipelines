@@ -65,24 +65,33 @@ def clear_of_obstacles(room: RoomGeom, g: Posed) -> float:
 
 
 def own_zones_blocked(room: RoomGeom, g: Posed) -> float:
-    """Unary part of ``implicit:clearance_zones``: an asset's own zones may not leave
-    the floor (stick into/through a wall) or overlap a fixed obstacle."""
+    """Unary part of ``implicit:clearance_zones``: an asset's own zones may not overlap a
+    fixed obstacle, and (per ``ZONE_WALL_POLICY``, default "front") the part of a zone at
+    or in front of the asset's back-edge line may not leave the floor, i.e. be cut off by
+    a wall. Zone parts behind the back line (through the wall the asset stands against)
+    are clipped away."""
     v = 0.0
-    for z, zb in zip(g.zones, g.zone_bounds, strict=True):
+    for z, zb in g.zone_wall:
         v += room.outside_area(z, zb)
+    for z, zb in zip(g.zones, g.zone_bounds, strict=True):
         for ob in room.obstacles:
             v += overlap_area(z, zb, ob.poly, ob.bounds)
     return v
 
 
 def zones_pair(ga: Posed, gb: Posed) -> float:
-    """Pair part of ``implicit:clearance_zones``: a's zones vs b's footprint and vice versa.
-    Zones may overlap other zones."""
+    """Pair part of ``implicit:clearance_zones``: a's zones vs b's footprint and vice versa,
+    skipping zones whose ``allowed_categories`` contain the other asset's category. Zones
+    may overlap other zones. (The contract clips zones to the floor first; since footprints
+    must lie inside the floor, zone-in-floor ∩ footprint equals zone ∩ footprint for every
+    feasible layout, so the clip is skipped here.)"""
     v = 0.0
-    for z, zb in zip(ga.zones, ga.zone_bounds, strict=True):
-        v += overlap_area(z, zb, gb.fp, gb.bounds)
-    for z, zb in zip(gb.zones, gb.zone_bounds, strict=True):
-        v += overlap_area(z, zb, ga.fp, ga.bounds)
+    for z, zb, allowed in zip(ga.zones, ga.zone_bounds, ga.zone_allowed, strict=True):
+        if gb.category not in allowed:
+            v += overlap_area(z, zb, gb.fp, gb.bounds)
+    for z, zb, allowed in zip(gb.zones, gb.zone_bounds, gb.zone_allowed, strict=True):
+        if ga.category not in allowed:
+            v += overlap_area(z, zb, ga.fp, ga.bounds)
     return v
 
 

@@ -9,6 +9,7 @@ Moves (per step, one movable asset is picked first):
   (``near``/``faces`` partner), with a random or partner-facing yaw.
 - ``snap``: put the asset's back against a random wall, facing into the room.
 - ``swap``: exchange the poses of two movable assets (wall-bound ones re-snap).
+- ``back``: an asset with a soft ``fixed`` jumps back to its exact initial pose.
 
 Group moves: with probability ``P_GROUP`` a non-swap move of an asset that has
 *followers* (smaller assets tied to it by a tight hard ``near``, e.g. desk -> chair,
@@ -28,12 +29,13 @@ from .geometry import wrap_angle, yaw_facing
 from .model import Model, Pose, State
 
 T_START = 3.0
-T_END = 0.003
+T_END = 1e-4
 SIGMA_START = 0.6
 SIGMA_END = 0.03
 INIT_CANDIDATES = 24
 WALL_GAP = 0.001  # snap leaves 1 mm between back edge and wall (robust to float noise)
 P_GROUP = 0.5
+P_BACK_TO_INITIAL = 0.1  # soft-`fixed` assets: jump straight back to the initial pose
 P_FOCUS = 0.5
 FOCUS_AFTER = 0.3
 
@@ -185,6 +187,8 @@ class Annealer:
     def _move(self, i: int, state: State, sigma: float) -> dict[int, Pose]:
         m, rng = self.m, self.rng
         x, y, yaw = state.poses[i]  # type: ignore[misc]
+        if m.prefers_initial[i] and rng.random() < P_BACK_TO_INITIAL:
+            return {i: m.initial[i]}  # type: ignore[dict-item]
         u = rng.random()
         if m.wall_bound[i]:
             if u < 0.45:

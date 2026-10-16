@@ -113,6 +113,7 @@ class Model:
         # followers[i]: smaller movable assets tied to i by a hard `near` of <= 0.3 m
         # (desk -> chair, bed -> nightstands); they move rigidly with i in group moves
         self.followers: list[list[int]] = [[] for _ in range(self.n)]
+        self.prefers_initial = [False] * self.n  # soft `fixed`: search may jump back to it
         self._build_implicit()
         self._build_constraints()
         for c in problem.constraints:
@@ -330,6 +331,8 @@ class Model:
                 a = self.index[c.a]
                 pose0 = self.initial[a]
                 assert pose0 is not None  # guaranteed by LayoutProblem validation
+                if not c.hard:
+                    self.prefers_initial[a] = True
                 self.unary[a].append(
                     Term(
                         c.id, c.hard, w, a, -1, lambda g, p=pose0: rules.fixed_offset(g, p), c.a, ""

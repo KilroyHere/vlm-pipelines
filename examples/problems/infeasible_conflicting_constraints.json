@@ -1,5 +1,5 @@
 {
- "schema_version": "0.1.0",
+ "schema_version": "0.2.0",
  "id": "infeasible_conflicting_constraints",
  "room": {
   "id": "room_infeasible_conflicting_constraints",

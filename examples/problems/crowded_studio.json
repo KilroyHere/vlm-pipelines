@@ -1,5 +1,5 @@
 {
- "schema_version": "0.1.0",
+ "schema_version": "0.2.0",
  "id": "crowded_studio",
  "room": {
   "id": "room_crowded_studio",
@@ -204,7 +204,37 @@
     "depth": 0.55,
     "height": 0.75
    },
-   "label": "desk"
+   "label": "desk",
+   "clearance_zones": [
+    {
+     "name": "chair_zone",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.5,
+        0.275
+       ],
+       [
+        0.5,
+        0.275
+       ],
+       [
+        0.5,
+        1.025
+       ],
+       [
+        -0.5,
+        1.025
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    }
+   ],
+   "subtype": "desk"
   },
   {
    "id": "desk_chair",
@@ -296,7 +326,118 @@
     "depth": 0.75,
     "height": 0.75
    },
-   "label": "small dining table"
+   "label": "small dining table",
+   "clearance_zones": [
+    {
+     "name": "seat_front",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.375,
+        0.375
+       ],
+       [
+        0.375,
+        0.375
+       ],
+       [
+        0.375,
+        0.875
+       ],
+       [
+        -0.375,
+        0.875
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    },
+    {
+     "name": "seat_back",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.375,
+        -0.875
+       ],
+       [
+        0.375,
+        -0.875
+       ],
+       [
+        0.375,
+        -0.375
+       ],
+       [
+        -0.375,
+        -0.375
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    },
+    {
+     "name": "seat_left",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.875,
+        -0.375
+       ],
+       [
+        -0.375,
+        -0.375
+       ],
+       [
+        -0.375,
+        0.375
+       ],
+       [
+        -0.875,
+        0.375
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    },
+    {
+     "name": "seat_right",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        0.375,
+        -0.375
+       ],
+       [
+        0.875,
+        -0.375
+       ],
+       [
+        0.875,
+        0.375
+       ],
+       [
+        0.375,
+        0.375
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    }
+   ],
+   "subtype": "dining_table"
   },
   {
    "id": "dchair_1",

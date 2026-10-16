@@ -28,6 +28,14 @@ AREA_EPS = 1e-6  # m^2; overlaps smaller than this count as touching
 HALF_PI = math.pi / 2
 TWO_PI = 2 * math.pi
 BUFFER_QUAD_SEGS = 4  # resolution of round buffers (walkway erosion)
+# How walls/the floor boundary interact with clearance zones (docs/solver.md, "Clearance
+# zones"). Footprint-in-zone checks always use the zone clipped to the floor (contract
+# v0.2.0). On top of that, the part of a zone that leaves the floor counts as blocked:
+#   "front":  only the part at or in front of the asset's back-edge line (default; a zone
+#             poking through the wall the asset stands against is ignored)
+#   "clip":   never (pure contract reading: zones are just clipped to the floor)
+#   "strict": always (the v0.1 behaviour)
+ZONE_WALL_POLICY = "front"
 _CACHE_LIMIT = 8192
 
 Bounds = tuple[float, float, float, float]
@@ -309,6 +317,9 @@ class Posed:
     zones: list[Polygon]
     zone_bounds: list[Bounds]
     zone_purposes: list[str]
+    zone_allowed: list[frozenset[str]]  # categories whose footprints may enter each zone
+    zone_wall: list[tuple[Polygon, Bounds]]  # zone parts that must stay inside the floor
+    category: str
     fx: float  # world front unit vector
     fy: float
     back: np.ndarray  # (2, 2) world endpoints of the back edge
@@ -350,6 +361,7 @@ class AssetTemplate:
             (z.name, z.purpose, np.asarray(z.polygon.points, dtype=float))
             for z in asset.clearance_zones
         ]
+        self.zone_allowed = [frozenset(z.allowed_categories) for z in asset.clearance_zones]
         self.back = _edge(self.pts, use_min=True)
         self.front = _edge(self.pts, use_min=False)
         self.xmin, self.ymin = self.pts.min(axis=0)
@@ -365,8 +377,10 @@ class AssetTemplate:
             asset.mount.value,
             tuple(np.round(self.pts, 3).ravel()),
             tuple((p, tuple(np.round(z, 3).ravel())) for _, p, z in self.zones),
+            tuple(tuple(sorted(a)) for a in self.zone_allowed),
             round(self.height, 3),
         )
+        self._zone_wall_local = self._zone_wall_parts()
         self._cache: dict[tuple[float, float, float], Posed] = {}
         # all vertices (footprint, zones, back edge, front edge) in one array -> one matmul
         rings = [self.pts, *[z for _, _, z in self.zones]]
@@ -376,6 +390,33 @@ class AssetTemplate:
         self._stack = np.vstack([*rings, self.back, self.front])
         self._n_ring_pts = sum(len(r) for r in rings)
         self._purposes = [p for _, p, _ in self.zones]
+
+    def _zone_wall_parts(self) -> list[list[np.ndarray] | None]:
+        """Per zone, the local-frame part that must stay inside the floor (see
+        ZONE_WALL_POLICY): ``None`` = the whole zone, else a list of rings (maybe empty)."""
+        out: list[list[np.ndarray] | None] = []
+        for _, _, z in self.zones:
+            if ZONE_WALL_POLICY == "strict":
+                out.append(None)
+                continue
+            if ZONE_WALL_POLICY == "clip":
+                out.append([])
+                continue
+            zp = Polygon(z)
+            lo = zp.bounds
+            front = shapely.box(lo[0] - 1, self.ymin - 1e-9, lo[2] + 1, max(lo[3], self.ymin) + 1)
+            part = zp.intersection(front)
+            if abs(part.area - zp.area) < 1e-9:
+                out.append(None)
+            else:
+                out.append(
+                    [
+                        np.asarray(g.exterior.coords[:-1], dtype=float)
+                        for g in getattr(part, "geoms", [part])
+                        if g.geom_type == "Polygon" and g.area > 1e-9
+                    ]
+                )
+        return out
 
     def posed(self, x: float, y: float, yaw: float) -> Posed:
         key = (x, y, yaw)
@@ -399,6 +440,16 @@ class AssetTemplate:
             (a[0], a[1], b[0], b[1]) for a, b in zip(mins.tolist(), maxs.tolist(), strict=True)
         ]
         n = self._n_ring_pts
+        rot = np.array([[c, s], [-s, c]])
+        zone_wall = []
+        for k, part in enumerate(self._zone_wall_local):
+            if part is None:  # the whole zone
+                zone_wall.append((polys[k + 1], bounds[k + 1]))
+            else:
+                for ring in part:
+                    rw = ring @ rot + (x, y)
+                    mn, mx = rw.min(axis=0), rw.max(axis=0)
+                    zone_wall.append((shapely.polygons(rw), (mn[0], mn[1], mx[0], mx[1])))
         g = Posed(
             x,
             y,
@@ -408,6 +459,9 @@ class AssetTemplate:
             polys[1:],
             bounds[1:],
             self._purposes,
+            self.zone_allowed,
+            zone_wall,
+            self.category,
             -s,
             c,
             w[n : n + 2],

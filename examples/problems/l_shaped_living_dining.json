@@ -1,5 +1,5 @@
 {
- "schema_version": "0.1.0",
+ "schema_version": "0.2.0",
  "id": "l_shaped_living_dining",
  "room": {
   "id": "room_l_shaped_living_dining",
@@ -213,7 +213,118 @@
     "depth": 0.9,
     "height": 0.75
    },
-   "label": "dining table"
+   "label": "dining table",
+   "clearance_zones": [
+    {
+     "name": "seat_front",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.7,
+        0.45
+       ],
+       [
+        0.7,
+        0.45
+       ],
+       [
+        0.7,
+        1.0
+       ],
+       [
+        -0.7,
+        1.0
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    },
+    {
+     "name": "seat_back",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.7,
+        -1.0
+       ],
+       [
+        0.7,
+        -1.0
+       ],
+       [
+        0.7,
+        -0.45
+       ],
+       [
+        -0.7,
+        -0.45
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    },
+    {
+     "name": "seat_left",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -1.25,
+        -0.45
+       ],
+       [
+        -0.7,
+        -0.45
+       ],
+       [
+        -0.7,
+        0.45
+       ],
+       [
+        -1.25,
+        0.45
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    },
+    {
+     "name": "seat_right",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        0.7,
+        -0.45
+       ],
+       [
+        1.25,
+        -0.45
+       ],
+       [
+        1.25,
+        0.45
+       ],
+       [
+        0.7,
+        0.45
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    }
+   ],
+   "subtype": "dining_table"
   },
   {
    "id": "dchair_0",

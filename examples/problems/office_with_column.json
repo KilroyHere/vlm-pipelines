@@ -1,5 +1,5 @@
 {
- "schema_version": "0.1.0",
+ "schema_version": "0.2.0",
  "id": "office_with_column",
  "room": {
   "id": "room_office_with_column",
@@ -134,7 +134,37 @@
     "depth": 0.7,
     "height": 0.75
    },
-   "label": "desk"
+   "label": "desk",
+   "clearance_zones": [
+    {
+     "name": "chair_zone",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.7,
+        0.35
+       ],
+       [
+        0.7,
+        0.35
+       ],
+       [
+        0.7,
+        1.1
+       ],
+       [
+        -0.7,
+        1.1
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    }
+   ],
+   "subtype": "desk"
   },
   {
    "id": "chair_a",
@@ -180,7 +210,37 @@
     "depth": 0.7,
     "height": 0.75
    },
-   "label": "desk"
+   "label": "desk",
+   "clearance_zones": [
+    {
+     "name": "chair_zone",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.7,
+        0.35
+       ],
+       [
+        0.7,
+        0.35
+       ],
+       [
+        0.7,
+        1.1
+       ],
+       [
+        -0.7,
+        1.1
+       ]
+      ]
+     },
+     "allowed_categories": [
+      "chair"
+     ]
+    }
+   ],
+   "subtype": "desk"
   },
   {
    "id": "chair_b",
