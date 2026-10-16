@@ -1,0 +1,225 @@
+{
+ "schema_version": "0.1.0",
+ "id": "infeasible_conflicting_constraints",
+ "room": {
+  "id": "room_infeasible_conflicting_constraints",
+  "floor": {
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     5,
+     0
+    ],
+    [
+     5,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ]
+  },
+  "ceiling_height": 2.6,
+  "walls": [
+   {
+    "id": "w_south",
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     5,
+     0
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_east",
+    "start": [
+     5,
+     0
+    ],
+    "end": [
+     5,
+     4
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_north",
+    "start": [
+     5,
+     4
+    ],
+    "end": [
+     0,
+     4
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_west",
+    "start": [
+     0,
+     4
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "height": 2.6
+   }
+  ],
+  "openings": [
+   {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_south",
+    "offset": 0.6,
+    "width": 0.9,
+    "height": 2.1,
+    "swing": {
+     "into_room": true,
+     "hinge": "start"
+    }
+   }
+  ],
+  "obstacles": []
+ },
+ "assets": [
+  {
+   "id": "sofa",
+   "category": "sofa",
+   "dimensions": {
+    "width": 2.0,
+    "depth": 0.9,
+    "height": 0.85
+   },
+   "label": "2.0 m sofa",
+   "clearance_zones": [
+    {
+     "name": "legroom",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.9,
+        0.45
+       ],
+       [
+        0.9,
+        0.45
+       ],
+       [
+        0.9,
+        0.9
+       ],
+       [
+        -0.9,
+        0.9
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tv_stand",
+   "category": "television",
+   "dimensions": {
+    "width": 1.6,
+    "depth": 0.45,
+    "height": 0.55
+   },
+   "label": "TV on stand"
+  },
+  {
+   "id": "armchair",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.85,
+    "depth": 0.85,
+    "height": 0.9
+   },
+   "label": "armchair",
+   "clearance_zones": [
+    {
+     "name": "legroom",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.875
+       ],
+       [
+        -0.4,
+        0.875
+       ]
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "constraints": [
+  {
+   "type": "faces",
+   "id": "sofa_faces_tv",
+   "a": "sofa",
+   "b": "tv_stand",
+   "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "tv_on_wall",
+   "a": "tv_stand",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "sofa_close_to_tv",
+   "a": "sofa",
+   "b": "tv_stand",
+   "max_distance": 1.0,
+   "hard": true,
+   "rationale": "user: 'sofa within 1 m of the TV'"
+  },
+  {
+   "type": "distance_at_least",
+   "id": "viewing_distance",
+   "a": "sofa",
+   "b": "tv_stand",
+   "min_distance": 2.0,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "walkway_width",
+   "id": "rule_walkway",
+   "min_width": 0.9,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_door",
+   "opening_id": "door",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  }
+ ]
+}

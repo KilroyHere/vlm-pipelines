@@ -1,0 +1,518 @@
+{
+ "schema_version": "0.1.0",
+ "id": "office_with_column",
+ "room": {
+  "id": "room_office_with_column",
+  "floor": {
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     5,
+     0
+    ],
+    [
+     5,
+     4.5
+    ],
+    [
+     0,
+     4.5
+    ]
+   ]
+  },
+  "ceiling_height": 2.6,
+  "walls": [
+   {
+    "id": "w_south",
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     5,
+     0
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_east",
+    "start": [
+     5,
+     0
+    ],
+    "end": [
+     5,
+     4.5
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_north",
+    "start": [
+     5,
+     4.5
+    ],
+    "end": [
+     0,
+     4.5
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_west",
+    "start": [
+     0,
+     4.5
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "height": 2.6
+   }
+  ],
+  "openings": [
+   {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_west",
+    "offset": 0.7,
+    "width": 0.9,
+    "height": 2.1,
+    "swing": {
+     "into_room": true,
+     "hinge": "start"
+    }
+   },
+   {
+    "id": "window",
+    "type": "window",
+    "wall_id": "w_east",
+    "offset": 2.25,
+    "width": 2.0,
+    "height": 1.2,
+    "sill_height": 0.8
+   }
+  ],
+  "obstacles": [
+   {
+    "id": "column",
+    "label": "column",
+    "height": 2.6,
+    "footprint": {
+     "points": [
+      [
+       2.3,
+       2.05
+      ],
+      [
+       2.7,
+       2.05
+      ],
+      [
+       2.7,
+       2.45
+      ],
+      [
+       2.3,
+       2.45
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "assets": [
+  {
+   "id": "desk_a",
+   "category": "table",
+   "dimensions": {
+    "width": 1.4,
+    "depth": 0.7,
+    "height": 0.75
+   },
+   "label": "desk"
+  },
+  {
+   "id": "chair_a",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.5,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.25
+       ],
+       [
+        -0.25,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "desk_b",
+   "category": "table",
+   "dimensions": {
+    "width": 1.4,
+    "depth": 0.7,
+    "height": 0.75
+   },
+   "label": "desk"
+  },
+  {
+   "id": "chair_b",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.5,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.25
+       ],
+       [
+        -0.25,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "shelf_a",
+   "category": "storage",
+   "dimensions": {
+    "width": 0.9,
+    "depth": 0.35,
+    "height": 1.8
+   },
+   "label": "bookshelf",
+   "clearance_zones": [
+    {
+     "name": "access",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.7749999999999999
+       ],
+       [
+        -0.45,
+        0.7749999999999999
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "shelf_b",
+   "category": "storage",
+   "dimensions": {
+    "width": 0.9,
+    "depth": 0.35,
+    "height": 1.8
+   },
+   "label": "bookshelf",
+   "clearance_zones": [
+    {
+     "name": "access",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.7749999999999999
+       ],
+       [
+        -0.45,
+        0.7749999999999999
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cabinet",
+   "category": "storage",
+   "dimensions": {
+    "width": 0.5,
+    "depth": 0.6,
+    "height": 0.7
+   },
+   "label": "filing cabinet",
+   "clearance_zones": [
+    {
+     "name": "drawers",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.25,
+        0.3
+       ],
+       [
+        0.25,
+        0.3
+       ],
+       [
+        0.25,
+        0.8999999999999999
+       ],
+       [
+        -0.25,
+        0.8999999999999999
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "meeting_table",
+   "category": "table",
+   "dimensions": {
+    "width": 1.0,
+    "depth": 1.0,
+    "height": 0.75
+   },
+   "label": "round-ish meeting table",
+   "footprint": {
+    "points": [
+     [
+      0.5,
+      0.0
+     ],
+     [
+      0.354,
+      0.354
+     ],
+     [
+      0.0,
+      0.5
+     ],
+     [
+      -0.354,
+      0.354
+     ],
+     [
+      -0.5,
+      0.0
+     ],
+     [
+      -0.354,
+      -0.354
+     ],
+     [
+      0.0,
+      -0.5
+     ],
+     [
+      0.354,
+      -0.354
+     ]
+    ]
+   }
+  }
+ ],
+ "constraints": [
+  {
+   "type": "against_wall",
+   "id": "desk_a_on_wall",
+   "a": "desk_a",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "chair_a_at_desk_a",
+   "a": "chair_a",
+   "b": "desk_a",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_a_faces_desk_a",
+   "a": "chair_a",
+   "b": "desk_a",
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "desk_a_faces_chair_a",
+   "a": "desk_a",
+   "b": "chair_a",
+   "hard": true,
+   "origin": "rule_library",
+   "rationale": "chair sits in front of the desk, not beside it"
+  },
+  {
+   "type": "against_wall",
+   "id": "desk_b_on_wall",
+   "a": "desk_b",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "chair_b_at_desk_b",
+   "a": "chair_b",
+   "b": "desk_b",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_b_faces_desk_b",
+   "a": "chair_b",
+   "b": "desk_b",
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "desk_b_faces_chair_b",
+   "a": "desk_b",
+   "b": "chair_b",
+   "hard": true,
+   "origin": "rule_library",
+   "rationale": "chair sits in front of the desk, not beside it"
+  },
+  {
+   "type": "distance_at_least",
+   "id": "desks_apart",
+   "a": "desk_a",
+   "b": "desk_b",
+   "min_distance": 1.0,
+   "weight": 1.0
+  },
+  {
+   "type": "against_wall",
+   "id": "shelf_a_wall",
+   "a": "shelf_a",
+   "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "shelf_b_wall",
+   "a": "shelf_b",
+   "hard": true
+  },
+  {
+   "type": "parallel",
+   "id": "shelves_parallel",
+   "a": "shelf_a",
+   "b": "shelf_b",
+   "weight": 0.3
+  },
+  {
+   "type": "near",
+   "id": "shelves_together",
+   "a": "shelf_a",
+   "b": "shelf_b",
+   "max_distance": 0.1,
+   "weight": 0.5
+  },
+  {
+   "type": "against_wall",
+   "id": "cabinet_wall",
+   "a": "cabinet",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "cabinet_near_desk_a",
+   "a": "cabinet",
+   "b": "desk_a",
+   "max_distance": 0.6,
+   "weight": 0.5
+  },
+  {
+   "type": "distance_at_least",
+   "id": "meeting_away_a",
+   "a": "meeting_table",
+   "b": "desk_a",
+   "min_distance": 0.9,
+   "hard": true
+  },
+  {
+   "type": "distance_at_least",
+   "id": "meeting_away_b",
+   "a": "meeting_table",
+   "b": "desk_b",
+   "min_distance": 0.9,
+   "hard": true
+  },
+  {
+   "type": "walkway_width",
+   "id": "rule_walkway",
+   "min_width": 0.9,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_door",
+   "opening_id": "door",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  }
+ ]
+}

@@ -1,0 +1,503 @@
+{
+ "schema_version": "0.1.0",
+ "id": "dining_room",
+ "room": {
+  "id": "room_dining_room",
+  "floor": {
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     5.0,
+     0
+    ],
+    [
+     5.0,
+     4.4
+    ],
+    [
+     0,
+     4.4
+    ]
+   ]
+  },
+  "ceiling_height": 2.6,
+  "walls": [
+   {
+    "id": "w_south",
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     5.0,
+     0
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_east",
+    "start": [
+     5.0,
+     0
+    ],
+    "end": [
+     5.0,
+     4.4
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_north",
+    "start": [
+     5.0,
+     4.4
+    ],
+    "end": [
+     0,
+     4.4
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_west",
+    "start": [
+     0,
+     4.4
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "height": 2.6
+   }
+  ],
+  "openings": [
+   {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_south",
+    "offset": 0.7,
+    "width": 0.9,
+    "height": 2.1,
+    "swing": {
+     "into_room": true,
+     "hinge": "start"
+    }
+   },
+   {
+    "id": "to_kitchen",
+    "type": "opening",
+    "wall_id": "w_east",
+    "offset": 3.4,
+    "width": 1.0,
+    "height": 2.1
+   },
+   {
+    "id": "window",
+    "type": "window",
+    "wall_id": "w_north",
+    "offset": 2.5,
+    "width": 2.0,
+    "height": 1.2,
+    "sill_height": 0.85
+   }
+  ],
+  "obstacles": []
+ },
+ "assets": [
+  {
+   "id": "table",
+   "category": "table",
+   "dimensions": {
+    "width": 1.8,
+    "depth": 0.9,
+    "height": 0.75
+   },
+   "label": "dining table"
+  },
+  {
+   "id": "chair_0",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "dining chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.25
+       ],
+       [
+        -0.225,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chair_1",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "dining chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.25
+       ],
+       [
+        -0.225,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chair_2",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "dining chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.25
+       ],
+       [
+        -0.225,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chair_3",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "dining chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.25
+       ],
+       [
+        -0.225,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chair_4",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "dining chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.25
+       ],
+       [
+        -0.225,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chair_5",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "dining chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.65
+       ],
+       [
+        0.225,
+        -0.25
+       ],
+       [
+        -0.225,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sideboard",
+   "category": "storage",
+   "dimensions": {
+    "width": 1.6,
+    "depth": 0.45,
+    "height": 0.85
+   },
+   "label": "sideboard",
+   "clearance_zones": [
+    {
+     "name": "access",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.8,
+        0.225
+       ],
+       [
+        0.8,
+        0.225
+       ],
+       [
+        0.8,
+        0.825
+       ],
+       [
+        -0.8,
+        0.825
+       ]
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "constraints": [
+  {
+   "type": "near",
+   "id": "chair_0_at_table",
+   "a": "chair_0",
+   "b": "table",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_0_faces_table",
+   "a": "chair_0",
+   "b": "table",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "chair_1_at_table",
+   "a": "chair_1",
+   "b": "table",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_1_faces_table",
+   "a": "chair_1",
+   "b": "table",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "chair_2_at_table",
+   "a": "chair_2",
+   "b": "table",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_2_faces_table",
+   "a": "chair_2",
+   "b": "table",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "chair_3_at_table",
+   "a": "chair_3",
+   "b": "table",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_3_faces_table",
+   "a": "chair_3",
+   "b": "table",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "chair_4_at_table",
+   "a": "chair_4",
+   "b": "table",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_4_faces_table",
+   "a": "chair_4",
+   "b": "table",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "chair_5_at_table",
+   "a": "chair_5",
+   "b": "table",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_5_faces_table",
+   "a": "chair_5",
+   "b": "table",
+   "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "sideboard_wall",
+   "a": "sideboard",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "sideboard_near_table",
+   "a": "sideboard",
+   "b": "table",
+   "max_distance": 1.6,
+   "weight": 0.3
+  },
+  {
+   "type": "walkway_width",
+   "id": "rule_walkway",
+   "min_width": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_door",
+   "opening_id": "door",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_to_kitchen",
+   "opening_id": "to_kitchen",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  }
+ ]
+}

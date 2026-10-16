@@ -1,0 +1,380 @@
+{
+ "schema_version": "0.1.0",
+ "id": "fixed_piano_room",
+ "room": {
+  "id": "room_fixed_piano_room",
+  "floor": {
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     5,
+     0
+    ],
+    [
+     5,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ]
+  },
+  "ceiling_height": 2.6,
+  "walls": [
+   {
+    "id": "w_south",
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     5,
+     0
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_east",
+    "start": [
+     5,
+     0
+    ],
+    "end": [
+     5,
+     4
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_north",
+    "start": [
+     5,
+     4
+    ],
+    "end": [
+     0,
+     4
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_west",
+    "start": [
+     0,
+     4
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "height": 2.6
+   }
+  ],
+  "openings": [
+   {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_south",
+    "offset": 4.2,
+    "width": 0.9,
+    "height": 2.1,
+    "swing": {
+     "into_room": true,
+     "hinge": "end"
+    }
+   },
+   {
+    "id": "window",
+    "type": "window",
+    "wall_id": "w_west",
+    "offset": 2.0,
+    "width": 1.5,
+    "height": 1.2,
+    "sill_height": 0.9
+   }
+  ],
+  "obstacles": []
+ },
+ "assets": [
+  {
+   "id": "piano",
+   "category": "piano",
+   "dimensions": {
+    "width": 1.5,
+    "depth": 0.6,
+    "height": 1.25
+   },
+   "label": "upright piano"
+  },
+  {
+   "id": "piano_bench",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.8,
+    "depth": 0.4,
+    "height": 0.5
+   },
+   "label": "piano bench"
+  },
+  {
+   "id": "builtin_cabinet",
+   "category": "storage",
+   "dimensions": {
+    "width": 1.0,
+    "depth": 0.45,
+    "height": 0.9
+   },
+   "label": "built-in cabinet",
+   "movable": false
+  },
+  {
+   "id": "sofa",
+   "category": "sofa",
+   "dimensions": {
+    "width": 2.0,
+    "depth": 0.9,
+    "height": 0.85
+   },
+   "label": "2.0 m sofa",
+   "clearance_zones": [
+    {
+     "name": "legroom",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.9,
+        0.45
+       ],
+       [
+        0.9,
+        0.45
+       ],
+       [
+        0.9,
+        0.9
+       ],
+       [
+        -0.9,
+        0.9
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "armchair",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.85,
+    "depth": 0.85,
+    "height": 0.9
+   },
+   "label": "armchair",
+   "clearance_zones": [
+    {
+     "name": "legroom",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.875
+       ],
+       [
+        -0.4,
+        0.875
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "coffee_table",
+   "category": "table",
+   "dimensions": {
+    "width": 1.0,
+    "depth": 0.6,
+    "height": 0.45
+   },
+   "label": "coffee table"
+  },
+  {
+   "id": "bookshelf",
+   "category": "storage",
+   "dimensions": {
+    "width": 0.9,
+    "depth": 0.35,
+    "height": 1.8
+   },
+   "label": "bookshelf",
+   "clearance_zones": [
+    {
+     "name": "access",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.7749999999999999
+       ],
+       [
+        -0.45,
+        0.7749999999999999
+       ]
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "constraints": [
+  {
+   "type": "fixed",
+   "id": "piano_stays",
+   "a": "piano",
+   "hard": true,
+   "origin": "user",
+   "rationale": "piano is too heavy to move"
+  },
+  {
+   "type": "fixed",
+   "id": "sofa_prefers_current",
+   "a": "sofa",
+   "weight": 0.3,
+   "rationale": "user prefers not to move the sofa"
+  },
+  {
+   "type": "near",
+   "id": "bench_at_piano",
+   "a": "piano_bench",
+   "b": "piano",
+   "max_distance": 0.35,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "bench_faces_piano",
+   "a": "piano_bench",
+   "b": "piano",
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "piano_faces_bench",
+   "a": "piano",
+   "b": "piano_bench",
+   "hard": true,
+   "origin": "rule_library",
+   "rationale": "bench in front of the keyboard"
+  },
+  {
+   "type": "faces",
+   "id": "sofa_faces_table",
+   "a": "sofa",
+   "b": "coffee_table",
+   "weight": 1.0
+  },
+  {
+   "type": "near",
+   "id": "table_near_sofa",
+   "a": "coffee_table",
+   "b": "sofa",
+   "max_distance": 0.5
+  },
+  {
+   "type": "distance_at_least",
+   "id": "table_legroom",
+   "a": "coffee_table",
+   "b": "sofa",
+   "min_distance": 0.35
+  },
+  {
+   "type": "faces",
+   "id": "armchair_faces_table",
+   "a": "armchair",
+   "b": "coffee_table",
+   "weight": 0.5
+  },
+  {
+   "type": "against_wall",
+   "id": "bookshelf_wall",
+   "a": "bookshelf",
+   "hard": true
+  },
+  {
+   "type": "walkway_width",
+   "id": "rule_walkway",
+   "min_width": 0.9,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_door",
+   "opening_id": "door",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  }
+ ],
+ "initial": {
+  "piano": {
+   "x": 1.2,
+   "y": 3.7,
+   "yaw": 3.141592653589793
+  },
+  "builtin_cabinet": {
+   "x": 4.775,
+   "y": 2.5,
+   "yaw": 1.5707963267948966
+  },
+  "sofa": {
+   "x": 2.6,
+   "y": 0.45,
+   "yaw": 0.0
+  },
+  "armchair": {
+   "x": 4.4,
+   "y": 0.9,
+   "yaw": 1.5707963267948966
+  },
+  "coffee_table": {
+   "x": 2.6,
+   "y": 1.6,
+   "yaw": 0.0
+  },
+  "bookshelf": {
+   "x": 0.175,
+   "y": 1.0,
+   "yaw": -1.5707963267948966
+  },
+  "piano_bench": {
+   "x": 1.2,
+   "y": 2.9,
+   "yaw": 0.0
+  }
+ }
+}

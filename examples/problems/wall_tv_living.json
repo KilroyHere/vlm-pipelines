@@ -1,0 +1,321 @@
+{
+ "schema_version": "0.1.0",
+ "id": "wall_tv_living",
+ "room": {
+  "id": "room_wall_tv_living",
+  "floor": {
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4.5,
+     0
+    ],
+    [
+     4.5,
+     3.8
+    ],
+    [
+     0,
+     3.8
+    ]
+   ]
+  },
+  "ceiling_height": 2.6,
+  "walls": [
+   {
+    "id": "w_south",
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4.5,
+     0
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_east",
+    "start": [
+     4.5,
+     0
+    ],
+    "end": [
+     4.5,
+     3.8
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_north",
+    "start": [
+     4.5,
+     3.8
+    ],
+    "end": [
+     0,
+     3.8
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_west",
+    "start": [
+     0,
+     3.8
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "height": 2.6
+   }
+  ],
+  "openings": [
+   {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_east",
+    "offset": 0.6,
+    "width": 0.85,
+    "height": 2.1,
+    "swing": {
+     "into_room": true,
+     "hinge": "start"
+    }
+   },
+   {
+    "id": "window",
+    "type": "window",
+    "wall_id": "w_west",
+    "offset": 1.9,
+    "width": 1.8,
+    "height": 1.2,
+    "sill_height": 0.8
+   }
+  ],
+  "obstacles": []
+ },
+ "assets": [
+  {
+   "id": "tv",
+   "category": "television",
+   "dimensions": {
+    "width": 1.25,
+    "depth": 0.08,
+    "height": 0.75
+   },
+   "label": "wall-mounted TV",
+   "mount": "wall"
+  },
+  {
+   "id": "sofa",
+   "category": "sofa",
+   "dimensions": {
+    "width": 2.1,
+    "depth": 0.95,
+    "height": 0.85
+   },
+   "label": "2.1 m sofa",
+   "clearance_zones": [
+    {
+     "name": "legroom",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.9500000000000001,
+        0.475
+       ],
+       [
+        0.9500000000000001,
+        0.475
+       ],
+       [
+        0.9500000000000001,
+        0.925
+       ],
+       [
+        -0.9500000000000001,
+        0.925
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "armchair",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.85,
+    "depth": 0.85,
+    "height": 0.9
+   },
+   "label": "armchair",
+   "clearance_zones": [
+    {
+     "name": "legroom",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.875
+       ],
+       [
+        -0.4,
+        0.875
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "side_table",
+   "category": "table",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.45,
+    "height": 0.55
+   },
+   "label": "side table"
+  },
+  {
+   "id": "coffee_table",
+   "category": "table",
+   "dimensions": {
+    "width": 1.0,
+    "depth": 0.55,
+    "height": 0.42
+   },
+   "label": "coffee table"
+  },
+  {
+   "id": "plant",
+   "category": "plant",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.45,
+    "height": 1.4
+   },
+   "label": "potted plant"
+  }
+ ],
+ "constraints": [
+  {
+   "type": "faces",
+   "id": "sofa_faces_tv",
+   "a": "sofa",
+   "b": "tv",
+   "hard": true
+  },
+  {
+   "type": "parallel",
+   "id": "sofa_parallel_tv",
+   "a": "sofa",
+   "b": "tv",
+   "hard": true
+  },
+  {
+   "type": "distance_at_least",
+   "id": "viewing_distance",
+   "a": "sofa",
+   "b": "tv",
+   "min_distance": 2.0,
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "viewing_not_too_far",
+   "a": "sofa",
+   "b": "tv",
+   "max_distance": 3.0,
+   "weight": 1.0
+  },
+  {
+   "type": "faces",
+   "id": "armchair_faces_tv",
+   "a": "armchair",
+   "b": "tv",
+   "max_angle_deg": 45,
+   "weight": 0.5
+  },
+  {
+   "type": "near",
+   "id": "side_table_by_sofa",
+   "a": "side_table",
+   "b": "sofa",
+   "max_distance": 0.1,
+   "weight": 1.0
+  },
+  {
+   "type": "faces",
+   "id": "sofa_faces_coffee_table",
+   "a": "sofa",
+   "b": "coffee_table",
+   "weight": 1.0
+  },
+  {
+   "type": "near",
+   "id": "coffee_table_near_sofa",
+   "a": "coffee_table",
+   "b": "sofa",
+   "max_distance": 0.5
+  },
+  {
+   "type": "parallel",
+   "id": "coffee_table_parallel_sofa",
+   "a": "coffee_table",
+   "b": "sofa",
+   "weight": 0.5
+  },
+  {
+   "type": "distance_at_least",
+   "id": "coffee_table_legroom",
+   "a": "coffee_table",
+   "b": "sofa",
+   "min_distance": 0.4
+  },
+  {
+   "type": "against_wall",
+   "id": "plant_on_wall",
+   "a": "plant",
+   "weight": 0.3
+  },
+  {
+   "type": "keep_clear",
+   "id": "window_clear",
+   "opening_id": "window",
+   "distance": 0.5,
+   "weight": 1.0
+  },
+  {
+   "type": "walkway_width",
+   "id": "rule_walkway",
+   "min_width": 0.9,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_door",
+   "opening_id": "door",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  }
+ ]
+}

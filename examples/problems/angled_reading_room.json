@@ -1,0 +1,344 @@
+{
+ "schema_version": "0.1.0",
+ "id": "angled_reading_room",
+ "room": {
+  "id": "room_angled_reading_room",
+  "floor": {
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4.2,
+     0
+    ],
+    [
+     4.2,
+     2.6
+    ],
+    [
+     2.6,
+     4.2
+    ],
+    [
+     0,
+     4.2
+    ]
+   ]
+  },
+  "ceiling_height": 2.6,
+  "walls": [
+   {
+    "id": "w_south",
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4.2,
+     0
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_east",
+    "start": [
+     4.2,
+     0
+    ],
+    "end": [
+     4.2,
+     2.6
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_diag",
+    "start": [
+     4.2,
+     2.6
+    ],
+    "end": [
+     2.6,
+     4.2
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_north",
+    "start": [
+     2.6,
+     4.2
+    ],
+    "end": [
+     0,
+     4.2
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_west",
+    "start": [
+     0,
+     4.2
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "height": 2.6
+   }
+  ],
+  "openings": [
+   {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_south",
+    "offset": 0.7,
+    "width": 0.85,
+    "height": 2.1,
+    "swing": {
+     "into_room": true,
+     "hinge": "start"
+    }
+   },
+   {
+    "id": "window",
+    "type": "window",
+    "wall_id": "w_west",
+    "offset": 2.1,
+    "width": 1.4,
+    "height": 1.2,
+    "sill_height": 0.9
+   }
+  ],
+  "obstacles": []
+ },
+ "assets": [
+  {
+   "id": "shelf",
+   "category": "storage",
+   "dimensions": {
+    "width": 1.2,
+    "depth": 0.35,
+    "height": 1.8
+   },
+   "label": "bookshelf",
+   "clearance_zones": [
+    {
+     "name": "access",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.6,
+        0.175
+       ],
+       [
+        0.6,
+        0.175
+       ],
+       [
+        0.6,
+        0.7749999999999999
+       ],
+       [
+        -0.6,
+        0.7749999999999999
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading_chair",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.85,
+    "depth": 0.85,
+    "height": 0.9
+   },
+   "label": "armchair",
+   "clearance_zones": [
+    {
+     "name": "legroom",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.875
+       ],
+       [
+        -0.4,
+        0.875
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "side_table",
+   "category": "table",
+   "dimensions": {
+    "width": 0.4,
+    "depth": 0.4,
+    "height": 0.55
+   },
+   "label": "side table"
+  },
+  {
+   "id": "desk",
+   "category": "table",
+   "dimensions": {
+    "width": 1.2,
+    "depth": 0.6,
+    "height": 0.75
+   },
+   "label": "desk"
+  },
+  {
+   "id": "desk_chair",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.5,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.25
+       ],
+       [
+        -0.25,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ottoman",
+   "category": "table",
+   "dimensions": {
+    "width": 0.5,
+    "depth": 0.5,
+    "height": 0.4
+   },
+   "label": "ottoman"
+  }
+ ],
+ "constraints": [
+  {
+   "type": "against_wall",
+   "id": "shelf_on_diagonal",
+   "a": "shelf",
+   "wall_id": "w_diag",
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "reader_faces_shelf",
+   "a": "reading_chair",
+   "b": "shelf",
+   "max_angle_deg": 30,
+   "weight": 1.0
+  },
+  {
+   "type": "near",
+   "id": "reader_near_shelf",
+   "a": "reading_chair",
+   "b": "shelf",
+   "max_distance": 1.5,
+   "weight": 0.5
+  },
+  {
+   "type": "near",
+   "id": "side_table_by_reader",
+   "a": "side_table",
+   "b": "reading_chair",
+   "max_distance": 0.1,
+   "weight": 1.0
+  },
+  {
+   "type": "near",
+   "id": "ottoman_by_reader",
+   "a": "ottoman",
+   "b": "reading_chair",
+   "max_distance": 0.6,
+   "weight": 0.5
+  },
+  {
+   "type": "against_wall",
+   "id": "desk_on_wall",
+   "a": "desk",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "desk_chair_at_desk",
+   "a": "desk_chair",
+   "b": "desk",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "desk_chair_faces_desk",
+   "a": "desk_chair",
+   "b": "desk",
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "desk_faces_desk_chair",
+   "a": "desk",
+   "b": "desk_chair",
+   "hard": true,
+   "origin": "rule_library",
+   "rationale": "chair sits in front of the desk, not beside it"
+  },
+  {
+   "type": "walkway_width",
+   "id": "rule_walkway",
+   "min_width": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_door",
+   "opening_id": "door",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  }
+ ]
+}

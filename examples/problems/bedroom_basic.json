@@ -1,0 +1,369 @@
+{
+ "schema_version": "0.1.0",
+ "id": "bedroom_basic",
+ "room": {
+  "id": "room_bedroom_basic",
+  "floor": {
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     3.8,
+     0
+    ],
+    [
+     3.8,
+     3.6
+    ],
+    [
+     0,
+     3.6
+    ]
+   ]
+  },
+  "ceiling_height": 2.6,
+  "walls": [
+   {
+    "id": "w_south",
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     3.8,
+     0
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_east",
+    "start": [
+     3.8,
+     0
+    ],
+    "end": [
+     3.8,
+     3.6
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_north",
+    "start": [
+     3.8,
+     3.6
+    ],
+    "end": [
+     0,
+     3.6
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_west",
+    "start": [
+     0,
+     3.6
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "height": 2.6
+   }
+  ],
+  "openings": [
+   {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_south",
+    "offset": 0.6,
+    "width": 0.85,
+    "height": 2.1,
+    "swing": {
+     "into_room": true,
+     "hinge": "start"
+    }
+   },
+   {
+    "id": "window",
+    "type": "window",
+    "wall_id": "w_north",
+    "offset": 1.9,
+    "width": 1.4,
+    "height": 1.2,
+    "sill_height": 0.9
+   }
+  ],
+  "obstacles": []
+ },
+ "assets": [
+  {
+   "id": "bed",
+   "category": "bed",
+   "dimensions": {
+    "width": 1.6,
+    "depth": 2.05,
+    "height": 0.55
+   },
+   "label": "bed 1.6x2.05",
+   "clearance_zones": [
+    {
+     "name": "left_side",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -1.4,
+        -0.6249999999999999
+       ],
+       [
+        -0.8,
+        -0.6249999999999999
+       ],
+       [
+        -0.8,
+        1.025
+       ],
+       [
+        -1.4,
+        1.025
+       ]
+      ]
+     }
+    },
+    {
+     "name": "right_side",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        0.8,
+        -0.6249999999999999
+       ],
+       [
+        1.4,
+        -0.6249999999999999
+       ],
+       [
+        1.4,
+        1.025
+       ],
+       [
+        0.8,
+        1.025
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nightstand_l",
+   "category": "storage",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.4,
+    "height": 0.55
+   },
+   "label": "nightstand"
+  },
+  {
+   "id": "nightstand_r",
+   "category": "storage",
+   "dimensions": {
+    "width": 0.45,
+    "depth": 0.4,
+    "height": 0.55
+   },
+   "label": "nightstand"
+  },
+  {
+   "id": "wardrobe",
+   "category": "storage",
+   "dimensions": {
+    "width": 1.2,
+    "depth": 0.6,
+    "height": 2.0
+   },
+   "label": "wardrobe",
+   "clearance_zones": [
+    {
+     "name": "doors",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.6,
+        0.3
+       ],
+       [
+        0.6,
+        0.3
+       ],
+       [
+        0.6,
+        1.1
+       ],
+       [
+        -0.6,
+        1.1
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "desk",
+   "category": "table",
+   "dimensions": {
+    "width": 1.2,
+    "depth": 0.6,
+    "height": 0.75
+   },
+   "label": "desk"
+  },
+  {
+   "id": "desk_chair",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.5,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.25
+       ],
+       [
+        -0.25,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "constraints": [
+  {
+   "type": "against_wall",
+   "id": "bed_head_on_wall",
+   "a": "bed",
+   "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "ns_l_wall",
+   "a": "nightstand_l",
+   "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "ns_r_wall",
+   "a": "nightstand_r",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "ns_l_by_bed",
+   "a": "nightstand_l",
+   "b": "bed",
+   "max_distance": 0.05,
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "ns_r_by_bed",
+   "a": "nightstand_r",
+   "b": "bed",
+   "max_distance": 0.05,
+   "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "wardrobe_on_wall",
+   "a": "wardrobe",
+   "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "desk_on_wall",
+   "a": "desk",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "desk_chair_at_desk",
+   "a": "desk_chair",
+   "b": "desk",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "desk_chair_faces_desk",
+   "a": "desk_chair",
+   "b": "desk",
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "desk_faces_desk_chair",
+   "a": "desk",
+   "b": "desk_chair",
+   "hard": true,
+   "origin": "rule_library",
+   "rationale": "chair sits in front of the desk, not beside it"
+  },
+  {
+   "type": "distance_at_least",
+   "id": "desk_away_from_bed",
+   "a": "desk",
+   "b": "bed",
+   "min_distance": 0.6,
+   "weight": 0.5
+  },
+  {
+   "type": "keep_clear",
+   "id": "window_clear",
+   "opening_id": "window",
+   "distance": 0.4,
+   "weight": 0.5,
+   "origin": "rule_library"
+  },
+  {
+   "type": "walkway_width",
+   "id": "rule_walkway",
+   "min_width": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_door",
+   "opening_id": "door",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  }
+ ]
+}

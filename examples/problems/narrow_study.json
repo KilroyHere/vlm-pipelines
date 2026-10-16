@@ -1,0 +1,356 @@
+{
+ "schema_version": "0.1.0",
+ "id": "narrow_study",
+ "room": {
+  "id": "room_narrow_study",
+  "floor": {
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     2.2,
+     0
+    ],
+    [
+     2.2,
+     5.5
+    ],
+    [
+     0,
+     5.5
+    ]
+   ]
+  },
+  "ceiling_height": 2.6,
+  "walls": [
+   {
+    "id": "w_south",
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     2.2,
+     0
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_east",
+    "start": [
+     2.2,
+     0
+    ],
+    "end": [
+     2.2,
+     5.5
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_north",
+    "start": [
+     2.2,
+     5.5
+    ],
+    "end": [
+     0,
+     5.5
+    ],
+    "height": 2.6
+   },
+   {
+    "id": "w_west",
+    "start": [
+     0,
+     5.5
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "height": 2.6
+   }
+  ],
+  "openings": [
+   {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_west",
+    "offset": 0.7,
+    "width": 0.8,
+    "height": 2.1,
+    "swing": {
+     "into_room": true,
+     "hinge": "end"
+    }
+   },
+   {
+    "id": "window",
+    "type": "window",
+    "wall_id": "w_north",
+    "offset": 1.1,
+    "width": 1.2,
+    "height": 1.2,
+    "sill_height": 0.9
+   }
+  ],
+  "obstacles": []
+ },
+ "assets": [
+  {
+   "id": "desk",
+   "category": "table",
+   "dimensions": {
+    "width": 1.2,
+    "depth": 0.6,
+    "height": 0.75
+   },
+   "label": "desk"
+  },
+  {
+   "id": "desk_chair",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.5,
+    "depth": 0.5,
+    "height": 0.9
+   },
+   "label": "chair",
+   "clearance_zones": [
+    {
+     "name": "pull_out",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.7
+       ],
+       [
+        0.25,
+        -0.25
+       ],
+       [
+        -0.25,
+        -0.25
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "shelf_1",
+   "category": "storage",
+   "dimensions": {
+    "width": 0.9,
+    "depth": 0.35,
+    "height": 1.8
+   },
+   "label": "bookshelf",
+   "clearance_zones": [
+    {
+     "name": "access",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.7749999999999999
+       ],
+       [
+        -0.45,
+        0.7749999999999999
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "shelf_2",
+   "category": "storage",
+   "dimensions": {
+    "width": 0.9,
+    "depth": 0.35,
+    "height": 1.8
+   },
+   "label": "bookshelf",
+   "clearance_zones": [
+    {
+     "name": "access",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.175
+       ],
+       [
+        0.45,
+        0.7749999999999999
+       ],
+       [
+        -0.45,
+        0.7749999999999999
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading_chair",
+   "category": "chair",
+   "dimensions": {
+    "width": 0.85,
+    "depth": 0.85,
+    "height": 0.9
+   },
+   "label": "armchair",
+   "clearance_zones": [
+    {
+     "name": "legroom",
+     "purpose": "use",
+     "polygon": {
+      "points": [
+       [
+        -0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.425
+       ],
+       [
+        0.4,
+        0.875
+       ],
+       [
+        -0.4,
+        0.875
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "side_table",
+   "category": "table",
+   "dimensions": {
+    "width": 0.4,
+    "depth": 0.4,
+    "height": 0.55
+   },
+   "label": "side table"
+  }
+ ],
+ "constraints": [
+  {
+   "type": "against_wall",
+   "id": "desk_under_window",
+   "a": "desk",
+   "wall_id": "w_north",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "chair_at_desk",
+   "a": "desk_chair",
+   "b": "desk",
+   "max_distance": 0.1,
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "chair_faces_desk",
+   "a": "desk_chair",
+   "b": "desk",
+   "hard": true
+  },
+  {
+   "type": "faces",
+   "id": "desk_faces_chair",
+   "a": "desk",
+   "b": "desk_chair",
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "against_wall",
+   "id": "shelf_1_wall",
+   "a": "shelf_1",
+   "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "shelf_2_wall",
+   "a": "shelf_2",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "shelves_together",
+   "a": "shelf_1",
+   "b": "shelf_2",
+   "max_distance": 0.05,
+   "weight": 0.5
+  },
+  {
+   "type": "against_wall",
+   "id": "reading_chair_wall",
+   "a": "reading_chair",
+   "weight": 0.5
+  },
+  {
+   "type": "near",
+   "id": "side_table_by_chair",
+   "a": "side_table",
+   "b": "reading_chair",
+   "max_distance": 0.1,
+   "weight": 1.0
+  },
+  {
+   "type": "faces",
+   "id": "reader_faces_shelves",
+   "a": "reading_chair",
+   "b": "shelf_1",
+   "weight": 0.3
+  },
+  {
+   "type": "walkway_width",
+   "id": "rule_walkway",
+   "min_width": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
+   "type": "keep_clear",
+   "id": "rule_clear_door",
+   "opening_id": "door",
+   "distance": 0.8,
+   "hard": true,
+   "origin": "rule_library"
+  }
+ ]
+}
