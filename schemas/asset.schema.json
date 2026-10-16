@@ -1,0 +1,224 @@
+{
+  "$defs": {
+    "AssetSource": {
+      "properties": {
+        "dimensions_from": {
+          "enum": [
+            "roomplan",
+            "listing",
+            "manual",
+            "mesh"
+          ],
+          "title": "Dimensions From",
+          "type": "string"
+        },
+        "geometry_from": {
+          "default": "box",
+          "enum": [
+            "box",
+            "sam3d",
+            "catalog",
+            "object_capture",
+            "manual"
+          ],
+          "title": "Geometry From",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dimensions_from"
+      ],
+      "title": "AssetSource",
+      "type": "object"
+    },
+    "ClearanceZone": {
+      "description": "Local-frame region that must stay free of *other assets' footprints* for\nthis asset to be usable. Clearance zones may overlap each other\n(two chairs can share the same walking space).",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "polygon": {
+          "$ref": "#/$defs/Polygon2D"
+        },
+        "purpose": {
+          "default": "access",
+          "enum": [
+            "access",
+            "swing",
+            "use"
+          ],
+          "title": "Purpose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "polygon"
+      ],
+      "title": "ClearanceZone",
+      "type": "object"
+    },
+    "Dimensions": {
+      "properties": {
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "depth": {
+          "exclusiveMinimum": 0,
+          "title": "Depth",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        }
+      },
+      "required": [
+        "width",
+        "depth",
+        "height"
+      ],
+      "title": "Dimensions",
+      "type": "object"
+    },
+    "MeshRef": {
+      "description": "Visual mesh, already normalized into the asset's canonical local frame.",
+      "properties": {
+        "uri": {
+          "title": "Uri",
+          "type": "string"
+        },
+        "format": {
+          "default": "glb",
+          "enum": [
+            "glb",
+            "obj",
+            "ply"
+          ],
+          "title": "Format",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri"
+      ],
+      "title": "MeshRef",
+      "type": "object"
+    },
+    "Mount": {
+      "enum": [
+        "floor",
+        "wall"
+      ],
+      "title": "Mount",
+      "type": "string"
+    },
+    "Polygon2D": {
+      "description": "Simple polygon in the XY plane. Stored counter-clockwise, not closed\n(the first point is not repeated at the end).",
+      "properties": {
+        "points": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "title": "Polygon2D",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "category": {
+      "title": "Category",
+      "type": "string"
+    },
+    "label": {
+      "default": "",
+      "title": "Label",
+      "type": "string"
+    },
+    "dimensions": {
+      "$ref": "#/$defs/Dimensions"
+    },
+    "footprint": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Polygon2D"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "clearance_zones": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ClearanceZone"
+      },
+      "title": "Clearance Zones",
+      "type": "array"
+    },
+    "mount": {
+      "$ref": "#/$defs/Mount",
+      "default": "floor"
+    },
+    "movable": {
+      "default": true,
+      "title": "Movable",
+      "type": "boolean"
+    },
+    "mesh": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MeshRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "source": {
+      "$ref": "#/$defs/AssetSource",
+      "default": {
+        "dimensions_from": "manual",
+        "geometry_from": "box"
+      }
+    },
+    "front_confirmed": {
+      "default": false,
+      "title": "Front Confirmed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "category",
+    "dimensions"
+  ],
+  "title": "Asset",
+  "type": "object"
+}

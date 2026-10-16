@@ -1,0 +1,185 @@
+{
+  "$defs": {
+    "ConstraintResult": {
+      "properties": {
+        "constraint_id": {
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "hard": {
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "satisfied": {
+          "title": "Satisfied",
+          "type": "boolean"
+        },
+        "violation": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Violation",
+          "type": "number"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detail"
+        }
+      },
+      "required": [
+        "constraint_id",
+        "hard",
+        "satisfied"
+      ],
+      "title": "ConstraintResult",
+      "type": "object"
+    },
+    "Layout": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "placements": {
+          "items": {
+            "$ref": "#/$defs/Placement"
+          },
+          "title": "Placements",
+          "type": "array"
+        },
+        "cost": {
+          "title": "Cost",
+          "type": "number"
+        },
+        "feasible": {
+          "title": "Feasible",
+          "type": "boolean"
+        },
+        "results": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ConstraintResult"
+          },
+          "title": "Results",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "placements",
+        "cost",
+        "feasible"
+      ],
+      "title": "Layout",
+      "type": "object"
+    },
+    "Placement": {
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "pose": {
+          "$ref": "#/$defs/Pose2D"
+        }
+      },
+      "required": [
+        "asset_id",
+        "pose"
+      ],
+      "title": "Placement",
+      "type": "object"
+    },
+    "Pose2D": {
+      "description": "Placement of an asset's local frame on the floor.",
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "yaw": {
+          "default": 0.0,
+          "title": "Yaw",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Pose2D",
+      "type": "object"
+    },
+    "SolveStats": {
+      "properties": {
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        },
+        "seconds": {
+          "minimum": 0,
+          "title": "Seconds",
+          "type": "number"
+        },
+        "evaluations": {
+          "title": "Evaluations",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seed",
+        "seconds",
+        "evaluations"
+      ],
+      "title": "SolveStats",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "problem_id": {
+      "title": "Problem Id",
+      "type": "string"
+    },
+    "layouts": {
+      "items": {
+        "$ref": "#/$defs/Layout"
+      },
+      "title": "Layouts",
+      "type": "array"
+    },
+    "stats": {
+      "$ref": "#/$defs/SolveStats"
+    },
+    "notes": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "problem_id",
+    "layouts",
+    "stats"
+  ],
+  "title": "SolveResult",
+  "type": "object"
+}

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+out/
+# Large generated / downloaded artifacts never go in git
+*.glb
+*.ply
+*.usdz
+spikes/sam3d/data/
+spikes/sam3d/outputs/
+!tests/fixtures/**/*.glb

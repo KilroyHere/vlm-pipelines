@@ -1,0 +1,54 @@
+{
+  "schema_version": "0.1.0",
+  "id": "living_room_basic",
+  "room": {
+    "id": "living_room_5x4",
+    "floor": {"points": [[0, 0], [5, 0], [5, 4], [0, 4]]},
+    "ceiling_height": 2.6,
+    "walls": [
+      {"id": "w_south", "start": [0, 0], "end": [5, 0], "height": 2.6},
+      {"id": "w_east", "start": [5, 0], "end": [5, 4], "height": 2.6},
+      {"id": "w_north", "start": [5, 4], "end": [0, 4], "height": 2.6},
+      {"id": "w_west", "start": [0, 4], "end": [0, 0], "height": 2.6}
+    ],
+    "openings": [
+      {"id": "door_main", "type": "door", "wall_id": "w_south", "offset": 0.6, "width": 0.9,
+       "height": 2.1, "swing": {"into_room": true, "hinge": "start"}},
+      {"id": "window_north", "type": "window", "wall_id": "w_north", "offset": 2.5, "width": 1.6,
+       "height": 1.2, "sill_height": 0.9}
+    ],
+    "obstacles": [
+      {"id": "radiator", "label": "radiator", "height": 0.6,
+       "footprint": {"points": [[4.9, 1.5], [5.0, 1.5], [5.0, 2.5], [4.9, 2.5]]}}
+    ]
+  },
+  "assets": [
+    {"id": "sofa", "category": "sofa", "label": "3-seat sofa",
+     "dimensions": {"width": 2.2, "depth": 0.95, "height": 0.85},
+     "clearance_zones": [{"name": "legroom", "purpose": "use",
+       "polygon": {"points": [[-1.0, 0.475], [1.0, 0.475], [1.0, 0.975], [-1.0, 0.975]]}}]},
+    {"id": "tv_stand", "category": "television", "label": "TV on stand",
+     "dimensions": {"width": 1.6, "depth": 0.45, "height": 0.55}},
+    {"id": "coffee_table", "category": "table", "label": "coffee table",
+     "dimensions": {"width": 1.1, "depth": 0.6, "height": 0.45}},
+    {"id": "armchair", "category": "chair", "label": "armchair",
+     "dimensions": {"width": 0.85, "depth": 0.85, "height": 0.9},
+     "clearance_zones": [{"name": "legroom", "purpose": "use",
+       "polygon": {"points": [[-0.4, 0.425], [0.4, 0.425], [0.4, 0.875], [-0.4, 0.875]]}}]},
+    {"id": "bookshelf", "category": "storage", "label": "bookshelf",
+     "dimensions": {"width": 0.9, "depth": 0.35, "height": 1.8},
+     "clearance_zones": [{"name": "access", "purpose": "access",
+       "polygon": {"points": [[-0.45, 0.175], [0.45, 0.175], [0.45, 0.775], [-0.45, 0.775]]}}]}
+  ],
+  "constraints": [
+    {"type": "faces", "id": "sofa_faces_tv", "a": "sofa", "b": "tv_stand", "hard": true},
+    {"type": "against_wall", "id": "tv_on_wall", "a": "tv_stand", "hard": true},
+    {"type": "near", "id": "table_near_sofa", "a": "coffee_table", "b": "sofa", "max_distance": 0.5},
+    {"type": "distance_at_least", "id": "table_legroom", "a": "coffee_table", "b": "sofa", "min_distance": 0.35},
+    {"type": "faces", "id": "armchair_faces_table", "a": "armchair", "b": "coffee_table", "weight": 0.5},
+    {"type": "against_wall", "id": "bookshelf_on_wall", "a": "bookshelf", "hard": true},
+    {"type": "walkway_width", "id": "rule_walkway", "min_width": 0.9, "hard": true, "origin": "rule_library"},
+    {"type": "keep_clear", "id": "rule_door_clear", "opening_id": "door_main", "distance": 0.9, "hard": true, "origin": "rule_library"},
+    {"type": "keep_clear", "id": "rule_window_clear", "opening_id": "window_north", "distance": 0.4, "weight": 0.5, "origin": "rule_library"}
+  ]
+}

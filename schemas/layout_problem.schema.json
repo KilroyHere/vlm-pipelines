@@ -1,0 +1,1085 @@
+{
+  "$defs": {
+    "AgainstWall": {
+      "description": "a's back (local -Y side) is within ``max_gap`` of a wall (any wall, or ``wall_id``).",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "rule_library",
+            "user",
+            "vlm"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "type": {
+          "const": "against_wall",
+          "default": "against_wall",
+          "title": "Type",
+          "type": "string"
+        },
+        "a": {
+          "title": "A",
+          "type": "string"
+        },
+        "wall_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wall Id"
+        },
+        "max_gap": {
+          "default": 0.05,
+          "minimum": 0,
+          "title": "Max Gap",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "a"
+      ],
+      "title": "AgainstWall",
+      "type": "object"
+    },
+    "Asset": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "label": {
+          "default": "",
+          "title": "Label",
+          "type": "string"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/Dimensions"
+        },
+        "footprint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Polygon2D"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "clearance_zones": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ClearanceZone"
+          },
+          "title": "Clearance Zones",
+          "type": "array"
+        },
+        "mount": {
+          "$ref": "#/$defs/Mount",
+          "default": "floor"
+        },
+        "movable": {
+          "default": true,
+          "title": "Movable",
+          "type": "boolean"
+        },
+        "mesh": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MeshRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source": {
+          "$ref": "#/$defs/AssetSource",
+          "default": {
+            "dimensions_from": "manual",
+            "geometry_from": "box"
+          }
+        },
+        "front_confirmed": {
+          "default": false,
+          "title": "Front Confirmed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "dimensions"
+      ],
+      "title": "Asset",
+      "type": "object"
+    },
+    "AssetSource": {
+      "properties": {
+        "dimensions_from": {
+          "enum": [
+            "roomplan",
+            "listing",
+            "manual",
+            "mesh"
+          ],
+          "title": "Dimensions From",
+          "type": "string"
+        },
+        "geometry_from": {
+          "default": "box",
+          "enum": [
+            "box",
+            "sam3d",
+            "catalog",
+            "object_capture",
+            "manual"
+          ],
+          "title": "Geometry From",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dimensions_from"
+      ],
+      "title": "AssetSource",
+      "type": "object"
+    },
+    "ClearanceZone": {
+      "description": "Local-frame region that must stay free of *other assets' footprints* for\nthis asset to be usable. Clearance zones may overlap each other\n(two chairs can share the same walking space).",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "polygon": {
+          "$ref": "#/$defs/Polygon2D"
+        },
+        "purpose": {
+          "default": "access",
+          "enum": [
+            "access",
+            "swing",
+            "use"
+          ],
+          "title": "Purpose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "polygon"
+      ],
+      "title": "ClearanceZone",
+      "type": "object"
+    },
+    "Dimensions": {
+      "properties": {
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "depth": {
+          "exclusiveMinimum": 0,
+          "title": "Depth",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        }
+      },
+      "required": [
+        "width",
+        "depth",
+        "height"
+      ],
+      "title": "Dimensions",
+      "type": "object"
+    },
+    "DistanceAtLeast": {
+      "description": "Footprint-to-footprint distance between a and b is at least ``min_distance``.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "rule_library",
+            "user",
+            "vlm"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "type": {
+          "const": "distance_at_least",
+          "default": "distance_at_least",
+          "title": "Type",
+          "type": "string"
+        },
+        "a": {
+          "title": "A",
+          "type": "string"
+        },
+        "b": {
+          "title": "B",
+          "type": "string"
+        },
+        "min_distance": {
+          "minimum": 0,
+          "title": "Min Distance",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "a",
+        "b",
+        "min_distance"
+      ],
+      "title": "DistanceAtLeast",
+      "type": "object"
+    },
+    "DoorSwing": {
+      "description": "Door leaf swing. The swept quarter-disc (radius = opening width) must stay clear.",
+      "properties": {
+        "into_room": {
+          "default": true,
+          "title": "Into Room",
+          "type": "boolean"
+        },
+        "hinge": {
+          "default": "start",
+          "enum": [
+            "start",
+            "end"
+          ],
+          "title": "Hinge",
+          "type": "string"
+        }
+      },
+      "title": "DoorSwing",
+      "type": "object"
+    },
+    "Faces": {
+      "description": "a's front points at b's centre, within ``max_angle_deg``.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "rule_library",
+            "user",
+            "vlm"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "type": {
+          "const": "faces",
+          "default": "faces",
+          "title": "Type",
+          "type": "string"
+        },
+        "a": {
+          "title": "A",
+          "type": "string"
+        },
+        "b": {
+          "title": "B",
+          "type": "string"
+        },
+        "max_angle_deg": {
+          "default": 20.0,
+          "exclusiveMinimum": 0,
+          "title": "Max Angle Deg",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "a",
+        "b"
+      ],
+      "title": "Faces",
+      "type": "object"
+    },
+    "Fixed": {
+      "description": "a keeps its initial pose (requires ``LayoutProblem.initial`` to contain a).",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "rule_library",
+            "user",
+            "vlm"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "type": {
+          "const": "fixed",
+          "default": "fixed",
+          "title": "Type",
+          "type": "string"
+        },
+        "a": {
+          "title": "A",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "a"
+      ],
+      "title": "Fixed",
+      "type": "object"
+    },
+    "KeepClear": {
+      "description": "No footprint within ``distance`` in front of an opening (door, window, passage).\nFor windows, only assets taller than the sill count.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "rule_library",
+            "user",
+            "vlm"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "type": {
+          "const": "keep_clear",
+          "default": "keep_clear",
+          "title": "Type",
+          "type": "string"
+        },
+        "opening_id": {
+          "title": "Opening Id",
+          "type": "string"
+        },
+        "distance": {
+          "default": 0.6,
+          "exclusiveMinimum": 0,
+          "title": "Distance",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "opening_id"
+      ],
+      "title": "KeepClear",
+      "type": "object"
+    },
+    "MeshRef": {
+      "description": "Visual mesh, already normalized into the asset's canonical local frame.",
+      "properties": {
+        "uri": {
+          "title": "Uri",
+          "type": "string"
+        },
+        "format": {
+          "default": "glb",
+          "enum": [
+            "glb",
+            "obj",
+            "ply"
+          ],
+          "title": "Format",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri"
+      ],
+      "title": "MeshRef",
+      "type": "object"
+    },
+    "Mount": {
+      "enum": [
+        "floor",
+        "wall"
+      ],
+      "title": "Mount",
+      "type": "string"
+    },
+    "Near": {
+      "description": "Footprint-to-footprint distance between a and b is at most ``max_distance``.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "rule_library",
+            "user",
+            "vlm"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "type": {
+          "const": "near",
+          "default": "near",
+          "title": "Type",
+          "type": "string"
+        },
+        "a": {
+          "title": "A",
+          "type": "string"
+        },
+        "b": {
+          "title": "B",
+          "type": "string"
+        },
+        "max_distance": {
+          "minimum": 0,
+          "title": "Max Distance",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "a",
+        "b",
+        "max_distance"
+      ],
+      "title": "Near",
+      "type": "object"
+    },
+    "Obstacle": {
+      "description": "Immovable thing the layout must avoid (column, radiator, built-in).",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "footprint": {
+          "$ref": "#/$defs/Polygon2D"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "footprint",
+        "height"
+      ],
+      "title": "Obstacle",
+      "type": "object"
+    },
+    "Opening": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/OpeningType"
+        },
+        "wall_id": {
+          "title": "Wall Id",
+          "type": "string"
+        },
+        "offset": {
+          "description": "Distance along the wall from its start to the opening centre",
+          "title": "Offset",
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "sill_height": {
+          "default": 0.0,
+          "description": "Height of the opening's bottom edge",
+          "minimum": 0.0,
+          "title": "Sill Height",
+          "type": "number"
+        },
+        "swing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DoorSwing"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "wall_id",
+        "offset",
+        "width",
+        "height"
+      ],
+      "title": "Opening",
+      "type": "object"
+    },
+    "OpeningType": {
+      "enum": [
+        "door",
+        "window",
+        "opening"
+      ],
+      "title": "OpeningType",
+      "type": "string"
+    },
+    "Parallel": {
+      "description": "a and b orientation axes are parallel (yaw difference modulo 180 deg).",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "rule_library",
+            "user",
+            "vlm"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "type": {
+          "const": "parallel",
+          "default": "parallel",
+          "title": "Type",
+          "type": "string"
+        },
+        "a": {
+          "title": "A",
+          "type": "string"
+        },
+        "b": {
+          "title": "B",
+          "type": "string"
+        },
+        "max_angle_deg": {
+          "default": 5.0,
+          "exclusiveMinimum": 0,
+          "title": "Max Angle Deg",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "a",
+        "b"
+      ],
+      "title": "Parallel",
+      "type": "object"
+    },
+    "Polygon2D": {
+      "description": "Simple polygon in the XY plane. Stored counter-clockwise, not closed\n(the first point is not repeated at the end).",
+      "properties": {
+        "points": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "title": "Polygon2D",
+      "type": "object"
+    },
+    "Pose2D": {
+      "description": "Placement of an asset's local frame on the floor.",
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "yaw": {
+          "default": 0.0,
+          "title": "Yaw",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Pose2D",
+      "type": "object"
+    },
+    "Room": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "floor": {
+          "$ref": "#/$defs/Polygon2D"
+        },
+        "ceiling_height": {
+          "exclusiveMinimum": 0,
+          "title": "Ceiling Height",
+          "type": "number"
+        },
+        "walls": {
+          "items": {
+            "$ref": "#/$defs/Wall"
+          },
+          "title": "Walls",
+          "type": "array"
+        },
+        "openings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Opening"
+          },
+          "title": "Openings",
+          "type": "array"
+        },
+        "obstacles": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Obstacle"
+          },
+          "title": "Obstacles",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "floor",
+        "ceiling_height",
+        "walls"
+      ],
+      "title": "Room",
+      "type": "object"
+    },
+    "WalkwayWidth": {
+      "description": "Every door/passage and every asset's access zone stay mutually reachable\nthrough free floor at least ``min_width`` wide.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "rule_library",
+            "user",
+            "vlm"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "type": {
+          "const": "walkway_width",
+          "default": "walkway_width",
+          "title": "Type",
+          "type": "string"
+        },
+        "min_width": {
+          "default": 0.9,
+          "exclusiveMinimum": 0,
+          "title": "Min Width",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "WalkwayWidth",
+      "type": "object"
+    },
+    "Wall": {
+      "description": "A straight wall segment. The room interior is on the left when walking\nfrom ``start`` to ``end`` (i.e. walls run counter-clockwise around the floor).",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "start": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Start",
+          "type": "array"
+        },
+        "end": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "End",
+          "type": "array"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "thickness": {
+          "default": 0.1,
+          "exclusiveMinimum": 0,
+          "title": "Thickness",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "start",
+        "end",
+        "height"
+      ],
+      "title": "Wall",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "room": {
+      "$ref": "#/$defs/Room"
+    },
+    "assets": {
+      "items": {
+        "$ref": "#/$defs/Asset"
+      },
+      "title": "Assets",
+      "type": "array"
+    },
+    "constraints": {
+      "default": [],
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "against_wall": "#/$defs/AgainstWall",
+            "distance_at_least": "#/$defs/DistanceAtLeast",
+            "faces": "#/$defs/Faces",
+            "fixed": "#/$defs/Fixed",
+            "keep_clear": "#/$defs/KeepClear",
+            "near": "#/$defs/Near",
+            "parallel": "#/$defs/Parallel",
+            "walkway_width": "#/$defs/WalkwayWidth"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/Faces"
+          },
+          {
+            "$ref": "#/$defs/AgainstWall"
+          },
+          {
+            "$ref": "#/$defs/Near"
+          },
+          {
+            "$ref": "#/$defs/DistanceAtLeast"
+          },
+          {
+            "$ref": "#/$defs/Parallel"
+          },
+          {
+            "$ref": "#/$defs/KeepClear"
+          },
+          {
+            "$ref": "#/$defs/WalkwayWidth"
+          },
+          {
+            "$ref": "#/$defs/Fixed"
+          }
+        ]
+      },
+      "title": "Constraints",
+      "type": "array"
+    },
+    "initial": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Pose2D"
+      },
+      "description": "Current/scanned poses, keyed by asset id",
+      "title": "Initial",
+      "type": "object"
+    }
+  },
+  "required": [
+    "id",
+    "room",
+    "assets"
+  ],
+  "title": "LayoutProblem",
+  "type": "object"
+}
