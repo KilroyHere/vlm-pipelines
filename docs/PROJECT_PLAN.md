@@ -31,7 +31,7 @@ WS-A and WS-B share **only** `roomlayout.schema`. Neither imports the other.
 
 Result: 12 problems; every feasible one reaches a first feasible layout in ≤ 1.5 s
 (seeds 0–2, 4 cores); `crowded_studio` is the tightest (7–10 distinct feasible
-layouts). Details: [solver.md](solver.md). In progress: `elevation` support (v0.3.0).
+layouts). Details: [solver.md](solver.md). Contract v0.3.0 `elevation` supported (wall TV above a console).
 
 ### M2a: Asset normalization (WS-B, CPU)
 - [x] Raw mesh (any common format) → canonical frame (ADR-0001), fitted to measured
@@ -100,3 +100,6 @@ them.
 - 2026-10-16: WS-A delivered M1 (all exit criteria met). Integration checkpoint 1 passes. Contract
   v0.3.0 (`elevation`, solve stats, immovable assets need `initial`, ADR-0005 zone/wall policy).
   Deferred: line of sight, chair distribution. WS-A implementing `elevation`.
+- 2026-10-16: WS-A delivered v0.3.0 solver support (`elevation`, solve stats, immovable assets).
+  Lead review: fast + slow suites green, renders checked. **M1 and M2a closed; M2b waits on EXT**
+  (Hugging Face checkpoint access, GPU, license confirmation). Next: M3 constraints + rule library.

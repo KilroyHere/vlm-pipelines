@@ -14,8 +14,10 @@ python -m roomlayout.solver examples/problems/bedroom_basic.json --out out/bedro
     [--k 10 --seed 0 --budget 10 --workers 4 --no-png]
 ```
 
-The CLI writes `result.json` (a `SolveResult`), `diagnostics.json` (search statistics the
-contract has no field for yet; see "Schema change requests") and `layout_NN.png` per layout.
+The CLI writes `result.json` (a `SolveResult`; `stats` carries `restarts`,
+`time_to_first_feasible_s` and `time_limited` since contract v0.3.0), `diagnostics.json`
+(extra search statistics: feasible restarts, feasible layouts returned) and `layout_NN.png`
+per layout.
 
 ## Modules
 
@@ -93,13 +95,31 @@ applies). Asset clearance zones may overlap a swing.
 | `near(a,b)` | shapely distance between footprints ≤ `max_distance` (0 when they touch or overlap) | m beyond |
 | `distance_at_least(a,b)` | footprint distance ≥ `min_distance` | m short |
 | `parallel(a,b)` | \|Δyaw\| modulo 180° ≤ `max_angle_deg` | rad beyond |
-| `keep_clear(opening)` | rectangle = opening width × `distance` along the interior normal. Every footprint counts for doors/passages; for windows only assets with `height > sill_height` | m² of footprint inside |
+| `keep_clear(opening)` | rectangle = opening width × `distance` along the interior normal. For doors/passages every footprint counts except assets mounted entirely above the opening; for windows only assets whose top (`elevation + height`) is above `sill_height` | m² of footprint inside |
 | `walkway_width` | see below | see below |
 | `fixed(a)` | hard: the asset is **pinned** at `initial` and never moved (always satisfied). Soft: the asset may move; violation = m displacement + rad rotation from `initial` | as stated |
 
-`movable: false` assets are pinned at their `initial` pose too. Without an initial pose
-they are treated as movable, with a note (the contract does not require one).
-A pair constraint relating an asset to itself is ignored, with a note.
+`movable: false` assets are pinned at their `initial` pose too (the contract requires one
+since v0.3.0). A pair constraint relating an asset to itself is ignored, with a note.
+
+### Elevation (contract v0.3.0)
+
+Each asset occupies the vertical extent `[elevation, elevation + height]`.
+- `no_overlap` applies only to pairs whose extents overlap; extents that merely touch,
+  e.g. a TV at 1.0 m over a 0.5 m console, don't conflict. This is decided once per pair
+  when the problem is compiled.
+- Clearance zones and walkways are floor-level space for a walker `WALKER_HEIGHT = 1.8 m`
+  tall. Assets with `elevation ≥ 1.8 m` never enter a zone and never block the walkway;
+  anything lower does.
+- Obstacles stand on the floor, so an asset conflicts with one only if its bottom is below
+  the obstacle's top (e.g. a wall cabinet above a radiator is fine).
+- The door swing applies only to assets whose bottom is below the opening's top.
+- Window `keep_clear` counts assets whose top is above the sill. Door/passage
+  `keep_clear` ignores assets mounted entirely above the opening.
+- `against_wall` / `wall_mount` may not cross a window whose glass `[sill, sill + height]`
+  overlaps the asset's extent, nor a door/passage unless the asset is above it.
+- The diversity signature includes elevation. The "footprints exceed the floor" proof
+  only sums floor-standing assets (`elevation = 0`), which all overlap vertically.
 
 **Walkway width.** Free floor = floor − footprints − obstacles. It is eroded by
 `r = min_width / 2` and computed as `erode(floor, r) − ⋃ dilate(footprint, r) − ⋃
@@ -253,7 +273,7 @@ One PNG per layout. It shows:
 | `l_shaped_living_dining` | L-shaped floor, passage + door, living group + dining table with seating zones and 4 chairs, sideboard |
 | `office_with_column` | column obstacle, 2 desk sets, shelves, an octagonal (non-rectangular) meeting table |
 | `narrow_study` | 2.2 × 5.5 m room, `against_wall` with `wall_id`, chained walkway |
-| `wall_tv_living` | `mount: wall` TV, `parallel`, viewing distance (`distance_at_least` + soft `near`) |
+| `wall_tv_living` | `mount: wall` TV at `elevation` 1.0 m hanging above a console (`near` 0 m, no overlap conflict), `parallel`, viewing distance (`distance_at_least` + soft `near`), the window blocks hanging the TV on the glass |
 | `fixed_piano_room` | hard `fixed` piano, `movable: false` built-in, soft `fixed` sofa, `initial` poses (some violating rules), piano bench zone with `allowed_categories` |
 | `crowded_studio` | 10 assets in 22 m², bed + sofa/TV + dining + desk |
 | `dining_room` | table with seating zones (`allowed_categories: [chair]`), 6 identical chairs, sideboard, passage |
@@ -297,7 +317,7 @@ results / restarts used. "time" = max wall time over seeds, incl. pool start-up.
 | `living_room_basic` | 5 | 0.04 / 0.05 | 10 / 10 / 10 | 0 / 0 / 0 | 14/16 / 16/16 / 13/16 | 3.9 |
 | `narrow_study` | 6 | 0.09 / 0.18 | 10 / 10 / 10 | 0 / 0 / 0 | 16/16 / 13/16 / 16/16 | 3.8 |
 | `office_with_column` | 8 | 0.09 / 0.29 | 10 / 10 / 10 | 0 / 0 / 0 | 15/16 / 15/16 / 16/16 | 5.5 |
-| `wall_tv_living` | 6 | 0.04 / 0.07 | 10 / 10 / 10 | 0 / 0 / 0 | 14/16 / 13/16 / 14/16 | 3.9 |
+| `wall_tv_living` | 7 | 0.05 / 0.17 | 10 / 10 / 10 | 0 / 0 / 0 | 9/16 / 9/16 / 8/16 | 4.4 |
 
 Measured 2026-10-16 on the shared 4-core dev box. Another workstream's test runs
 sometimes competed for CPU, so treat the times as upper bounds. Feasible problems stop
@@ -312,16 +332,16 @@ Throughput is about 2,000–2,500 candidate evaluations per second per core (sha
 
 ## Known limitations
 
-- **No elevation.** Wall-mounted assets are checked with their floor footprint, so a TV
-  cannot hang above a TV console (overlap), and window sill checks use the asset's own
-  height rather than its mounting height. See the schema change requests.
-- **No line of sight.** `faces` is purely angular: a sofa can "face" a TV across a dining
+- **Elevation is a single slab per asset.** Tuck-under geometry (a chair under a table)
+  still needs height-banded footprints (ADR-0003).
+- **No line of sight** (backlog). `faces` is purely angular: a sofa can "face" a TV across a dining
   table (seen in `crowded_studio`).
 - **Under-constrained problems give arbitrary but valid layouts.** Many zero-cost layouts
   tie, and nothing prefers e.g. a coffee table *in front of* the sofa over beside it
-  unless the problem says so (`living_room_basic` has no `faces(sofa, coffee_table)`).
+  unless the problem says so (`living_room_basic` lacked `faces(sofa, coffee_table)` and
+  `faces(tv_stand, sofa)` until v0.3.0).
   There is no built-in aesthetic prior; the rule library must emit these preferences.
-- **No even distribution.** Chairs around a table end up where they fit (two at each end
+- **No even distribution** (backlog). Chairs around a table end up where they fit (two at each end
   of a 1.8 m table is valid); nothing in the vocabulary expresses "3 per long side".
 - Yaw is snapped (multiples of 90° + wall-aligned). There are no free angles (e.g. a
   45° armchair in a corner).
@@ -332,8 +352,8 @@ Throughput is about 2,000–2,500 candidate evaluations per second per core (sha
 
 ## Next steps
 
-- Elevation / vertical extent for wall-mounted and tuck-under assets (see the schema
-  requests); line-of-sight for `faces`.
+- Backlog: line-of-sight for `faces` (tall blockers only) and even distribution of
+  chairs; height-banded footprints for tuck-under.
 - A rule library that turns categories into the standard relations used in the examples
   (desk ↔ chair mutual faces, sofa–TV distance, coffee table in front of sofa, seating
   zones).
@@ -342,24 +362,12 @@ Throughput is about 2,000–2,500 candidate evaluations per second per core (sha
 - Optional free-angle refinement (gradient or local continuous yaw) after annealing.
 - A VLM critic on the rendered top-k (ARCHITECTURE stage 7) to rerank "valid but odd".
 
-## Schema change requests (open, for the tech lead)
+## Schema change requests
 
-1. **Vertical extent for assets.** Add `Asset.elevation: NonNegativeFloat = 0.0` (height of
-   the asset's bottom above the floor; for `mount: wall` the mounting height). Footprint
-   overlap would then only count when vertical extents intersect (TV above a console), and
-   window sill checks would use `elevation + height`.
-2. **Search statistics in `SolveStats`**: `restarts: int`,
-   `time_to_first_feasible_s: float | None`, `time_limited: bool`. They are written to
-   `diagnostics.json` until then.
-3. **Line of sight**: `Faces.clear_view: bool = False`. When true, no other footprint
-   taller than `min(height_a, height_b)` may cross the corridor between a's front edge and
-   b's footprint. Alternatively, a new `line_of_sight(a, b)` type.
-4. **Validation**: `LayoutProblem` should require an `initial` pose for `movable: false`
-   assets, as it already does for `fixed`.
-5. **contracts.md wording**:
-   - list `implicit:wall_mount` among the implicit rules;
-   - state the zone/wall policy chosen above ("front": clip only what lies behind the back
-     edge of an asset flush against a wall), or tell us to switch to "clip";
-   - define the walkway targets (front edge for assets without an access zone, one level
-     of chaining through access zones);
-   - say that a door with `swing: null` has no swing check.
+All resolved in contract v0.3.0:
+- `Asset.elevation`: implemented as above.
+- `SolveStats.restarts` / `time_to_first_feasible_s` / `time_limited`: populated.
+- Required `initial` for immovable assets: done; the fallback path was removed.
+- Zone/wall policy: accepted as ADR-0005, with the contracts.md wording updated by the
+  lead.
+- Line of sight and even distribution: deferred to the backlog.
