@@ -605,6 +605,15 @@
    "hard": true
   },
   {
+   "type": "faces",
+   "id": "tv_faces_sofa",
+   "a": "tv_stand",
+   "b": "sofa",
+   "max_angle_deg": 30,
+   "hard": true,
+   "origin": "rule_library"
+  },
+  {
    "type": "distance_at_least",
    "id": "tv_distance",
    "a": "sofa",

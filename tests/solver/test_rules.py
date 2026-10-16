@@ -339,8 +339,9 @@ def test_clearance_zone_allowed_categories():
     chair_zone = front_zone(1.2, 0.6, 0.7, "use", "chair")
     chair_zone["allowed_categories"] = ["chair"]
     desk = box("desk", 1.2, 0.6, zones=[chair_zone], category="table")
-    p = make_problem([desk, box("c", 0.5, 0.5, category="chair"),
-                      box("bin", 0.5, 0.5, category="storage")])
+    p = make_problem(
+        [desk, box("c", 0.5, 0.5, category="chair"), box("bin", 0.5, 0.5, category="storage")]
+    )
     poses = {"desk": (2, 0.3, FACE_N), "c": (2, 0.9, FACE_S), "bin": (3.5, 2.5, 0)}
     res, ok = results(p, poses)
     assert ok and res["implicit:clearance_zones"].satisfied
@@ -350,14 +351,17 @@ def test_clearance_zone_allowed_categories():
 
 def test_zone_through_the_wall_behind_the_asset_is_clipped():
     """A zone that pokes through the wall the asset stands against (behind its back
-    edge) is clipped to the floor, not a violation; one cut off by a wall in front or at
-    the side still is (docs/solver.md, ZONE_WALL_POLICY = "front")."""
+    edge, back flush with the wall) is clipped to the floor, not a violation; one cut off
+    by a wall in front or at the side, or behind an asset that is merely pushed near a
+    wall, still is (docs/solver.md, ZONE_WALL_POLICY = "front")."""
     margin = {"name": "margin", "purpose": "access", "polygon": rect(-0.7, -0.5, 0.7, 0.8)}
     p = make_problem([box("cab", 1.0, 0.6, zones=[margin])])
     res, ok = results(p, {"cab": (2, 0.3, FACE_N)})  # back on the south wall
     assert ok and res["implicit:clearance_zones"].satisfied
     res, ok = results(p, {"cab": (0.3, 1.5, FACE_E)})  # back on the west wall instead
     assert ok  # the 0.2 m of margin behind it is clipped
+    res, ok = results(p, {"cab": (2, 0.45, FACE_N)})  # 15 cm off the wall: not "against"
+    assert not ok and res["implicit:clearance_zones"].violation == pytest.approx(0.05 * 1.4)
     res, ok = results(p, {"cab": (0.5, 0.3, FACE_N)})  # pushed into the SW corner
     assert not ok  # the margin's left side is cut off by the west wall
     assert res["implicit:clearance_zones"].violation == pytest.approx(0.2 * 1.1)

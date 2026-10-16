@@ -5,6 +5,7 @@ Simulated annealing over 2D footprints (ADR-0003). Input: a `LayoutProblem`; out
 
 ```python
 from roomlayout.solver import solve
+
 result = solve(problem, k=10, seed=0, time_budget_s=10.0)
 ```
 
@@ -62,13 +63,17 @@ is wall-mounted.
    must lie inside the floor (hard rule), so zone ∩ footprint equals clipped-zone ∩
    footprint for every feasible layout, and the explicit clip is skipped for speed.
 2. *Unary part:* a zone overlapping a fixed obstacle (column, radiator) is a violation,
-   since you can't stand there. A zone cut off by a wall is a violation only for the part
-   **at or in front of the asset's back-edge line**. The part of a zone behind the back
-   edge (poking through the wall the asset stands against) is clipped silently. This is
-   WS-B's case, and it is accepted.
+   since you can't stand there. A zone that leaves the floor (cut off by a wall) is a
+   violation too, with one exception that implements WS-B's request:
+   - If the asset's back is **flush against a wall** (the `against_wall` test with a 5 cm
+     gap passes), the part of a zone *behind its back-edge line* is clipped silently. That
+     part pokes through the wall the asset stands against.
+   - Zone parts at or in front of the back line must stay inside the floor.
    - Why not clip everything (the literal contract)? Then a wardrobe could face a wall
-     10 cm away, or a bed could stand with one access side in a corner. Both are "valid"
-     but unusable, and the zone would lose its purpose.
+     10 cm away, a bed could stand with one access side in a corner, and a dining table
+     could be pushed into a wall over its seating zone. All of these are "valid" but
+     unusable. The last one showed up in `l_shaped_living_dining` with an earlier, looser
+     version of this rule.
    - The policy is one constant, `geometry.ZONE_WALL_POLICY`: `"front"` (default),
      `"clip"` (pure contract: zones never conflict with walls), or `"strict"` (v0.1: any
      part of a zone outside the floor counts).
@@ -258,7 +263,7 @@ One PNG per layout. It shows:
 
 The problems were authored the way a rule library should emit them. For example,
 `faces(chair, desk)` **and** `faces(desk, chair)`: with only the former, a chair beside the
-desk's end "faces" it. Another example is a soft `near(sofa, tv, ~3 m)`: without it the
+desk's end "faces" it. The same goes for `faces(sofa, tv)` **and** `faces(tv, sofa)`, without which the screen can end up side-on to the sofa. Another example is a soft `near(sofa, tv, ~3 m)`: without it the
 sofa can face the TV from across the whole room.
 
 Tests (`tests/solver/`):
@@ -279,7 +284,29 @@ Tests (`tests/solver/`):
 "feasible" = feasible layouts among the returned top-10. "restarts" = feasible restart
 results / restarts used. "time" = max wall time over seeds, incl. pool start-up.
 
-PERF_TABLE
+| problem | assets | first feasible [s] (min / max) | feasible in top-10 (s0 / s1 / s2) | best cost | feasible restarts / restarts used | time [s] (max) |
+|---|---|---|---|---|---|---|
+| `angled_reading_room` | 6 | 0.07 / 0.19 | 10 / 10 / 10 | 0 / 0 / 0 | 14/16 / 13/16 / 14/16 | 4.7 |
+| `bedroom_basic` | 6 | 0.13 / 0.21 | 10 / 10 / 10 | 0 / 0 / 0 | 18/22 / 13/17 / 16/30 | 5.3 |
+| `crowded_studio` | 10 | 0.66 / 1.45 | 7 / 8 / 10 | 0.234 / 0.249 / 0.249 | 5/49 / 6/51 / 7/28 | 9.6 |
+| `dining_room` | 8 | 0.17 / 0.41 | 10 / 10 / 10 | 0 / 0 / 0 | 8/16 / 10/24 / 10/16 | 6.8 |
+| `fixed_piano_room` | 7 | 0.04 / 0.06 | 10 / 10 / 10 | 0 / 0 / 0 | 13/16 / 13/16 / 12/16 | 3.1 |
+| `infeasible_conflicting_constraints` | 3 | - | 0 / 0 / 0 | 100 / 100 / 397 | 0/231 / 0/226 / 0/205 | 9.6 |
+| `infeasible_tiny_bedroom` | 3 | - | 0 / 0 / 0 | 307 / 307 / 1.56e+03 | 0/108 / 0/103 / 0/106 | 9.6 |
+| `l_shaped_living_dining` | 9 | 0.31 / 0.58 | 10 / 10 / 10 | 0 / 0 / 0 | 7/16 / 8/22 / 8/18 | 6.5 |
+| `living_room_basic` | 5 | 0.04 / 0.05 | 10 / 10 / 10 | 0 / 0 / 0 | 14/16 / 16/16 / 13/16 | 3.9 |
+| `narrow_study` | 6 | 0.09 / 0.18 | 10 / 10 / 10 | 0 / 0 / 0 | 16/16 / 13/16 / 16/16 | 3.8 |
+| `office_with_column` | 8 | 0.09 / 0.29 | 10 / 10 / 10 | 0 / 0 / 0 | 15/16 / 15/16 / 16/16 | 5.5 |
+| `wall_tv_living` | 6 | 0.04 / 0.07 | 10 / 10 / 10 | 0 / 0 / 0 | 14/16 / 13/16 / 14/16 | 3.9 |
+
+Measured 2026-10-16 on the shared 4-core dev box. Another workstream's test runs
+sometimes competed for CPU, so treat the times as upper bounds. Feasible problems stop
+early via the stopping rule (k diverse feasible layouts after ≥ 16 restarts); infeasible
+ones use the whole budget.
+
+The weakest case is `crowded_studio`: only 5–7 of ~30–50 restarts end feasible, and it
+returns 7–10 distinct feasible layouts. Its best cost is ~0.25 because the soft
+`sofa_wall` rarely fits alongside everything else.
 
 Throughput is about 2,000–2,500 candidate evaluations per second per core (shapely-bound).
 
@@ -314,3 +341,25 @@ Throughput is about 2,000–2,500 candidate evaluations per second per core (sha
   oriented-rectangle fast path for the common rectangle-vs-rectangle case. Expect 3–5×.
 - Optional free-angle refinement (gradient or local continuous yaw) after annealing.
 - A VLM critic on the rendered top-k (ARCHITECTURE stage 7) to rerank "valid but odd".
+
+## Schema change requests (open, for the tech lead)
+
+1. **Vertical extent for assets.** Add `Asset.elevation: NonNegativeFloat = 0.0` (height of
+   the asset's bottom above the floor; for `mount: wall` the mounting height). Footprint
+   overlap would then only count when vertical extents intersect (TV above a console), and
+   window sill checks would use `elevation + height`.
+2. **Search statistics in `SolveStats`**: `restarts: int`,
+   `time_to_first_feasible_s: float | None`, `time_limited: bool`. They are written to
+   `diagnostics.json` until then.
+3. **Line of sight**: `Faces.clear_view: bool = False`. When true, no other footprint
+   taller than `min(height_a, height_b)` may cross the corridor between a's front edge and
+   b's footprint. Alternatively, a new `line_of_sight(a, b)` type.
+4. **Validation**: `LayoutProblem` should require an `initial` pose for `movable: false`
+   assets, as it already does for `fixed`.
+5. **contracts.md wording**:
+   - list `implicit:wall_mount` among the implicit rules;
+   - state the zone/wall policy chosen above ("front": clip only what lies behind the back
+     edge of an asset flush against a wall), or tell us to switch to "clip";
+   - define the walkway targets (front edge for assets without an access zone, one level
+     of chaining through access zones);
+   - say that a door with `swing: null` has no swing check.

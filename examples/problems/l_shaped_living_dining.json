@@ -530,6 +530,16 @@
    "hard": true
   },
   {
+   "type": "faces",
+   "id": "tv_faces_sofa",
+   "a": "tv_stand",
+   "b": "sofa",
+   "max_angle_deg": 30,
+   "hard": true,
+   "origin": "rule_library",
+   "rationale": "screen turned towards the seating"
+  },
+  {
    "type": "near",
    "id": "tv_not_too_far",
    "a": "sofa",

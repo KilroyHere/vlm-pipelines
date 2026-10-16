@@ -30,7 +30,7 @@ from roomlayout.schema import (
 )
 
 from . import rules
-from .geometry import AssetTemplate, Posed, RoomGeom, bboxes_overlap
+from .geometry import WALKER_HEIGHT, AssetTemplate, Posed, RoomGeom, bboxes_overlap
 
 W_HARD = 100.0
 GROUP_NEAR_MAX = 0.3  # m; hard `near` at most this tight makes a rigid group for moves
@@ -87,14 +87,8 @@ class Model:
         # pinned = never moved by the search (movable=False or a hard `fixed`)
         self.pinned = [False] * self.n
         for t in self.templates:
-            if not t.asset.movable:
-                if self.initial[t.idx] is None:
-                    self.notes.append(
-                        f"asset {t.id!r} has movable=false but no initial pose; "
-                        "treating it as movable"
-                    )
-                else:
-                    self.pinned[t.idx] = True
+            if not t.asset.movable:  # LayoutProblem guarantees an initial pose (v0.3.0)
+                self.pinned[t.idx] = True
         for c in problem.constraints:
             if isinstance(c, Fixed) and c.hard:
                 self.pinned[self.index[c.a]] = True
@@ -169,7 +163,7 @@ class Model:
                         1.0,
                         i,
                         -1,
-                        lambda g, room=room: rules.own_zones_blocked(room, g),
+                        lambda g, room=room, t=t: rules.own_zones_blocked(room, t, g),
                         f"{t.id} zones vs walls/obstacles",
                         "m²",
                     )
@@ -207,20 +201,21 @@ class Model:
         for i in range(self.n):
             for j in range(i + 1, self.n):
                 ti, tj = self.templates[i], self.templates[j]
-                self._add_pair(
-                    Term(
-                        implicit_id("no_overlap"),
-                        H,
-                        1.0,
-                        i,
-                        j,
-                        rules.no_overlap,
-                        f"{ti.id}×{tj.id}",
-                        "m²",
-                        local=True,
+                if ti.z0 < tj.z1 and tj.z0 < ti.z1:  # vertical extents overlap
+                    self._add_pair(
+                        Term(
+                            implicit_id("no_overlap"),
+                            H,
+                            1.0,
+                            i,
+                            j,
+                            rules.no_overlap,
+                            f"{ti.id}×{tj.id}",
+                            "m²",
+                            local=True,
+                        )
                     )
-                )
-                if ti.zones or tj.zones:
+                if (ti.zones and tj.z0 < WALKER_HEIGHT) or (tj.zones and ti.z0 < WALKER_HEIGHT):
                     self._add_pair(
                         Term(
                             implicit_id("clearance_zones"),
@@ -311,8 +306,10 @@ class Model:
                 rect = room.keep_clear_rect(c.opening_id, c.distance)
                 rb = rect.bounds
                 for t in self.templates:
-                    if o.type == OpeningType.window and t.height <= o.sill:
-                        continue
+                    if o.type == OpeningType.window and t.z1 <= o.sill:
+                        continue  # windows: only assets whose top is above the sill
+                    if o.type != OpeningType.window and t.z0 >= o.top:
+                        continue  # doors/passages: assets mounted above the opening
                     self.unary[t.idx].append(
                         Term(
                             c.id,

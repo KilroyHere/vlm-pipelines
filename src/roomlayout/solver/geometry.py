@@ -31,12 +31,16 @@ BUFFER_QUAD_SEGS = 4  # resolution of round buffers (walkway erosion)
 # How walls/the floor boundary interact with clearance zones (docs/solver.md, "Clearance
 # zones"). Footprint-in-zone checks always use the zone clipped to the floor (contract
 # v0.2.0). On top of that, the part of a zone that leaves the floor counts as blocked:
-#   "front":  only the part at or in front of the asset's back-edge line (default; a zone
-#             poking through the wall the asset stands against is ignored)
+#   "front":  if the asset's back is flush against a wall, only the part at or in front of
+#             its back-edge line (a zone poking through the wall it stands against is
+#             ignored); otherwise the whole zone (default)
 #   "clip":   never (pure contract reading: zones are just clipped to the floor)
 #   "strict": always (the v0.1 behaviour)
 ZONE_WALL_POLICY = "front"
 _CACHE_LIMIT = 8192
+# Clearance zones and walkways are floor-level space for a walker this tall: assets whose
+# bottom (elevation) is at or above it never conflict with them (contract v0.3.0).
+WALKER_HEIGHT = 1.8
 
 Bounds = tuple[float, float, float, float]
 
@@ -96,6 +100,7 @@ class OpeningGeom:
     t0: float  # span along the wall (from wall start)
     t1: float
     sill: float
+    top: float  # height of the opening's top edge (sill + height)
     center: tuple[float, float]  # world point on the wall line
     inward: tuple[float, float]  # interior normal of its wall
     swing: Polygon | None  # interior door-swing quarter disc, if any
@@ -132,15 +137,16 @@ class WallGeom:
             return math.hypot(t - self.length, d)
         return abs(d)
 
-    def blocked_spans(self, height: float, wall_mounted: bool) -> list[tuple[float, float]]:
-        """Spans along this wall where an asset cannot stand with its back to the wall:
-        doors and passages always (there is no wall there); windows when the asset is
-        taller than the sill, or wall-mounted (nothing is hung on glass)."""
+    def blocked_spans(self, z0: float, z1: float) -> list[tuple[float, float]]:
+        """Spans along this wall where an asset spanning heights [z0, z1] cannot have its
+        back to the wall: doors/passages (no wall there) unless the asset is entirely above
+        the opening, and windows whose glass [sill, top] overlaps [z0, z1]."""
         spans = []
         for o in self.openings:
             if o.type in (OpeningType.door, OpeningType.opening):
-                spans.append((o.t0, o.t1))
-            elif wall_mounted or height > o.sill:
+                if z0 < o.top:
+                    spans.append((o.t0, o.t1))
+            elif z1 > o.sill and z0 < o.top:
                 spans.append((o.t0, o.t1))
         return spans
 
@@ -201,13 +207,16 @@ class RoomGeom:
                 t0,
                 t1,
                 o.sill_height,
+                o.sill_height + o.height,
                 w.point(o.offset, 0.0),
                 (w.nx, w.ny),
                 swing,
             )
             self.openings[o.id] = og
             w.openings.append(og)
-        self.swings = [(o.id, o.swing, o.swing.bounds) for o in self.openings.values() if o.swing]
+        self.swings = [
+            (o.id, o.swing, o.swing.bounds, o.top) for o in self.openings.values() if o.swing
+        ]
         self.obstacles = [
             ObstacleGeom(
                 ob.id,
@@ -325,6 +334,8 @@ class Posed:
     back: np.ndarray  # (2, 2) world endpoints of the back edge
     front_edge: np.ndarray  # (2, 2) world endpoints of the front edge
     all_bounds: Bounds  # bounds of footprint + zones
+    z0: float = 0.0  # vertical extent [elevation, elevation + height]
+    z1: float = 0.0
     _buffers: dict[float, BaseGeometry] = field(default_factory=dict)
 
     @property
@@ -354,6 +365,8 @@ class AssetTemplate:
         self.label = asset.label or asset.id
         self.category = asset.category
         self.height = asset.dimensions.height
+        self.z0 = asset.elevation  # vertical extent [z0, z1] (contract v0.3.0)
+        self.z1 = asset.elevation + asset.dimensions.height
         self.mount = asset.mount
         self.wall_mounted = asset.mount == Mount.wall
         self.pts = np.asarray(asset.effective_footprint().points, dtype=float)
@@ -379,8 +392,10 @@ class AssetTemplate:
             tuple((p, tuple(np.round(z, 3).ravel())) for _, p, z in self.zones),
             tuple(tuple(sorted(a)) for a in self.zone_allowed),
             round(self.height, 3),
+            round(self.z0, 3),
         )
         self._zone_wall_local = self._zone_wall_parts()
+        self.zone_has_behind = any(p is not None for p in self._zone_wall_local)
         self._cache: dict[tuple[float, float, float], Posed] = {}
         # all vertices (footprint, zones, back edge, front edge) in one array -> one matmul
         rings = [self.pts, *[z for _, _, z in self.zones]]
@@ -467,6 +482,8 @@ class AssetTemplate:
             w[n : n + 2],
             w[n + 2 : n + 4],
             (*mins.min(axis=0).tolist(), *maxs.max(axis=0).tolist()),
+            self.z0,
+            self.z1,
         )
         if len(self._cache) >= _CACHE_LIMIT:
             self._cache.clear()

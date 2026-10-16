@@ -31,6 +31,7 @@ from shapely.geometry import LineString, Point
 from shapely.geometry.base import BaseGeometry
 
 from .geometry import (
+    WALKER_HEIGHT,
     AssetTemplate,
     Posed,
     RoomGeom,
@@ -61,17 +62,25 @@ def inside_room(room: RoomGeom, g: Posed) -> float:
 
 
 def clear_of_obstacles(room: RoomGeom, g: Posed) -> float:
-    return sum(overlap_area(g.fp, g.bounds, ob.poly, ob.bounds) for ob in room.obstacles)
+    """Obstacles stand on the floor: an asset mounted above an obstacle's top is fine."""
+    return sum(
+        overlap_area(g.fp, g.bounds, ob.poly, ob.bounds)
+        for ob in room.obstacles
+        if g.z0 < ob.height
+    )
 
 
-def own_zones_blocked(room: RoomGeom, g: Posed) -> float:
+def own_zones_blocked(room: RoomGeom, tmpl: AssetTemplate, g: Posed) -> float:
     """Unary part of ``implicit:clearance_zones``: an asset's own zones may not overlap a
-    fixed obstacle, and (per ``ZONE_WALL_POLICY``, default "front") the part of a zone at
-    or in front of the asset's back-edge line may not leave the floor, i.e. be cut off by
-    a wall. Zone parts behind the back line (through the wall the asset stands against)
-    are clipped away."""
+    fixed obstacle, nor leave the floor (be cut off by a wall). Under ``ZONE_WALL_POLICY``
+    "front" (default), when the asset's back is flush against a wall (``against_wall`` with
+    a 5 cm gap holds), zone parts *behind* its back-edge line, i.e. through the wall it
+    stands against, are clipped away instead."""
     v = 0.0
-    for z, zb in g.zone_wall:
+    pieces = g.zone_wall
+    if tmpl.zone_has_behind and against_wall(tmpl, g, room.walls, WALL_MOUNT_GAP) > 0.0:
+        pieces = list(zip(g.zones, g.zone_bounds, strict=True))  # not against a wall
+    for z, zb in pieces:
         v += room.outside_area(z, zb)
     for z, zb in zip(g.zones, g.zone_bounds, strict=True):
         for ob in room.obstacles:
@@ -84,23 +93,31 @@ def zones_pair(ga: Posed, gb: Posed) -> float:
     skipping zones whose ``allowed_categories`` contain the other asset's category. Zones
     may overlap other zones. (The contract clips zones to the floor first; since footprints
     must lie inside the floor, zone-in-floor ∩ footprint equals zone ∩ footprint for every
-    feasible layout, so the clip is skipped here.)"""
+    feasible layout, so the clip is skipped here.) Zones are floor-level: assets whose
+    elevation is >= WALKER_HEIGHT never conflict with them.
+    """
     v = 0.0
-    for z, zb, allowed in zip(ga.zones, ga.zone_bounds, ga.zone_allowed, strict=True):
-        if gb.category not in allowed:
-            v += overlap_area(z, zb, gb.fp, gb.bounds)
-    for z, zb, allowed in zip(gb.zones, gb.zone_bounds, gb.zone_allowed, strict=True):
-        if ga.category not in allowed:
-            v += overlap_area(z, zb, ga.fp, ga.bounds)
+    if gb.z0 < WALKER_HEIGHT:
+        for z, zb, allowed in zip(ga.zones, ga.zone_bounds, ga.zone_allowed, strict=True):
+            if gb.category not in allowed:
+                v += overlap_area(z, zb, gb.fp, gb.bounds)
+    if ga.z0 < WALKER_HEIGHT:
+        for z, zb, allowed in zip(gb.zones, gb.zone_bounds, gb.zone_allowed, strict=True):
+            if ga.category not in allowed:
+                v += overlap_area(z, zb, ga.fp, ga.bounds)
     return v
 
 
 def no_overlap(ga: Posed, gb: Posed) -> float:
+    """Only compiled for pairs whose vertical extents overlap (see Model)."""
     return overlap_area(ga.fp, ga.bounds, gb.fp, gb.bounds)
 
 
 def door_swing(room: RoomGeom, g: Posed) -> float:
-    return sum(overlap_area(g.fp, g.bounds, poly, b) for _, poly, b in room.swings)
+    """The leaf sweeps up to the opening's top; assets mounted above it don't conflict."""
+    return sum(
+        overlap_area(g.fp, g.bounds, poly, b) for _, poly, b, top in room.swings if g.z0 < top
+    )
 
 
 # --------------------------------------------------------------------------- vocabulary
@@ -118,7 +135,7 @@ def against_wall(tmpl: AssetTemplate, g: Posed, walls: list[WallGeom], max_gap: 
         v = max(0.0, gap - max_gap) + max(0.0, ang - WALL_ANGLE_TOL)
         if v >= best:
             continue
-        spans = w.blocked_spans(tmpl.height, tmpl.wall_mounted)
+        spans = w.blocked_spans(tmpl.z0, tmpl.z1)
         if spans:
             ta, _ = w.to_local(b0x, b0y)
             tb, _ = w.to_local(b1x, b1y)
@@ -235,7 +252,7 @@ def walkway(
     Each target still missed adds ``0.1 + min(distance - r - eps, 3)``."""
     r = min_width / 2
     targets = walkway_targets(room, templates, geoms)
-    blockers = [g.buffered(r) for g in geoms] + room.obstacle_buffers(r)
+    blockers = [g.buffered(r) for g in geoms if g.z0 < WALKER_HEIGHT] + room.obstacle_buffers(r)
     floor_er = room.eroded_floor(r)
     free = floor_er.difference(shapely.union_all(blockers)) if blockers else floor_er
     if not targets:

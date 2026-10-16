@@ -268,7 +268,14 @@ def _finish(
     result = SolveResult(
         problem_id=problem.id,
         layouts=layouts,
-        stats=SolveStats(seed=seed, seconds=seconds, evaluations=evaluations),
+        stats=SolveStats(
+            seed=seed,
+            seconds=seconds,
+            evaluations=evaluations,
+            restarts=diag.restarts,
+            time_to_first_feasible_s=diag.time_to_first_feasible_s,
+            time_limited=time_limited,
+        ),
         notes=notes,
     )
     return SolveOutcome(result, diag)
@@ -284,7 +291,8 @@ def explain_infeasibility(model: Model, prefix: list[RestartResult]) -> tuple[li
     notes = ["no feasible layout found"]
     proven = False
     room = model.room
-    fp_area = sum(t.area for t in model.templates)
+    # assets standing on the floor all overlap vertically, so their footprints are disjoint
+    fp_area = sum(t.area for t in model.templates if t.z0 == 0.0)
     ob_area = sum(ob.poly.area for ob in room.obstacles)
     free = room.area - ob_area
     if fp_area > free:
@@ -313,7 +321,7 @@ def explain_infeasibility(model: Model, prefix: list[RestartResult]) -> tuple[li
         if isinstance(c, AgainstWall) and c.hard and c.wall_id:
             t = model.templates[model.index[c.a]]
             wall = room.wall_by_id[c.wall_id]
-            spans = wall.blocked_spans(t.height, t.wall_mounted)
+            spans = wall.blocked_spans(t.z0, t.z1)
             longest = _longest_free_run(wall.length, spans)
             if longest < t.xmax - t.xmin:
                 proven = True
