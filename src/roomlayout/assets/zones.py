@@ -63,6 +63,11 @@ def build_zones(footprint: Polygon2D, specs: tuple[ZoneSpec, ...]) -> list[Clear
             pts = [(round(float(x), 5), round(float(y), 5)) for x, y in zp.exterior.coords[:-1]]
             name = spec.name if i == 0 else f"{spec.name}_{i + 1}"
             zones.append(
-                ClearanceZone(name=name, polygon=Polygon2D(points=pts), purpose=spec.purpose)
+                ClearanceZone(
+                    name=name,
+                    polygon=Polygon2D(points=pts),
+                    purpose=spec.purpose,
+                    allowed_categories=list(spec.allowed_categories),
+                )
             )
     return zones

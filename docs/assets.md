@@ -31,11 +31,34 @@ Writes to `out/`:
 | `<id>.glb` | mesh in the asset's local frame, written in glTF convention (Y-up, front = +Z) |
 | `<id>.report.json` | scale factors, mismatch flag, front hypotheses/scores/choice/confidence, debris, tilt, footprint stats, warnings, timings |
 | `<id>.front_candidates.png` | contact sheet for a VLM/user: "which letter is the front?" |
-| `<id>.front_{A,B,C,D}.png` | one straight-on view per candidate side |
+| `<id>.front_{A,B,C,D}.png` | one elevation per candidate side |
 
 Exit code 0 with warnings on stderr. Exit code 2 for bad input (missing/unreadable file,
 non-positive dims). Python API: `normalize(...)` returns a `NormalizeResult` (asset, mesh,
 report) and `write_outputs(result, out_dir)` writes the files.
+
+`--no-clearance` emits no zones at all, for decorative or wall-hung items where any zone
+would be wrong. It's no longer needed for tables and desks with chairs (see
+`allowed_categories` below).
+
+### Front-candidate renders
+
+The renders are written **by default** on every CLI run (`--no-render` skips them, which
+saves ~1-3 s). From Python, call `write_outputs(result, out_dir)` (`render=True` is the
+default). To produce them for any mesh:
+
+```bash
+python -m roomlayout.assets RAW.glb --category sofa --dims 2.2 0.95 0.85 --out out/
+open out/<id>.front_candidates.png          # or out/<id>.front_A.png ... front_D.png
+```
+
+The contact sheet has a top view and two three-quarter overviews (from the A/B and C/D
+corners), with the letters A-D on the floor beside their sides, and below them one
+**elevation** per side (camera level, orthographic). An elevation's aspect ratio is
+(that side's horizontal extent : height), which `tests/assets/test_asset_render.py`
+checks from the PNGs. The renders show the mesh *before* the front choice (generator
+proportions, aligned to the footprint rectangle), so the letters refer to the hypotheses in
+the report. The sheet doesn't mark the heuristic's pick, so a VLM's answer stays unbiased.
 
 To confirm a front after looking at the renders, re-run with `--front B`. That uses
 hypothesis B and sets `front_confirmed: true`. It's deterministic, so the rest of the output
@@ -126,8 +149,12 @@ Above `--mismatch-tol` (default 0.15) the report is `flagged`, with a warning (n
 failure): show it to the user and offer a retake. `up_check` also flags when treating
 another mesh axis as vertical would cut the mismatch by more than half.
 
+The Asset carries the two quality signals itself (contract v0.2.0):
+`source.aspect_mismatch` (the value above) and `source.front_confidence` (the heuristic's
+confidence, 1.0 when `--front` was given). The UI/solver can warn without reading the report.
+
 No dims: the mesh keeps the generator's scale (not metric for SAM 3D), the Asset gets
-`source.dimensions_from = "mesh"`, and the first warning starts with `DIMENSIONS NOT
+`source.dimensions_from = "mesh"` and `source.aspect_mismatch = null` (nothing to compare), and the first warning starts with `DIMENSIONS NOT
 MEASURED`. The CLI prints it on stderr. Downstream should refuse or visibly mark such assets.
 
 **Footprint** (`footprint.py`).
@@ -160,8 +187,13 @@ bbox-strip would miss. Disjoint pieces become separate zones (`legroom`, `legroo
 `Asset.category` is the RoomPlan category (`CapturedRoom.Object.Category`: bathtub, bed,
 chair, dishwasher, fireplace, oven, refrigerator, sink, sofa, stairs, storage, stove, table,
 television, toilet, washerDryer; verified against Apple's docs 2026-10-16). The finer type
-goes into `label` and `report.fine_type`. Aliases like couch, bookcase or L-shaped sofa
-are accepted.
+goes into `Asset.subtype` (e.g. `sectional`, `dining_chair`, `desk`; `null` for unknown
+categories), and a readable `label` defaults from it. Aliases like couch, bookcase or
+L-shaped sofa are accepted and resolve to the canonical subtype.
+
+Zones list `allowed_categories` (contract v0.2.0): the RoomPlan categories whose footprints
+may stand inside the zone. The dining-table chair zones and the desk's chair zone allow
+`chair`. Every other zone allows nothing.
 
 | fine type | RoomPlan | zones (depth, purpose) | rationale (rule of thumb) |
 |---|---|---|---|
@@ -171,8 +203,8 @@ are accepted.
 | stool | chair | – | |
 | bed | bed | access left/right 0.60, foot 0.60 (access) | ≥ 24 in (60 cm) around a bed |
 | table, coffee_table, side_table | table | – | a zone would push the sofa away |
-| dining_table, round_table | table | chairs 0.75 on all 4 sides (use) | 30-36 in from table edge (NKBA: 32-36 in) |
-| desk | table | chair_pull_out front 0.90 (use) | ~36 in chair space |
+| dining_table, round_table | table | chairs 0.75 on all 4 sides (use), allows `chair` | 30-36 in from table edge (NKBA: 32-36 in) |
+| desk | table | chair_pull_out front 0.90 (use), allows `chair` | ~36 in chair space |
 | storage, bookshelf, cabinet, sideboard | storage | access front 0.60 | stand and reach |
 | tv_stand | storage | access front 0.50 | |
 | dresser | storage | drawers front 0.90 | drawer pull-out + person |
@@ -193,8 +225,8 @@ re-verified against the primary texts in this session. Tune them in one place:
 - Front heuristic is geometry-only (see failure modes). VLM confirmation isn't wired up yet.
 - Single footprint for the whole height. Chair-under-table needs height-banded footprints
   (deferred in ARCHITECTURE.md).
-- Dining-table / desk zones conflict with separately placed chairs (no exemption mechanism
-  in the schema). See the schema change request in the WS-B report.
+- `allowed_categories` is by RoomPlan category, so a dining table's zone admits *any* chair,
+  including an armchair. Good enough for v1; per-asset grouping would need a contract change.
 - Zones can extend through walls when an asset stands against one. The solver should clip
   zones to the floor before any reachability test.
 - No decimation of the output mesh. SAM 3D raw meshes are passed through as-is, apart from

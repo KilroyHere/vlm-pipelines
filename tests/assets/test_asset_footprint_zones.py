@@ -120,3 +120,15 @@ def test_dining_table_has_zones_on_all_four_sides():
     fp = Polygon2D.rectangle(1.6, 0.9)
     zones = build_zones(fp, lookup("dining_table").zones)
     assert len(zones) == 4
+    assert all(z.allowed_categories == ["chair"] for z in zones)
+
+
+def test_desk_chair_zone_allows_chairs_but_sofa_legroom_allows_nothing():
+    fp = Polygon2D.rectangle(1.4, 0.7)
+    (desk,) = build_zones(fp, lookup("desk").zones)
+    assert desk.allowed_categories == ["chair"]
+    (legroom,) = build_zones(fp, lookup("sofa").zones)
+    assert legroom.allowed_categories == []
+    for p in PROFILES.values():
+        for z in p.zones:
+            assert set(z.allowed_categories) <= set(ROOMPLAN_CATEGORIES)

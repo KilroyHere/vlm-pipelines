@@ -14,10 +14,13 @@ Clearance depths are conventional interior-design rules of thumb, not measuremen
   front and a coffee table. We use the middle, so a coffee table may sit just outside it.
 - Bed access 0.60 m on each long side and at the foot: the minimum usually quoted is
   24 in (~60 cm). 30-36 in (75-90 cm) is the comfortable value.
-- Dining table 0.75 m on every side for seated diners and pulling chairs out. Common
+- Dining table 0.75 m on every side for seated diners and pulling chairs out. Chairs
+  (RoomPlan ``chair``) are allowed inside it via ``allowed_categories``; everything else
+  must stay out. Common
   advice is 30-36 in (75-90 cm) from the table edge (NKBA kitchen planning guidelines
   give 32-36 in from table edge to wall).
-- Desk 0.90 m in front for the chair: roughly 36 in of chair space.
+- Desk 0.90 m in front for the chair: roughly 36 in of chair space. Chairs are allowed
+  in it, other footprints are not.
 - Dining/office chair 0.45 m behind: the room a chair needs to slide back. A dining chair
   takes about half of the 36 in table-edge allowance.
 - Bookshelf / open storage 0.60 m in front to stand and reach.
@@ -88,6 +91,9 @@ class ZoneSpec:
     side: Side
     depth: float  # meters, measured outward from the footprint
     purpose: Purpose = "access"
+    # Categories whose footprints may stand in the zone (ClearanceZone.allowed_categories),
+    # e.g. chairs in a dining table's or desk's chair zone.
+    allowed_categories: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -131,7 +137,9 @@ def _profile(key, roomplan, label, front, rule, zones=(), mount=Mount.floor, mov
     return CategoryProfile(key, roomplan, label, front, rule, tuple(zones), mount, movable)
 
 
-_AROUND_075 = [ZoneSpec(f"chairs_{s}", s, 0.75, "use") for s in ("front", "back", "left", "right")]
+_AROUND_075 = [
+    ZoneSpec(f"chairs_{s}", s, 0.75, "use", ("chair",)) for s in ("front", "back", "left", "right")
+]
 _FRONT_090 = [ZoneSpec("door_access", "front", 0.90, "swing")]
 
 PROFILES: dict[str, CategoryProfile] = {
@@ -174,7 +182,7 @@ PROFILES: dict[str, CategoryProfile] = {
             "desk",
             DESK,
             _DESK_RULE,
-            [ZoneSpec("chair_pull_out", "front", 0.90, "use")],
+            [ZoneSpec("chair_pull_out", "front", 0.90, "use", ("chair",))],
         ),
         # storage
         _profile("storage", "storage", "storage", STORAGE, _STORAGE_RULE, [_z("access", 0.6)]),

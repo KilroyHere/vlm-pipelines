@@ -60,6 +60,9 @@ def test_asset_json_validates_with_relative_mesh_uri(sofa_run):
     _, out = sofa_run
     asset = Asset.model_validate_json((out / "sofa1.asset.json").read_text())
     assert asset.category == "sofa"
+    assert asset.subtype == "sectional"
+    assert asset.source.front_confidence == pytest.approx(1.0)
+    assert asset.source.aspect_mismatch == pytest.approx(0.0, abs=1e-6)
     assert asset.mesh.uri == "sofa1.glb" and asset.mesh.format == "glb"
     assert (out / asset.mesh.uri).exists()
     assert asset.source.dimensions_from == "listing"
@@ -140,6 +143,7 @@ def test_cli_without_dims_warns_loudly(tmp_path, capsys):
     assert "DIMENSIONS NOT MEASURED" in err
     asset = Asset.model_validate_json((tmp_path / "o" / "c.asset.json").read_text())
     assert asset.source.dimensions_from == "mesh"
+    assert asset.source.aspect_mismatch is None  # nothing measured, nothing to compare
 
 
 def test_cli_front_override_and_bad_input(tmp_path, capsys):
@@ -164,6 +168,7 @@ def test_cli_front_override_and_bad_input(tmp_path, capsys):
     assert code == 0
     asset = Asset.model_validate_json((tmp_path / "o" / "c.asset.json").read_text())
     assert asset.front_confirmed is True
+    assert asset.source.front_confidence == 1.0
     assert main([str(tmp_path / "missing.glb"), "--category", "chair", "--out", str(tmp_path)]) == 2
     assert "error" in capsys.readouterr().err
 

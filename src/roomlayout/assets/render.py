@@ -4,15 +4,18 @@ Pure matplotlib (Agg canvas, no pyplot state): triangles are projected orthograp
 depth-sorted (painter's algorithm) and Lambert-shaded. Vertex/face colours are used when
 the mesh has them (SAM 3D outputs vertex colours), otherwise a neutral grey.
 
-Each candidate view looks straight *at* the candidate front side from 25 degrees above, so
-it shows that side and the top and nothing of the neighbouring sides. A three-quarter view
-reads better as 3D, but a 30-degree offset let the view of side D show the open shelves of
-side C on a bookshelf, which made the question ambiguous.
+Each candidate view is a true orthographic **elevation** (camera level, looking straight
+at the candidate side), so its aspect ratio is (side's horizontal extent : height) and it
+shows that side only. Two earlier variants failed: a 30-degree three-quarter view let the
+view of side D show the open shelves of side C, and a 25-degree elevated view made long
+items look like rotated top views (from the short end of a 2.8 m sofa the foreshortened top
+outweighs the 0.85 m front). The 3D impression comes from the two corner overviews.
+
 The contact sheet (``<stem>.front_candidates.png``) is one image to send to a VLM with the
 question "which letter is the front?". It holds a top view and two three-quarter
 overviews from opposite corners, all with the letters A-D on the floor next to their
-sides, and below them the four straight-on side views. The sheet doesn't mark the
-heuristic's pick, so a VLM's answer stays independent of it.
+sides, and below them the four side elevations. The sheet doesn't mark the heuristic's
+pick, so a VLM's answer stays independent of it.
 """
 
 from __future__ import annotations
@@ -115,7 +118,7 @@ def _draw(ax, verts, faces, colors, view_dir: np.ndarray, normals: np.ndarray, e
     return right, up
 
 
-def _side_view_direction(k: int, elevation_deg: float = 25.0) -> np.ndarray:
+def _side_view_direction(k: int, elevation_deg: float = 0.0) -> np.ndarray:
     d = candidate_direction(k)
     el = np.radians(elevation_deg)
     return np.array([np.cos(el) * d[0], np.cos(el) * d[1], np.sin(el)])
@@ -198,7 +201,7 @@ def render_front_candidates(
         FigureCanvasAgg(fig)
         ax = fig.add_axes((0.02, 0.02, 0.96, 0.88))
         _draw(ax, verts, faces, colors, _side_view_direction(k), normals)
-        fig.suptitle(f"{label}: looking straight at side {label}", fontsize=12, y=0.97)
+        fig.suptitle(f"{label}: side {label}, elevation", fontsize=12, y=0.97)
         p = out_dir / f"{stem}.front_{label}.png"
         fig.savefig(p, dpi=dpi, facecolor="white")
         paths[label] = p
@@ -234,7 +237,7 @@ def render_front_candidates(
     for k, label in enumerate(LABELS):
         ax = fig.add_axes((xs[k], 0.03, w, h))
         _draw(ax, verts, faces, colors, _side_view_direction(k), normals)
-        ax.set_title(f"side {label} (straight on)", fontsize=11)
+        ax.set_title(f"side {label} (elevation)", fontsize=11)
     p = out_dir / f"{stem}.front_candidates.png"
     fig.savefig(p, dpi=dpi, facecolor="white")
     paths["sheet"] = p

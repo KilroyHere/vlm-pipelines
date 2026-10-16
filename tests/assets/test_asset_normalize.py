@@ -131,6 +131,7 @@ def test_mismatch_flagged_when_proportions_disagree():
     # Per-axis factors: y stretched 1.3x relative to x and z.
     sx, sy, sz = fit.scale
     assert sy / sx == pytest.approx(1.3, rel=1e-6)
+    assert result.asset.source.aspect_mismatch == pytest.approx(fit.aspect_mismatch, abs=1e-6)
     assert sz / sx == pytest.approx(1.0, rel=1e-6)
     assert any("proportions disagree" in w for w in result.report.warnings)
     # Measured dims still win.
@@ -188,6 +189,7 @@ def test_unknown_category_warns_and_has_no_zones():
     raw, _ = S.as_generator_output(synth, 0)
     result = normalize(raw, category="piano", dims=synth.dims)
     assert result.asset.category == "piano"
+    assert result.asset.subtype is None
     assert result.asset.clearance_zones == []
     assert any("unknown category" in w for w in result.report.warnings)
 
@@ -198,6 +200,7 @@ def test_category_maps_to_roomplan_and_label():
     result = normalize(raw, category="Sectional", dims=synth.dims)
     assert result.asset.category == "sofa"
     assert result.asset.label == "sectional sofa"
+    assert result.asset.subtype == "sectional"
     assert result.report.fine_type == "sectional"
 
 

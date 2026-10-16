@@ -109,6 +109,7 @@ def normalize(
     lap("load")
 
     profile = categories.lookup(category)
+    known_category = profile is not None
     if profile is None:
         profile = categories.profile_for(category)
         warnings.append(
@@ -211,6 +212,7 @@ def normalize(
     asset = Asset(
         id=asset_id,
         category=profile.roomplan,
+        subtype=profile.key if known_category else None,
         label=label if label is not None else profile.label,
         dimensions=dims,
         footprint=fp.polygon,
@@ -218,7 +220,13 @@ def normalize(
         mount=mount if mount is not None else profile.mount,
         movable=profile.movable,
         mesh=None,
-        source=AssetSource(dimensions_from=dims_source, geometry_from=geometry_from),
+        source=AssetSource(
+            dimensions_from=dims_source,
+            geometry_from=geometry_from,
+            front_confidence=decision.confidence,
+            # None when nothing was measured: there is no mismatch to report.
+            aspect_mismatch=round(fit.aspect_mismatch, 6) if dims_source != "mesh" else None,
+        ),
         front_confirmed=decision.method == "override",
     )
 
