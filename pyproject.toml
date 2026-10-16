@@ -34,7 +34,9 @@ packages = ["src/roomlayout"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# Fast by default; full suite incl. the solver benchmark: pytest -m "slow or not slow"
+addopts = "-q -m 'not slow'"
+markers = ["slow: long-running suite/benchmark tests"]
 
 [tool.ruff]
 line-length = 100

@@ -232,6 +232,12 @@
       "$ref": "#/$defs/Mount",
       "default": "floor"
     },
+    "elevation": {
+      "default": 0.0,
+      "minimum": 0,
+      "title": "Elevation",
+      "type": "number"
+    },
     "movable": {
       "default": true,
       "title": "Movable",

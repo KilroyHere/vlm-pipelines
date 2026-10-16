@@ -9,7 +9,7 @@ from .constraints import Constraint, Fixed, referenced_assets
 from .geometry import Pose2D
 from .room import Room
 
-SCHEMA_VERSION = "0.2.0"
+SCHEMA_VERSION = "0.3.0"
 
 
 class LayoutProblem(BaseModel):
@@ -40,6 +40,9 @@ class LayoutProblem(BaseModel):
                 raise ValueError(f"constraint {c.id!r} references unknown wall")
             if isinstance(c, Fixed) and c.a not in self.initial:
                 raise ValueError(f"fixed constraint {c.id!r} needs an initial pose for {c.a!r}")
+        for a in self.assets:
+            if not a.movable and a.id not in self.initial:
+                raise ValueError(f"immovable asset {a.id!r} needs an initial pose")
         for key in self.initial:
             if key not in known:
                 raise ValueError(f"initial pose for unknown asset {key!r}")
@@ -71,6 +74,11 @@ class SolveStats(BaseModel):
     seed: int
     seconds: NonNegativeFloat
     evaluations: int
+    restarts: int = 0
+    time_to_first_feasible_s: NonNegativeFloat | None = None
+    # True when the time budget (not the stopping rule) ended the search; results
+    # are then machine-speed dependent rather than purely seed-deterministic.
+    time_limited: bool = False
 
 
 class SolveResult(BaseModel):

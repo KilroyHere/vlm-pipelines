@@ -10,7 +10,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, PositiveFloat
+from pydantic import BaseModel, Field, NonNegativeFloat, PositiveFloat
 
 from .geometry import Polygon2D
 
@@ -64,6 +64,9 @@ class Asset(BaseModel):
     footprint: Polygon2D | None = None  # local frame; None means the bounding rectangle
     clearance_zones: list[ClearanceZone] = []
     mount: Mount = Mount.floor
+    # Height of the asset's bottom above the floor (mounting height for wall-mounted
+    # assets). Footprints only conflict when vertical extents overlap.
+    elevation: NonNegativeFloat = 0.0
     movable: bool = True
     mesh: MeshRef | None = None
     source: AssetSource = AssetSource(dimensions_from="manual")

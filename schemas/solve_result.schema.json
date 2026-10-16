@@ -135,6 +135,29 @@
         "evaluations": {
           "title": "Evaluations",
           "type": "integer"
+        },
+        "restarts": {
+          "default": 0,
+          "title": "Restarts",
+          "type": "integer"
+        },
+        "time_to_first_feasible_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Time To First Feasible S"
+        },
+        "time_limited": {
+          "default": false,
+          "title": "Time Limited",
+          "type": "boolean"
         }
       },
       "required": [
@@ -148,7 +171,7 @@
   },
   "properties": {
     "schema_version": {
-      "default": "0.2.0",
+      "default": "0.3.0",
       "title": "Schema Version",
       "type": "string"
     },

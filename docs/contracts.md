@@ -57,12 +57,21 @@ Every constraint has `id`, `hard`, `weight` (soft only), `origin`
 | `fixed(a)` | a keeps its `initial` pose |
 
 **Implicit hard rules** (always enforced, reported as `implicit:<name>`):
-`inside_room`, `no_overlap`, `clear_of_obstacles`, `clearance_zones` (no other
-asset's footprint inside an asset's clearance zone unless its category is in the
-zone's `allowed_categories`; zones are clipped to the floor polygon first),
-`door_swing`.
+- `inside_room`, `no_overlap`, `clear_of_obstacles`.
+- `clearance_zones`: no other asset's footprint inside an asset's clearance zone,
+  unless its category is in the zone's `allowed_categories`. Zones must lie inside the
+  room, except the part behind a back edge that is flush against a wall (ADR-0005).
+- `door_swing`: the swing quarter-disc stays clear. A door with `swing: null` has no
+  swing check.
+- `wall_mount`: `mount: wall` assets have their back flush to a wall.
 
-Wall-mounted assets (`mount: wall`) are placed with their back flush to a wall.
+Vertical extent of an asset is `[elevation, elevation + height]`. Footprint conflicts
+only count when vertical extents overlap (a wall TV can hang above a console).
+
+**Walkway targets** (`walkway_width`): every door/passage entry point, and for each
+asset its access-purpose zone, or a point just in front of its front edge if it has
+none. A target also counts as reachable through one level of another asset's access
+zone (a nightstand is reachable via the bed's side zone).
 
 ## Handoffs between stages
 
@@ -75,6 +84,9 @@ constraints.vlm (later) ──► Constraint[] (validated against this vocabular
 ```
 
 ## Changelog
+- 0.3.0: `Asset.elevation`; `SolveStats.restarts`, `time_to_first_feasible_s`,
+  `time_limited`; immovable assets require an `initial` pose; documented implicit
+  `wall_mount`, walkway targets and the zone/wall policy (requested by WS-A).
 - 0.2.0: additive. `ClearanceZone.allowed_categories`, `Asset.subtype`,
   `AssetSource.front_confidence`, `AssetSource.aspect_mismatch` (requested by WS-B).
 - 0.1.0: initial contract.

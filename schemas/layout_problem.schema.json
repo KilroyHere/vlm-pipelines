@@ -129,6 +129,12 @@
           "$ref": "#/$defs/Mount",
           "default": "floor"
         },
+        "elevation": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Elevation",
+          "type": "number"
+        },
         "movable": {
           "default": true,
           "title": "Movable",
@@ -1051,7 +1057,7 @@
   },
   "properties": {
     "schema_version": {
-      "default": "0.2.0",
+      "default": "0.3.0",
       "title": "Schema Version",
       "type": "string"
     },
