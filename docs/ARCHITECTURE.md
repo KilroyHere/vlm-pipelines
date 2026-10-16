@@ -64,8 +64,33 @@ The original design skipped this step, but every later stage depends on it.
   gains in LPIPS/PSNR). It does **not** produce collision geometry, and residual
   artifacts are expected on real captures. Treat it as a rendering backdrop.
 - Keep its estimated lighting; Stage 7 can use it to relight inserted assets.
-- Fallback if GOR-IS code is unavailable or too slow: Gaussian Grouping / GScream-
-  style removal + 2D inpainting; accept baked shadows.
+- Fallback if GOR-IS is too slow or fails on our captures: Gaussian Grouping /
+  GScream-style removal + 2D inpainting; accept baked shadows.
+
+### GOR-IS integration contract
+
+Code and datasets are released: [github.com/applezyh/GOR-IS](https://github.com/applezyh/GOR-IS)
+([project page](https://applezyh.github.io/GOR-IS-project-page/)). It is driven by
+`run.sh` over `train.py`, `baking.py`, `inpainting2D.py`, `inpainting3D.py`, and
+`render.py`. Per scene it expects a COLMAP-style folder:
+
+| GOR-IS input | Where we produce it |
+|---|---|
+| `images/` | Frames sampled from the room video (Stage 0) |
+| `sparse/` (COLMAP model) | Stage 0. If poses come from ARKit/VGGT, export them to COLMAP format and keep the metric scale. |
+| `object_mask/` | Per-view masks of the furniture to remove. Use SAM 2 video tracking seeded from one click/box per object, and take the union of all objects being removed. |
+| `specular_mask/` | **Open question:** the README doesn't say how this is produced. Check `run.sh` and the released datasets, and derive it from a highlight detector if it isn't auto-generated. |
+| `normal/` | Monocular normal prediction per frame (e.g. DSINE / StableNormal class). |
+| `train_list.txt` / `val_list.txt` / `test_list.txt` | Generated split. |
+
+Environment requirements: an NVIDIA RTX GPU (CUDA rasterizer, nvdiffrast, and an
+OptiX ray tracer `gtracer` built with CMake, derived from IRGS; use the repo's
+modified copy). Runs need a GPU worker. This stage won't run on CPU or Apple
+hardware.
+
+Before M5, benchmark on the released GOR-IS-Real scenes and then on one of our
+own captures. Record per-scene time, VRAM, and failure modes. Also confirm the
+repo `LICENSE` permits our intended (possibly commercial) use.
 
 ## Stage 1b — Environment, geometry
 
@@ -191,8 +216,11 @@ Meta 3D Gen is text-to-3D and is not used for reconstruction.
 - **Asset scale accuracy:** single-image reconstruction is not metric. Without
   user/listing dimensions, layouts can be confidently wrong. Require dimensions,
   or measure them in the room scan.
-- **GOR-IS availability/runtime:** this is recent research. Confirm code release
-  and per-scene training time before committing; keep the fallback.
+- **GOR-IS runtime, license, and inputs:** the code is released, but runtime, VRAM,
+  and license terms aren't documented, and the origin of `specular_mask/` is
+  unclear. It was evaluated on curated captures (its own synthetic/real sets, plus
+  Mip-NeRF 360 / Ref-Real), not casual phone scans. Benchmark first and keep the
+  fallback.
 - **Splat + mesh compositing realism:** lighting mismatch is the most visible
   artifact. It's a polish item, not a correctness one.
 - **Non-planar rooms:** plane fitting fails on curved walls; the mesh-extraction
@@ -211,3 +239,5 @@ De-risk the core value (layout search) before the expensive perception work.
 3. **M3 — Assets:** Stages 2–3 with SAM 3D Objects + CoACD; MuJoCo settle.
 4. **M4 — Room:** Stages 0 + 1b (ARKit capture → planes) replace the hand-authored room.
 5. **M5 — Visual:** Stage 1a 3DGS + GOR-IS, Stage 7 compositing and VLM critic.
+   A GOR-IS spike (benchmark on released data + one of our captures) can run in
+   parallel with M1 because it's independent of the solver.
