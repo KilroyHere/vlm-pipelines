@@ -9,7 +9,7 @@ from .constraints import Constraint, Fixed, referenced_assets
 from .geometry import Pose2D
 from .room import Room
 
-SCHEMA_VERSION = "0.1.0"
+SCHEMA_VERSION = "0.2.0"
 
 
 class LayoutProblem(BaseModel):

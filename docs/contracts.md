@@ -28,10 +28,12 @@ RoomPlan/ARKit use a Y-up frame. Conversion happens **only** at the ingest bound
 - **`Room`**: floor polygon, walls, openings (door/window/passage, positioned by
   `wall_id` + `offset` of the centre along the wall), and fixed obstacles (world-frame
   footprints).
-- **`Asset`**: dimensions, optional local-frame `footprint` (defaults to the
-  bounding rectangle), `clearance_zones` (local-frame regions other assets' footprints
-  must not enter), `mount`, optional `mesh` (already in canonical frame), and `source`
-  provenance.
+- **`Asset`**: `category` (coarse, RoomPlan-aligned) + optional `subtype`, dimensions,
+  optional local-frame `footprint` (defaults to the bounding rectangle),
+  `clearance_zones` (local-frame regions other assets' footprints must not enter,
+  except categories listed in the zone's `allowed_categories`, e.g. chairs in a dining
+  table's chair zone), `mount`, optional `mesh` (already in canonical frame), and
+  `source` provenance + quality signals (`front_confidence`, `aspect_mismatch`).
 - **`LayoutProblem`**: room + assets + constraints + optional `initial` poses. This
   is the solver input.
 - **`SolveResult`**: ranked, mutually diverse `Layout`s, each with `placements`,
@@ -56,7 +58,9 @@ Every constraint has `id`, `hard`, `weight` (soft only), `origin`
 
 **Implicit hard rules** (always enforced, reported as `implicit:<name>`):
 `inside_room`, `no_overlap`, `clear_of_obstacles`, `clearance_zones` (no other
-asset's footprint inside an asset's clearance zone), `door_swing`.
+asset's footprint inside an asset's clearance zone unless its category is in the
+zone's `allowed_categories`; zones are clipped to the floor polygon first),
+`door_swing`.
 
 Wall-mounted assets (`mount: wall`) are placed with their back flush to a wall.
 
@@ -69,3 +73,8 @@ ingest.roomplan (later) ──► Room ────┼──► LayoutProblem �
                                      │
 constraints.vlm (later) ──► Constraint[] (validated against this vocabulary)
 ```
+
+## Changelog
+- 0.2.0: additive. `ClearanceZone.allowed_categories`, `Asset.subtype`,
+  `AssetSource.front_confidence`, `AssetSource.aspect_mismatch` (requested by WS-B).
+- 0.1.0: initial contract.

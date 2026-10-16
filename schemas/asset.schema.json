@@ -23,6 +23,33 @@
           ],
           "title": "Geometry From",
           "type": "string"
+        },
+        "front_confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Front Confidence"
+        },
+        "aspect_mismatch": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aspect Mismatch"
         }
       },
       "required": [
@@ -50,6 +77,14 @@
           ],
           "title": "Purpose",
           "type": "string"
+        },
+        "allowed_categories": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Categories",
+          "type": "array"
         }
       },
       "required": [
@@ -154,6 +189,18 @@
       "title": "Category",
       "type": "string"
     },
+    "subtype": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Subtype"
+    },
     "label": {
       "default": "",
       "title": "Label",
@@ -205,7 +252,9 @@
       "$ref": "#/$defs/AssetSource",
       "default": {
         "dimensions_from": "manual",
-        "geometry_from": "box"
+        "geometry_from": "box",
+        "front_confidence": null,
+        "aspect_mismatch": null
       }
     },
     "front_confirmed": {

@@ -10,7 +10,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, PositiveFloat
+from pydantic import BaseModel, Field, PositiveFloat
 
 from .geometry import Polygon2D
 
@@ -34,6 +34,9 @@ class ClearanceZone(BaseModel):
     name: str
     polygon: Polygon2D
     purpose: Literal["access", "swing", "use"] = "access"
+    # Categories whose footprints MAY enter this zone (e.g. chairs inside a dining
+    # table's or desk's chair zone). Empty means no other footprint may enter.
+    allowed_categories: list[str] = []
 
 
 class MeshRef(BaseModel):
@@ -46,12 +49,16 @@ class MeshRef(BaseModel):
 class AssetSource(BaseModel):
     dimensions_from: Literal["roomplan", "listing", "manual", "mesh"]
     geometry_from: Literal["box", "sam3d", "catalog", "object_capture", "manual"] = "box"
+    # Asset-normalization quality signals, so the UI/solver can warn without the report.
+    front_confidence: float | None = Field(None, ge=0.0, le=1.0)
+    aspect_mismatch: float | None = Field(None, ge=0.0)  # fraction, e.g. 0.15 = 15%
 
 
 class Asset(BaseModel):
     id: str
     # RoomPlan category where possible: sofa, chair, table, bed, storage, television, ...
     category: str
+    subtype: str | None = None  # finer type within category: sectional, dining_chair, desk
     label: str = ""
     dimensions: Dimensions
     footprint: Polygon2D | None = None  # local frame; None means the bounding rectangle

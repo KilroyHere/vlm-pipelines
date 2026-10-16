@@ -30,24 +30,29 @@ WS-A and WS-B share **only** `roomlayout.schema`. Neither imports the other.
       + top-down PNG per layout.
 
 ### M2a: Asset normalization (WS-B, CPU)
-- [ ] Raw mesh (any common format) → canonical frame (ADR-0001), fitted to measured
+- [x] Raw mesh (any common format) → canonical frame (ADR-0001), fitted to measured
       `Dimensions`, exported as GLB with correct glTF Y-up conversion (round-trip test).
-- [ ] Footprint extraction → simplified local-frame `Polygon2D`, validated by tests on
+- [x] Footprint extraction → simplified local-frame `Polygon2D`, validated by tests on
       synthetic L-sofa / round table / chair meshes.
-- [ ] Front-orientation candidates: 4 yaw hypotheses + side renders for a later
+- [x] Front-orientation candidates: 4 yaw hypotheses + side renders for a later
       VLM/user pick; heuristic default.
-- [ ] Mismatch report when the generator's aspect ratio disagrees with measured
+- [x] Mismatch report when the generator's aspect ratio disagrees with measured
       dimensions beyond a tolerance.
-- [ ] CLI `python -m roomlayout.assets RAW_MESH --dims W D H --category C --out DIR`
+- [x] CLI `python -m roomlayout.assets RAW_MESH --dims W D H --category C --out DIR`
       → GLB + `Asset` JSON that validates and drops straight into a `LayoutProblem`.
 
 ### M2b: SAM 3D spike (WS-B harness; GPU run by EXT)
-- [ ] Verified requirements: GPU/VRAM, license terms (commercial?), input format
+- [x] Verified requirements: GPU/VRAM, license terms (commercial?), input format
       (image + mask).
-- [ ] Runbook + scripts to run SAM 3D Objects on a folder of `image + mask` pairs on a
+- [x] Runbook + scripts to run SAM 3D Objects on a folder of `image + mask` pairs on a
       rented GPU, then feed outputs through M2a.
-- [ ] Evaluation protocol: 20-photo test set spec, scoring rubric, go/no-go thresholds.
-- [ ] **Go/no-go decision** (needs the GPU run).
+- [x] Evaluation protocol: 20-photo test set spec, scoring rubric, go/no-go thresholds.
+- [ ] **Go/no-go decision**: blocked on EXT (GPU + Hugging Face checkpoint approval).
+
+Verified SAM 3D facts (details and sources: `spikes/sam3d/README.md`): linux x86-64 + NVIDIA GPU
+≥ 32 GB VRAM; checkpoints gated on Hugging Face with manual approval; output mesh is Y-up and
+not metric; SAM License has no non-commercial clause (engineering reading, **not** legal advice).
+Estimated spike cost: 3–4 GPU-hours on a 48 GB card, < $10.
 
 ### M3+: constraints (VLM), RoomPlan ingest + iOS capture, end-to-end. Not started.
 
@@ -62,11 +67,16 @@ WS-A and WS-B share **only** `roomlayout.schema`. Neither imports the other.
 | Risk | Impact | Owner | Mitigation | Status |
 |---|---|---|---|---|
 | SAM 3D quality too low on real room photos | Lose the novelty feature | WS-B / EXT | Spike with go/no-go rubric; fallback: catalog retrieval, Object Capture | open |
-| SAM 3D license blocks commercial use | Must swap generator | EXT | Check before building on it; generator boundary (ADR-0004) keeps the swap cheap | open |
-| No GPU available for the spike | M2b blocked | EXT | Hourly cloud GPU; everything else runs on CPU | open: **needs owner action** |
+| SAM 3D license blocks commercial use | Must swap generator | EXT | License text has no non-commercial clause; counsel to confirm. Generator boundary (ADR-0004) keeps a swap cheap | open: needs legal confirmation |
+| Hugging Face checkpoint approval delay | M2b blocked | EXT | Request access now (manual approval; asks for legal name, DOB, organization) | open: **needs owner action** |
+| Front heuristic wrong on real (blobby/hallucinated) meshes | Assets face the wall | WS-B | Contact sheets for VLM/user confirmation; `front_confidence` surfaced in the schema | open |
+| No GPU available for the spike | M2b blocked | EXT | Rent a ≥ 32 GB NVIDIA card hourly (48 GB ≈ $0.6–1.1/h); everything else runs on CPU | open: **needs owner action** |
 | Layouts satisfy rules but look bad | Core value | WS-A | Visual review of the suite; scoring iteration; VLM critic later | open |
 | Wrong furniture size | Silently wrong layouts | WS-B | Measured dimensions always win (ADR-0004); mismatch report | mitigated by design |
 | Schema churn between workstreams | Integration rework | Lead | Single owner, version bumps, integration test | mitigated |
 
 ## Status log
 - 2026-10-16: Contract v0.1.0, ADRs 0001–0004, and the plan landed. WS-A and WS-B kicked off.
+- 2026-10-16: WS-B delivered M2a (asset normalization, tested on CPU) and the M2b harness. Contract v0.2.0
+  (additive: `allowed_categories`, `subtype`, quality signals) accepted from WS-B review. Open follow-up:
+  front-candidate side-view render bug. M2b go/no-go waits on GPU + checkpoint access.
