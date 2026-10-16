@@ -1,5 +1,5 @@
 {
- "schema_version": "0.2.0",
+ "schema_version": "0.3.0",
  "id": "wall_tv_living",
  "room": {
   "id": "room_wall_tv_living",
@@ -109,7 +109,44 @@
     "height": 0.75
    },
    "label": "wall-mounted TV",
-   "mount": "wall"
+   "mount": "wall",
+   "elevation": 1.0
+  },
+  {
+   "id": "tv_console",
+   "category": "storage",
+   "dimensions": {
+    "width": 1.6,
+    "depth": 0.4,
+    "height": 0.5
+   },
+   "label": "low console under the TV",
+   "clearance_zones": [
+    {
+     "name": "drawers",
+     "purpose": "access",
+     "polygon": {
+      "points": [
+       [
+        -0.8,
+        0.2
+       ],
+       [
+        0.8,
+        0.2
+       ],
+       [
+        0.8,
+        0.7
+       ],
+       [
+        -0.8,
+        0.7
+       ]
+      ]
+     }
+    }
+   ]
   },
   {
    "id": "sofa",
@@ -228,6 +265,30 @@
    "a": "sofa",
    "b": "tv",
    "hard": true
+  },
+  {
+   "type": "against_wall",
+   "id": "console_on_wall",
+   "a": "tv_console",
+   "hard": true
+  },
+  {
+   "type": "near",
+   "id": "console_under_tv",
+   "a": "tv_console",
+   "b": "tv",
+   "max_distance": 0.0,
+   "hard": true,
+   "rationale": "TV hangs above the console (vertical extents don't overlap)"
+  },
+  {
+   "type": "faces",
+   "id": "sofa_faces_console",
+   "a": "sofa",
+   "b": "tv_console",
+   "max_angle_deg": 10,
+   "weight": 0.5,
+   "rationale": "console roughly centred under the TV"
   },
   {
    "type": "distance_at_least",

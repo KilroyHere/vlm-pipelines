@@ -164,9 +164,11 @@ def render_layout(
             bbox={"fc": "white", "ec": "none", "alpha": 0.7, "pad": 0.5},
         )
 
-    # assets
-    for t, g in zip(model.templates, geoms, strict=True):
+    # assets (elevated ones last, translucent with a dashed outline, labelled "@ z")
+    order = sorted(zip(model.templates, geoms, strict=True), key=lambda tg: tg[0].z0)
+    for t, g in order:
         color = _PALETTE[t.idx % len(_PALETTE)]
+        elevated = t.z0 > 0.0
         for z in g.zones:
             ax.add_patch(
                 MplPolygon(
@@ -185,10 +187,11 @@ def render_layout(
                 list(g.fp.exterior.coords),
                 closed=True,
                 fc=color,
-                alpha=0.85,
+                alpha=0.45 if elevated else 0.85,
                 ec="black",
-                lw=1,
-                zorder=5,
+                lw=1.2 if elevated else 1,
+                ls="--" if elevated else "-",
+                zorder=5.5 if elevated else 5,
             )
         )
         (b0x, b0y), (b1x, b1y) = g.back
@@ -205,7 +208,7 @@ def render_layout(
         ax.text(
             g.x,
             g.y - 0.0,
-            t.id,
+            f"{t.id} @{t.z0:.2f} m" if elevated else t.id,
             fontsize=7,
             ha="center",
             va="top",
@@ -258,6 +261,7 @@ def render_layout(
         "green = walkway free space (centre locus",
         "  of a walker of the walkway width)",
         "grey cross-hatch = obstacle, blue = window",
+        "dashed translucent = elevated (@ bottom height)",
     ):
         lines.append((txt, "#333333", "normal"))
     y = 1.0
