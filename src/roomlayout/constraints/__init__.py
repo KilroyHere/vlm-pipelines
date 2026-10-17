@@ -7,4 +7,10 @@
 
 Imports ``roomlayout.schema`` only (ADR-0002). User/VLM constraints take precedence over
 rule-library ones (docs/constraints.md).
+
+``build_constraints(problem, text)`` runs both in the right order (``build``).
 """
+
+from .build import BuildResult, build_constraints
+
+__all__ = ["BuildResult", "build_constraints"]

@@ -90,6 +90,8 @@ constraints.vlm (later) ──► Constraint[] (validated against this vocabular
 ```
 
 ## Changelog
+- 0.6.0: taxonomy subtypes `bench`, `piano_bench`, `ottoman` (chair), `meeting_table` (table)
+  plus aliases (requested by WS-C). Non-RoomPlan categories (piano, plant) deferred.
 - 0.5.0: `Wall.label` (optional display name; default is a compass name from the
   interior normal, +Y = north); constraint ids must be unique within a problem
   (requested by WS-D).

@@ -61,13 +61,19 @@ not metric; SAM License has no non-commercial clause (engineering reading, **not
 Estimated spike cost: 3–4 GPU-hours on a 48 GB card, < $10.
 
 ### M3a: Rule library (WS-C)
-- [ ] `implied_constraints(problem) -> list[Constraint]` (origin `rule_library`, each with a
+- [x] `implied_constraints(problem) -> list[Constraint]` (origin `rule_library`, each with a
       rationale) covering seating↔TV, coffee table, desk + chair, dining set, bed +
       nightstands, storage against walls, door/window/walkway safety rules.
-- [ ] Precedence: never emits an implied relation for a subject the user/VLM constrained.
-- [ ] "Minimal" variants of the suite problems (user essentials only) solve to layouts
+- [x] Precedence: never emits an implied relation for a subject the user/VLM constrained.
+- [x] "Minimal" variants of the suite problems (user essentials only) solve to layouts
       that pass automated sensibility checks (e.g. coffee table between sofa and TV).
-- [ ] docs/constraints.md (rule table with rationale).
+- [x] docs/constraints.md (rule table with rationale).
+
+Result: from a problem with no relational constraints, the rule library alone yields a top layout
+that is feasible and passes every sensibility check on all 10 feasible suite rooms × 3 seeds
+(30/30); lead re-verified on an unseen seed. Policy: ADR-0007. Details: [constraints.md](constraints.md).
+In progress (WS-A): solver top-k quality gate + group moves for strong soft ties, so lower-ranked
+layouts are as good as the top one.
 
 ### M3b: VLM constraint extraction (WS-D), ADR-0006
 - [x] `parse_request(problem, text, client=...) -> ParseResult` (constraints with
@@ -82,8 +88,13 @@ oneOf). **Not yet verified live** (no credentials): schema acceptance by the API
 real cost (estimated ~$0.03/call warm, ~$0.07 cold), extraction accuracy. Details: [vlm.md](vlm.md).
 
 ### M3c: orchestration (lead)
-- [ ] `build_constraints(problem, text)` = VLM + rule library + precedence, plus an
+- [x] `build_constraints(problem, text)` = VLM + rule library + precedence, plus an
       integration test from user text to solved layouts.
+
+Result: `roomlayout.constraints.build_constraints` (user/VLM first, then rule library).
+Integration checkpoint 2 in `tests/test_integration.py`: user words → (offline, synthetic) VLM
+answer → rule library → solver → feasible layout honouring the user's hard request and passing
+every sensibility check; user intent overrides defaults; a refused parse still yields a problem.
 
 ### M4+: RoomPlan ingest + iOS capture, end-to-end. Not started.
 
@@ -107,6 +118,7 @@ them.
 1. ✅ An asset from M2a loads into a `LayoutProblem` and solves with M1
    (`tests/test_integration.py`: raw SAM 3D-convention mesh → normalize → disk →
    `Asset` JSON → solve).
+3. ✅ User words → constraints → layouts (M3c, see above).
 2. Schema change requests from either workstream are reviewed here and applied by
    the lead.
 
@@ -141,3 +153,5 @@ them.
   kicked off. No API credentials in the dev environment yet: VLM is built and tested offline.
 - 2026-10-17: WS-D delivered M3b (VLM extraction, offline-verified, 73-case eval). Contract v0.5.0 (`Wall.label`,
   unique constraint ids). ADR-0006 amended (`create` + raw schema; evidence-driven vocabulary growth).
+- 2026-10-17: M3a accepted (ADR-0007). Contract v0.6.0 (taxonomy: bench, piano_bench, ottoman, meeting_table).
+  M3c landed: `build_constraints` + integration checkpoint 2. WS-A on solver quality (top-k gate, group moves).

@@ -29,6 +29,10 @@ ROOMPLAN_CATEGORIES: tuple[str, ...] = (
 
 # subtype -> RoomPlan category
 SUBTYPES: dict[str, str] = {
+    "bench": "chair",
+    "piano_bench": "chair",
+    "ottoman": "chair",
+    "meeting_table": "table",
     "sectional": "sofa",
     "loveseat": "sofa",
     "armchair": "chair",
@@ -51,6 +55,10 @@ SUBTYPES: dict[str, str] = {
 
 # everyday word -> subtype or category
 ALIASES: dict[str, str] = {
+    "footstool": "ottoman",
+    "pouf": "ottoman",
+    "pouffe": "ottoman",
+    "conference_table": "meeting_table",
     "couch": "sofa",
     "settee": "loveseat",
     "sectional_sofa": "sectional",

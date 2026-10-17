@@ -90,3 +90,107 @@ def test_asset_category_table_matches_shared_taxonomy():
         assert taxonomy.resolve(key)[0] == profile.roomplan, key
     for alias in categories.ALIASES:
         assert taxonomy.resolve(alias) is not None, alias
+
+
+# --- Integration checkpoint 2: user words -> constraints -> layouts (M3c) -------------
+
+
+def _minimal_living_room() -> LayoutProblem:
+    data = json.loads((ROOT / "examples/problems/living_room_basic.json").read_text())
+    data["constraints"] = []
+    return LayoutProblem.model_validate(data)
+
+
+def _vlm_answer(constraints, unexpressed=()):
+    """A SYNTHETIC structured-output answer, served through the real SDK offline."""
+    from roomlayout.constraints.vlm.offline import offline_client, synthetic_response
+
+    output = {"constraints": list(constraints), "unexpressed": list(unexpressed)}
+    return offline_client([synthetic_response(output)])
+
+
+def test_user_words_to_feasible_sensible_layouts():
+    from roomlayout.constraints import build_constraints
+    from roomlayout.constraints.checks import check_layout
+
+    text = "Sofa with its back to the north wall. Armchair next to the bookshelf. Cozy!"
+    client = _vlm_answer(
+        [
+            {
+                "type": "against_wall",
+                "a": "sofa",
+                "wall_id": "w_north",
+                "max_gap": None,
+                "hard": True,
+                "restatement": "The sofa's back is against the north wall.",
+                "source_text": "Sofa with its back to the north wall",
+            },
+            {
+                "type": "near",
+                "a": "armchair",
+                "b": "bookshelf",
+                "max_distance": 0.1,
+                "hard": False,
+                "restatement": "The armchair is right next to the bookshelf.",
+                "source_text": "Armchair next to the bookshelf",
+            },
+        ],
+        [
+            {
+                "text": "Cozy!",
+                "kind": "out_of_vocabulary",
+                "reason": "Coziness isn't something the layout rules can express yet.",
+            }
+        ],
+    )
+
+    built = build_constraints(_minimal_living_room(), text, client=client)
+
+    assert built.parse.status == "ok", built.parse.message
+    assert [u.text for u in built.parse.unexpressed] == ["Cozy!"]
+    assert {c.origin for c in built.from_user} == {"vlm"}
+    assert built.from_rules and {c.origin for c in built.from_rules} == {"rule_library"}
+    wall_rule = next(c for c in built.from_user if c.type == "against_wall")
+
+    result = solve(built.problem, k=3, seed=0, time_budget_s=10.0)
+
+    top = result.layouts[0]
+    assert top.feasible, result.notes
+    by_id = {r.constraint_id: r for r in top.results}
+    assert by_id[wall_rule.id].satisfied  # the user's hard request holds
+    failed = [c for c in check_layout(built.problem, top) if not c.passed]
+    assert not failed, failed  # and the room still makes sense
+
+
+def test_user_intent_overrides_rule_library_defaults():
+    from roomlayout.constraints import build_constraints
+
+    client = _vlm_answer(
+        [
+            {
+                "type": "faces",
+                "a": "sofa",
+                "b": "bookshelf",
+                "max_angle_deg": None,
+                "hard": False,
+                "restatement": "The sofa faces the bookshelf.",
+                "source_text": "sofa facing the bookshelf",
+            }
+        ]
+    )
+    built = build_constraints(_minimal_living_room(), "sofa facing the bookshelf", client=client)
+
+    sofa_faces = [c for c in built.problem.constraints if c.type == "faces" and c.a == "sofa"]
+    assert [c.origin for c in sofa_faces] == ["vlm"]  # no implied sofa->TV / sofa->table
+
+
+def test_failed_parse_still_returns_a_rule_library_problem():
+    from roomlayout.constraints import build_constraints
+    from roomlayout.constraints.vlm.offline import offline_client, synthetic_response
+
+    refused = offline_client([synthetic_response(None, stop_reason="refusal")])
+    built = build_constraints(_minimal_living_room(), "anything", client=refused)
+
+    assert built.parse.status == "refused"
+    assert built.notes and not built.from_user
+    assert built.from_rules
