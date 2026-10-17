@@ -1,0 +1,36 @@
+{
+ "case_id": "lr-01",
+ "synthetic": true,
+ "note": "SYNTHETIC: hand-authored to exercise the scorer, not recorded from the API. Wire shape follows the Messages API (thinking + JSON text block).",
+ "prompt_version": "vlm-prompt-1",
+ "model": "claude-opus-5-5",
+ "effort": "medium",
+ "responses": [
+  {
+   "id": "msg_synthetic_lr-01",
+   "type": "message",
+   "role": "assistant",
+   "model": "claude-opus-5-5",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "synthetic-signature-lr-01"
+    },
+    {
+     "type": "text",
+     "text": "{\"constraints\": [{\"source_text\": \"Put the couch against the south wall\", \"type\": \"against_wall\", \"a\": \"sofa\", \"wall_id\": \"w_south\", \"max_gap\": null, \"hard\": true, \"restatement\": \"The sofa must go against the south wall.\"}, {\"source_text\": \"facing the TV\", \"type\": \"faces\", \"a\": \"sofa\", \"b\": \"tv_stand\", \"max_angle_deg\": null, \"hard\": true, \"restatement\": \"The sofa must face the TV.\"}], \"unexpressed\": []}"
+    }
+   ],
+   "stop_reason": "end_turn",
+   "stop_sequence": null,
+   "stop_details": null,
+   "usage": {
+    "input_tokens": 900,
+    "output_tokens": 600,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 5200
+   }
+  }
+ ]
+}

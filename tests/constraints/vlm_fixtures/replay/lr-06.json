@@ -1,0 +1,62 @@
+{
+ "case_id": "lr-06",
+ "synthetic": true,
+ "note": "SYNTHETIC: hand-authored to exercise the scorer, not recorded from the API. Wire shape follows the Messages API (thinking + JSON text block).",
+ "prompt_version": "vlm-prompt-1",
+ "model": "claude-opus-5-5",
+ "effort": "medium",
+ "responses": [
+  {
+   "id": "msg_synthetic_lr-06a",
+   "type": "message",
+   "role": "assistant",
+   "model": "claude-opus-5-5",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "synthetic-signature-lr-06a"
+    },
+    {
+     "type": "text",
+     "text": "{\"constraints\": [{\"source_text\": \"Put the floor lamp beside the armchair\", \"type\": \"near\", \"a\": \"floor_lamp\", \"b\": \"armchair\", \"max_distance\": 0.1, \"hard\": true, \"restatement\": \"The floor lamp must be next to the armchair.\"}], \"unexpressed\": []}"
+    }
+   ],
+   "stop_reason": "end_turn",
+   "stop_sequence": null,
+   "stop_details": null,
+   "usage": {
+    "input_tokens": 900,
+    "output_tokens": 600,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 5200
+   }
+  },
+  {
+   "id": "msg_synthetic_lr-06b",
+   "type": "message",
+   "role": "assistant",
+   "model": "claude-opus-5-5",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "synthetic-signature-lr-06b"
+    },
+    {
+     "type": "text",
+     "text": "{\"constraints\": [], \"unexpressed\": [{\"text\": \"Put the floor lamp beside the armchair.\", \"kind\": \"unknown_item\", \"reason\": \"There is no floor lamp in the scanned room.\"}]}"
+    }
+   ],
+   "stop_reason": "end_turn",
+   "stop_sequence": null,
+   "stop_details": null,
+   "usage": {
+    "input_tokens": 900,
+    "output_tokens": 600,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 5200
+   }
+  }
+ ]
+}

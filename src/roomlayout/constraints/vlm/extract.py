@@ -51,7 +51,9 @@ PRICING: dict[str, tuple[float, float, float, float]] = {
     "claude-opus-4-8": (5.00, 25.00, 6.25, 0.50),
 }
 
-Status = Literal["ok", "refused", "truncated", "invalid_output"]
+# "error" is only produced by callers that catch API exceptions (the eval); parse_request
+# itself lets SDK exceptions propagate.
+Status = Literal["ok", "refused", "truncated", "invalid_output", "error"]
 
 
 class Unexpressed(BaseModel):
@@ -153,9 +155,7 @@ def build_request(
     kwargs: dict[str, Any] = {
         "model": model,
         "max_tokens": max_tokens,
-        "system": [
-            {"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}
-        ],
+        "system": [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
         "messages": [{"role": "user", "content": content}],
         "thinking": {"type": "adaptive"},
         "output_config": {

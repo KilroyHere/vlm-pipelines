@@ -11,9 +11,22 @@ reconciling.
 
 ## 1. Test set (20 items)
 
-Every item: one photo, a mask (README section 3), and **tape-measured W x D x H in meters**
-(W = side to side seen from the front, D = front to back, H = floor to highest point; for
-L-sofas the overall bounding box). Note how the measurement was taken in `meta.json` `notes`.
+Every item: one photo, a mask (README section 3), and **W x D x H in meters** (W = side to
+side seen from the front, D = front to back, H = floor to highest point; for L-sofas the
+overall bounding box), with where the numbers came from in `meta.json` `dims_provenance`.
+
+**Photo sources.** Items may come from web listings (retailer product pages, resale or
+estate-sale listings; candidates per case in [photo_sources.md](photo_sources.md)) or from
+the owner's own photos. All of them count toward the one go/no-go decision. For a web item,
+record `source_url` and `dims_provenance` (`manufacturer`, `seller_reported` or
+`estimated`), and add a true footprint only where it's known. For the owner's own photos,
+tape-measure (`tape_measured`) and note how in `notes`. Per item:
+
+```bash
+python make_mask.py prepare listing.jpg data/sectional_03 --category sectional \
+    --dims W D H --dims-provenance seller_reported --condition in_room \
+    --source-url https://offerup.com/item/detail/...
+```
 
 | # | category (`meta.category`) | condition | why |
 |---|---|---|---|
@@ -39,34 +52,19 @@ L-sofas the overall bounding box). Note how the measurement was taken in `meta.j
 | 20 | armchair | in-room, top-down-ish phone angle | unusual viewpoint |
 
 Rules: at least 14 in-room items (the product promise) and at least 4 product photos.
-Photos from a recent iPhone or Android at default settings. No retouching. In-room photos
+Own photos: a recent iPhone or Android at default settings; web photos: the listing's image
+as downloaded (capture settings unknown). No retouching. In-room photos
 taken from where a user would naturally stand. Tag conditions in `meta.condition` with
 `product`, `in_room`, `occluded`, `low_light`, `clutter`, `back_view`, `odd_angle`.
 
 **True footprint** (`meta.true_footprint`): `"rect"` for boxy items, `"round"` for round or
 oval tops, otherwise `{"points": [[x, y], ...]}` in meters in the asset frame (origin at the
-centre of the W x D box, +Y = front, CCW), from tape measurements. Example, a 2.8 x 1.6 L
+centre of the W x D box, +Y = front, CCW), from tape measurements or a listing's drawing.
+Leave it out when the shape isn't known (G2 then skips the item). Example, a 2.8 x 1.6 L
 with a 0.8 m wide chaise at the right front and 0.9 m deep main seats:
 `[[-1.4,-0.8],[1.4,-0.8],[1.4,0.8],[0.6,0.8],[0.6,0.1],[-1.4,0.1]]`.
 For a rectangle the IoU is almost guaranteed by the fit to dims. The informative items are
 the L-sofas, round/oval tables and chairs with splayed legs. Report them separately.
-
-### Dev set (web-sourced): not part of the go/no-go set
-
-A separate warm-up set of web photos (retailer pages, resale/estate-sale listings) mapped
-1:1 to the 20 cases above; sources in [dev_web_sources.md](dev_web_sources.md).
-- **Purpose:** exercise masks, generation, normalization and scoring as soon as GPU access
-  arrives, and catch failure modes cheaply.
-- **Limits:** dims are manufacturer, seller-reported or estimated (unverified). There are
-  usually no true footprints, and phone/capture settings are unknown. **These items can't
-  inform go/no-go.**
-- **Mechanics:** `meta.json` `"set": "dev_web"` (default `"go_no_go"`), plus
-  `"dims_provenance"` (`tape_measured` | `manufacturer` | `seller_reported` | `estimated`)
-  and `"source_url"`. Dev items are rated with the same rubric (section 2). `score.py`
-  reports them in their own section and **never** in a G1-G5 denominator.
-- Go/no-go items must be tape-measured (`dims_provenance: tape_measured`, the default for
-  `make_mask.py prepare`). A dev photo that becomes a properly captured, measured item
-  (e.g. case #6 shot by the product owner) moves to `go_no_go`.
 
 ## 2. Rubric (manual, per item, in `outputs/scores.csv`)
 
@@ -101,7 +99,8 @@ fused with an occluder), `wrong_topology` (L became straight, holes closed/opene
   footprint. We report it with the heuristic's front and best-of-4 yaws; the go/no-go uses
   best-of-4 so front mistakes don't count twice.
 - *Aspect mismatch*: from our report, `max_i |s_i / s_geo - 1|` over the per-axis scale
-  factors. It's how far SAM 3D's proportions are from the tape measure.
+  factors. It's how far SAM 3D's proportions are from the stated dims (tape measure or
+  listing; read it together with `dims_provenance`).
 - *Generation time* (GPU seconds per item, model loaded once) and *peak VRAM*.
 - *Normalization warnings*: debris share, up-axis suspicion, tilt corrected, footprint rule.
 
@@ -114,20 +113,20 @@ in the results. The model-load time (once per process) is reported separately in
 
 `score.py` writes `outputs/results.md` in this form. Paste it into the PR / status report.
 
-| item | category | condition | status | gen s | VRAM GB | shape | texture | IoU (front / best) | mismatch | front auto/true (conf) | failures |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| sofa_01 | sofa | in_room | ok | | | | | / | | / ( ) | |
-| ... | | | | | | | | | | | |
+| item | category | condition | dims_provenance | status | gen s | VRAM GB | shape | texture | IoU (front / best) | mismatch | front auto/true (conf) | failures |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| sofa_01 | sofa | product | manufacturer | ok | | | | | / | | / ( ) | |
+| ... | | | | | | | | | | | | |
 
-Summary block: the five criteria below with value, threshold and pass/FAIL, computed over
-`go_no_go` items only (the report states the count), then texture pass rate and
-front-heuristic accuracy. The `dev_web` items follow in their own section with the same
-per-item columns and descriptive statistics, but no verdict. Also write a short paragraph on the
+Summary block: the five criteria below with value, threshold and pass/FAIL over all items,
+**how many items G2 covered** (only items with a true footprint), the dims-provenance mix,
+then texture pass rate and front-heuristic accuracy. Also write a short paragraph on the
 dominant failure tags and one contact-sheet example each of the best and worst item.
 
 ## 5. Go / no-go thresholds
 
-All rates below are over **`go_no_go` items only**. Dev-set items are excluded.
+All rates are over all items. G2 only covers items with a true footprint, and the report
+states how many. A G2 based on a handful of footprints is weak evidence: say so.
 
 Blocking (all must pass for GO):
 

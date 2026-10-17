@@ -36,3 +36,14 @@ and openings that exist, and the call must be cheap and testable without credent
   it surface as "couldn't express", which is the signal for growing the vocabulary.
 - A top-down image is an optional input (the orchestrator supplies a render); text
   summary alone must be sufficient.
+
+## Amendment (2026-10-17, from implementation)
+- The call is `client.beta.messages.create` with the raw JSON Schema in
+  `output_config.format`, not `messages.parse()`. In SDK 1.15, `parse()` validates inside
+  the call, so a `refusal` or `max_tokens` stop raises before `stop_reason` can be read.
+  The SDK's schema transform also rewrites `const` tags that the API supports. We
+  validate ourselves after checking `stop_reason`.
+- Vocabulary growth is evidence-driven: the live eval and production logs count
+  `unexpressed` items of kind `out_of_vocabulary`. Top candidates (from WS-D): `faces`/`near`
+  targeting openings ("sofa facing the window"), obstacles as targets, room-relative
+  placement (corner, centred on a wall).

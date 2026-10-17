@@ -70,12 +70,16 @@ Estimated spike cost: 3–4 GPU-hours on a 48 GB card, < $10.
 - [ ] docs/constraints.md (rule table with rationale).
 
 ### M3b: VLM constraint extraction (WS-D), ADR-0006
-- [ ] `parse_request(problem, text, client=...) -> ParseResult` (constraints with
+- [x] `parse_request(problem, text, client=...) -> ParseResult` (constraints with
       `origin="vlm"`, restatements, unexpressed items, dropped items with reasons).
-- [ ] Structured-output schema accepted by the API (anyOf, no oneOf); static across
+- [x] Structured-output schema accepted by the API (anyOf, no oneOf); static across
       requests; prompt caching on the static prefix.
-- [ ] Fully tested without credentials (recorded responses); live eval script over
+- [x] Fully tested without credentials (recorded responses); live eval script over
       ≥ 50 realistic requests with expected constraints, runnable when credentials exist.
+
+Result: 73-case eval set; schema verified offline against the documented limits (anyOf, no
+oneOf). **Not yet verified live** (no credentials): schema acceptance by the API, cache hits,
+real cost (estimated ~$0.03/call warm, ~$0.07 cold), extraction accuracy. Details: [vlm.md](vlm.md).
 
 ### M3c: orchestration (lead)
 - [ ] `build_constraints(problem, text)` = VLM + rule library + precedence, plus an
@@ -91,6 +95,10 @@ table in front of seating, a soft viewing distance), and the VLM prompt must ask
 them.
 
 ## Backlog
+- **Vocabulary growth (ADR-0006 amendment), decide from live-eval `out_of_vocabulary` counts:**
+  `faces`/`near` to openings (top candidate), obstacles as targets, corner/centred placement.
+- First live VLM eval run (needs credentials): schema acceptance, cache hits, effort low vs
+  medium, per-tag accuracy. See docs/vlm.md.
 - Line of sight for `faces` (only tall assets block view): WS-A request, deferred.
 - Even distribution of chairs around a table: deferred.
 - Height-banded footprints (chair tucked under desk): ADR-0003, deferred.
@@ -131,3 +139,5 @@ them.
 - 2026-10-17: Counsel confirmed SAM 3D license is fine for our use. GPU provider: RunPod. Contract v0.4.0
   (shared `taxonomy`). ADR-0006 (VLM extraction design). M3a (rule library, WS-C) and M3b (VLM, WS-D)
   kicked off. No API credentials in the dev environment yet: VLM is built and tested offline.
+- 2026-10-17: WS-D delivered M3b (VLM extraction, offline-verified, 73-case eval). Contract v0.5.0 (`Wall.label`,
+  unique constraint ids). ADR-0006 amended (`create` + raw schema; evidence-driven vocabulary growth).

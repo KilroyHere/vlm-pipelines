@@ -1,0 +1,36 @@
+{
+ "case_id": "lr-11",
+ "synthetic": true,
+ "note": "SYNTHETIC: hand-authored to exercise the scorer, not recorded from the API. Wire shape follows the Messages API (thinking + JSON text block).",
+ "prompt_version": "vlm-prompt-1",
+ "model": "claude-opus-5-5",
+ "effort": "medium",
+ "responses": [
+  {
+   "id": "msg_synthetic_lr-11",
+   "type": "message",
+   "role": "assistant",
+   "model": "claude-opus-5-5",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "synthetic-signature-lr-11"
+    },
+    {
+     "type": "text",
+     "text": "{\"constraints\": [{\"source_text\": \"Sofa facing the TV please\", \"type\": \"faces\", \"a\": \"sofa\", \"b\": \"tv_stand\", \"max_angle_deg\": null, \"hard\": true, \"restatement\": \"The sofa must face the TV.\"}, {\"source_text\": \"Sofa facing the TV please\", \"type\": \"faces\", \"a\": \"tv_stand\", \"b\": \"sofa\", \"max_angle_deg\": null, \"hard\": true, \"restatement\": \"The TV must face the sofa.\"}], \"unexpressed\": []}"
+    }
+   ],
+   "stop_reason": "end_turn",
+   "stop_sequence": null,
+   "stop_details": null,
+   "usage": {
+    "input_tokens": 900,
+    "output_tokens": 600,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 5200
+   }
+  }
+ ]
+}

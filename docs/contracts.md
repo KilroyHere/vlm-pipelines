@@ -90,6 +90,9 @@ constraints.vlm (later) ──► Constraint[] (validated against this vocabular
 ```
 
 ## Changelog
+- 0.5.0: `Wall.label` (optional display name; default is a compass name from the
+  interior normal, +Y = north); constraint ids must be unique within a problem
+  (requested by WS-D).
 - 0.4.0: additive. `roomlayout.schema.taxonomy`: shared category/subtype/alias vocabulary
   (`resolve(name) -> (category, subtype)`), promoted from `assets.categories` for M3.
 - 0.3.0: `Asset.elevation`; `SolveStats.restarts`, `time_to_first_feasible_s`,

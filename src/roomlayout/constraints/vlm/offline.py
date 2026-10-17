@@ -22,8 +22,9 @@ import httpx2  # the SDK's HTTP library (anthropic 1.x); provides the mock trans
 Responder = Callable[[dict[str, Any]], dict[str, Any]]
 
 
-class OfflineExhausted(RuntimeError):
-    """More requests were made than prepared responses."""
+class OfflineExhausted(anthropic.AnthropicError):
+    """More requests were made than prepared responses. (An ``AnthropicError`` so the
+    SDK re-raises it as-is instead of wrapping it in ``APIConnectionError``.)"""
 
 
 def offline_client(
@@ -78,7 +79,9 @@ def synthetic_response(
     """
     content: list[dict[str, Any]] = []
     if fallback_from:
-        content.append({"type": "fallback", "from": {"model": fallback_from}, "to": {"model": model}})
+        content.append(
+            {"type": "fallback", "from": {"model": fallback_from}, "to": {"model": model}}
+        )
     content.append({"type": "thinking", "thinking": "", "signature": f"synthetic-signature-{tag}"})
     if output is not None:
         text = output if isinstance(output, str) else json.dumps(output)

@@ -429,10 +429,7 @@ def main(argv: list[str] | None = None) -> int:
         summaries[item.item_id] = s
         flag = "OK " if not item.problems else "BAD"
         dims = item.dims or "NO DIMS"
-        print(
-            f"[{flag}] {item.item_id:24s} {s.category:14s} {dims} "
-            f"{'; '.join(item.problems)}"
-        )
+        print(f"[{flag}] {item.item_id:24s} {s.category:14s} {dims} {'; '.join(item.problems)}")
         if not item.problems and item.dims is None:
             print(f"      {item.item_id}: no measured dims; the asset will be flagged 'mesh'")
         if s.dims_provenance in ("manufacturer", "seller_reported") and not s.source_url:

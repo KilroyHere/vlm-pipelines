@@ -20,6 +20,9 @@ class Wall(BaseModel):
     end: Vec2
     height: PositiveFloat
     thickness: PositiveFloat = 0.1
+    # Human name shown on the user's floor plan ("window wall", "north"). When None,
+    # consumers derive a compass name from the wall's interior normal (+Y = north).
+    label: str | None = None
 
     @property
     def length(self) -> float:

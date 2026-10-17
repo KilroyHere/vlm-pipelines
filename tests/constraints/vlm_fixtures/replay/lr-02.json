@@ -1,0 +1,36 @@
+{
+ "case_id": "lr-02",
+ "synthetic": true,
+ "note": "SYNTHETIC: hand-authored to exercise the scorer, not recorded from the API. Wire shape follows the Messages API (thinking + JSON text block).",
+ "prompt_version": "vlm-prompt-1",
+ "model": "claude-opus-5-5",
+ "effort": "medium",
+ "responses": [
+  {
+   "id": "msg_synthetic_lr-02",
+   "type": "message",
+   "role": "assistant",
+   "model": "claude-opus-5-5",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "synthetic-signature-lr-02"
+    },
+    {
+     "type": "text",
+     "text": "{\"constraints\": [], \"unexpressed\": [{\"text\": \"I want it to feel cozy\", \"kind\": \"out_of_vocabulary\", \"reason\": \"Coziness is a style, not a placement rule.\"}]}"
+    }
+   ],
+   "stop_reason": "end_turn",
+   "stop_sequence": null,
+   "stop_details": null,
+   "usage": {
+    "input_tokens": 900,
+    "output_tokens": 600,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 5200
+   }
+  }
+ ]
+}

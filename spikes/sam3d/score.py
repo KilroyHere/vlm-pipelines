@@ -276,8 +276,8 @@ def _stats_lines(st: dict) -> list[str]:
 
 def _item_table(rows: list[dict]) -> list[str]:
     lines = [
-        "| item | category | condition | dims_provenance | status | gen s | VRAM GB | shape | texture | "
-        "IoU (front / best) | mismatch | front auto/true (conf) | failures |",
+        "| item | category | condition | dims_provenance | status | gen s | VRAM GB | shape | "
+        "texture | IoU (front / best) | mismatch | front auto/true (conf) | failures |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:

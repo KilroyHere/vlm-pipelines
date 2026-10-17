@@ -1,22 +1,26 @@
-# Dev set (`dev_web`): web-sourced photos
+# Photo sources for the evaluation set
 
-A warm-up set of web photos (retailer product pages, resale and estate-sale listings) mapped
-1:1 to the 20 cases in [EVAL.md](EVAL.md). It lets us exercise the pipeline the day GPU
-access arrives. It **never counts for go/no-go**: dims are unverified, there are no true
-footprints and capture settings are unknown (EVAL.md, "Dev set").
+Where the photos for the 20 cases in [EVAL.md](EVAL.md) come from: retailer product pages,
+resale and estate-sale listings, mapped 1:1 to the cases, plus the owner's own photos where
+no listing fits (#6). All of them are part of the one evaluation and the one go/no-go
+decision. Web listings bring their own limits: dims are manufacturer- or seller-reported or
+estimated, capture settings are unknown, and a true footprint exists only where it's known.
+Each item records this in `meta.json` (`dims_provenance`, `source_url`, `true_footprint` only
+when known), and `score.py` shows it per item.
 
 ## Data handling
 - Download images **by hand** into the gitignored `data/` directory (e.g.
-  `data/dev03_sectional/`). Never commit photos, masks or outputs.
+  `data/sectional_03/`). Never commit photos, masks or outputs.
 - Internal evaluation only. Listing photos show private homes, so outputs (meshes, renders,
   contact sheets) derived from them aren't published or shared outside the team.
 - Record the page each photo came from in `meta.json` `source_url` (`make_mask.py prepare
   --source-url` strips `utm_*`/`fbclid`/`gclid` tracking parameters), and note in `notes`
   which image of the gallery was used.
-- Retailer/listing images belong to their owners. Use them only for this internal check.
+- Retailer/listing images belong to their owners. Use them only for this internal evaluation.
 
-Item ids: `devNN_<short name>`, e.g. `dev01_kivik`. Prepare each item with
-`--set dev_web --dims-provenance <source> --source-url <URL>` (README section 3b).
+Item ids: `<category>_<NN>` with NN the case number, e.g. `sofa_01`, `sectional_03`. Prepare
+each item with `make_mask.py prepare ... --dims-provenance <source> --source-url <URL>`
+(README section 3).
 
 ## Sources
 
@@ -44,8 +48,9 @@ Item ids: `devNN_<short name>`, e.g. `dev01_kivik`. Prepare each item with
 | 6 | armchair, low light | needs sourcing | **needs sourcing** | – | – |
 
 **#6 recommendation:** have the product owner photograph their own armchair at night
-(lamps only) with a phone at default settings and tape-measure it. That makes it a genuine
-`go_no_go` item (tape-measured dims, known capture, true footprint) rather than a dev item.
+(lamps only) with a phone at default settings and tape-measure it. That gives an
+item with tape-measured dims, a known capture and a true footprint
+(`--dims-provenance tape_measured`, no `source_url`).
 
 "check listing" means nobody has checked the page for dimensions yet. Whoever downloads the
 image records what the page states (`seller_reported`), or uses `estimated` and says how in

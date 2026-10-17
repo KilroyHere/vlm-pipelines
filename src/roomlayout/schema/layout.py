@@ -9,7 +9,7 @@ from .constraints import Constraint, Fixed, referenced_assets
 from .geometry import Pose2D
 from .room import Room
 
-SCHEMA_VERSION = "0.4.0"
+SCHEMA_VERSION = "0.5.0"
 
 
 class LayoutProblem(BaseModel):
@@ -28,6 +28,9 @@ class LayoutProblem(BaseModel):
         if len(set(ids)) != len(ids):
             raise ValueError("duplicate asset ids")
         known = set(ids)
+        cids = [c.id for c in self.constraints]
+        if len(set(cids)) != len(cids):
+            raise ValueError("duplicate constraint ids")
         openings = {o.id for o in self.room.openings}
         walls = {w.id for w in self.room.walls}
         for c in self.constraints:
