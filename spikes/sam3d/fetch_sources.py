@@ -309,8 +309,17 @@ def filter_candidates(raw: list[tuple[str, str, str]], base_url: str) -> list[Ca
 # --------------------------------------------------------------------------- dimensions
 
 _NUM = r"(\d+(?:\.\d+)?(?:\s+\d+/\d+)?|\d+/\d+)"
-_FRAC_CHARS = {"½": " 1/2", "¼": " 1/4", "¾": " 3/4", "⅛": " 1/8", "⅜": " 3/8", "⅝": " 5/8",
-               "⅞": " 7/8", "⅓": " 1/3", "⅔": " 2/3"}
+_FRAC_CHARS = {
+    "½": " 1/2",
+    "¼": " 1/4",
+    "¾": " 3/4",
+    "⅛": " 1/8",
+    "⅜": " 3/8",
+    "⅝": " 5/8",
+    "⅞": " 7/8",
+    "⅓": " 1/3",
+    "⅔": " 2/3",
+}
 _UNIT = r"(\"|”|''|in\b|inch(?:es)?\b|cm\b|mm\b|m\b|'|ft\b|feet\b)"
 TO_M = {"in": 0.0254, "cm": 0.01, "mm": 0.001, "m": 1.0, "ft": 0.3048}
 
@@ -391,24 +400,13 @@ def parse_dims_text(text: str) -> tuple[dict, str] | None:
 
 
 def parse_ikea_dims(page_html: str) -> tuple[dict, str] | None:
-    """IKEA product pages: JSON-LD Product width/depth/height, else the Measurements
-    accordion (Max. width / Max. depth for sectionals), never the packaging section."""
-    for obj in jsonld_objects(_PageParser.jsonld_blocks(page_html)):
-        for o in obj if isinstance(obj, list) else [obj]:
-            if isinstance(o, dict) and o.get("@type") == "Product":
-                vals = [o.get(k) for k in ("width", "depth", "height")]
-                if all(isinstance(v, str) for v in vals):
-                    try:
-                        m = [_ikea_value(v) for v in vals]
-                    except ValueError:
-                        continue
-                    text = f"JSON-LD width {vals[0]}, depth {vals[1]}, height {vals[2]}"
-                    return dict(zip(("width", "depth", "height"), m, strict=True)), text
+    """IKEA product pages: the Measurements table (Max. width / Max. depth, so a sectional
+    includes its chaise), else JSON-LD; never the packaging section."""
     i = page_html.find('id="SEC_measurements')
     if i < 0:
         i = page_html.find(">Measurements<")
     if i < 0:
-        return None
+        return _ikea_jsonld_dims(page_html)
     seg = page_html[i : i + 20000]
     j = seg.find("measurements-packaging", 50)
     seg = seg[:j] if j > 0 else seg
@@ -430,6 +428,23 @@ def parse_ikea_dims(page_html: str) -> tuple[dict, str] | None:
         return {k: v[0] for k, v in out.items()}, "Measurements: " + ", ".join(
             v[1] for v in out.values()
         )
+    return _ikea_jsonld_dims(page_html)
+
+
+def _ikea_jsonld_dims(page_html: str) -> tuple[dict, str] | None:
+    """Fallback: JSON-LD Product width/depth/height. Its depth is the *minimum* depth, so a
+    sectional's chaise is missing; only used when the Measurements table isn't found."""
+    for obj in jsonld_objects(_PageParser.jsonld_blocks(page_html)):
+        for o in obj if isinstance(obj, list) else [obj]:
+            if isinstance(o, dict) and o.get("@type") == "Product":
+                vals = [o.get(k) for k in ("width", "depth", "height")]
+                if all(isinstance(v, str) for v in vals):
+                    try:
+                        m = [_ikea_value(v) for v in vals]
+                    except ValueError:
+                        continue
+                    text = f"JSON-LD width {vals[0]}, depth {vals[1]}, height {vals[2]}"
+                    return dict(zip(("width", "depth", "height"), m, strict=True)), text
     return None
 
 
@@ -624,7 +639,7 @@ def download_candidates(fetcher: Fetcher, src: Source, item_dir: Path, rep: Item
         except Exception as exc:
             c.status, c.reject = "download_failed", str(exc)[:200]
             continue
-        ext = (IMG_EXT.search(c.url).group(1).lower() if IMG_EXT.search(c.url) else "jpg")
+        ext = IMG_EXT.search(c.url).group(1).lower() if IMG_EXT.search(c.url) else "jpg"
         c.file = f"{k:03d}.{ext.replace('jpeg', 'jpg')}"
         (cdir / c.file).write_bytes(data)
         try:
@@ -695,8 +710,7 @@ def process(src: Source, data: Path, fetcher: Fetcher | None, detector, args) ->
         "image_url": chosen.url,
         "image_selection": {
             "detector": "google/owlv2-base-patch16-ensemble",
-            "rule": "highest selected-box score with box fraction in "
-            f"{frac_range(src.condition)}",
+            "rule": f"highest selected-box score with box fraction in {frac_range(src.condition)}",
             "candidate_file": chosen.file,
             "detection": chosen.detection,
         },
