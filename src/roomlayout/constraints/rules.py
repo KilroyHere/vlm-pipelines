@@ -76,6 +76,8 @@ W_DESK_CHAIR = 2.0
 DESK_CHAIR_NEAR = 0.15
 W_DESK_WALL = 0.5
 W_INVITED = 1.5  # zone invitation (asset admitted by another asset's clearance zone)
+W_OTTOMAN = 1.0
+OTTOMAN_NEAR = 0.6  # m: within leg reach of the seat
 ZONE_INVITE_NEAR = 0.3
 W_DINING = 1.0
 DINING_NEAR = 0.15
@@ -150,8 +152,10 @@ class Roles:
     wall_storage: list[str] = field(default_factory=list)
     desks: list[str] = field(default_factory=list)
     # (zone owner, zone name, member): a clearance zone that admits a category invites one
-    # otherwise-unassigned asset of that category (a piano's bench area -> the bench)
-    invited: list[tuple[str, str, str]] = field(default_factory=list)
+    # otherwise-unassigned asset of that category (a piano's bench area -> the bench).
+    # zone name None: a piano bench paired with a piano-labelled asset (no zone).
+    invited: list[tuple[str, str | None, str]] = field(default_factory=list)
+    footrests: list[tuple[str, str]] = field(default_factory=list)  # (ottoman, seat)
 
 
 def _area(a: Asset) -> float:
@@ -188,7 +192,8 @@ def assign_roles(problem: LayoutProblem) -> Roles:
 
     desks = of(lambda r: r.subtype == "desk")
     R.desks = desks
-    dining_tables = of(lambda r: r.subtype in ("dining_table", "round_table"))
+    # tables that take a set of chairs (meeting tables behave like dining tables)
+    dining_tables = of(lambda r: r.subtype in ("dining_table", "round_table", "meeting_table"))
     office = of(lambda r: r.subtype == "office_chair")
     dining_chairs = of(lambda r: r.subtype == "dining_chair")
     generic = of(lambda r: r.category == "chair" and r.subtype is None)
@@ -217,10 +222,13 @@ def assign_roles(problem: LayoutProblem) -> Roles:
     for k, b in enumerate(beds):
         R.beds.append((b, stands_n[k :: len(beds)] if beds else []))
     R.wall_storage = of(lambda r: r.subtype in WALL_STORAGE)
-    # zone invitations: leftover generic chairs and stools, other assets with no role
+    # zone invitations: benches first (piano benches before plain ones), then leftover
+    # generic chairs, then stools. Benches and stools never become desk or dining chairs.
     taken = {c for _, c in R.desk_pairs} | {c for _, cs in R.dining for c in cs}
     taken |= set(R.secondary_seating) | {R.primary_seating}
-    free = [i for i in generic + of(lambda r: r.subtype == "stool") if i not in taken]
+    piano_benches = of(lambda r: r.subtype == "piano_bench")
+    free = piano_benches + of(lambda r: r.subtype == "bench") + generic
+    free = [i for i in free + of(lambda r: r.subtype == "stool") if i not in taken]
     for owner in assets:
         if owner.id in desks or owner.id in dining_tables:
             continue  # desk chairs and dining chairs are handled above
@@ -231,6 +239,22 @@ def assign_roles(problem: LayoutProblem) -> Roles:
                     free.remove(cand[0])
                     R.invited.append((owner.id, z.name, cand[0]))
                     break
+    # a piano bench without an inviting zone goes to a piano-labelled asset (piano is not
+    # a taxonomy category, so this is matched on words)
+    pianos = [
+        a.id
+        for a in assets
+        if roles[a.id].category != "chair"
+        and "piano" in _id_tokens(f"{a.category} {a.label} {a.id}")
+    ]
+    lone = [b for b in piano_benches if b in free]
+    for k, b in enumerate(lone):
+        if pianos:
+            R.invited.append((pianos[k % len(pianos)], None, b))
+    # ottomans are footrests for the main seating (else the first secondary seat)
+    seat_for_ottoman = R.primary_seating or (R.secondary_seating or [None])[0]
+    if seat_for_ottoman:
+        R.footrests = [(o, seat_for_ottoman) for o in of(lambda r: r.subtype == "ottoman")]
     return R
 
 
@@ -443,17 +467,22 @@ def implied_constraints(problem: LayoutProblem) -> list[Constraint]:
     for d in roles.desks:
         wall(d, W_DESK_WALL, "desks usually stand against a wall (weak preference)")
     for owner, zone, member in roles.invited:
-        why = f"{member} belongs in {owner}'s '{zone}' zone, which admits it"
+        if zone is None:
+            why = f"the {roles.by_id[member].subtype} sits at the {owner}'s front"
+        else:
+            why = f"{member} belongs in {owner}'s '{zone}' zone, which admits it"
         near(member, owner, ZONE_INVITE_NEAR, W_INVITED, why)
         faces(member, owner, W_INVITED, why)
-        if _zone_in_front(by[owner], zone):
-            faces(owner, member, W_INVITED, f"{why} (the zone is in front of {owner})")
+        if zone is None or _zone_in_front(by[owner], zone):
+            faces(owner, member, W_INVITED, f"{why} (in front of {owner})")
+    for o, seat in roles.footrests:
+        near(o, seat, OTTOMAN_NEAR, W_OTTOMAN, f"an ottoman is a footrest/extra seat by {seat}")
 
     # ---------------------------------------------------------------- dining
     for t, chairs in roles.dining:
         for ch in chairs:
-            near(ch, t, DINING_NEAR, W_DINING, "dining chairs are at the table")
-            faces(ch, t, W_DINING, "dining chairs face the table")
+            near(ch, t, DINING_NEAR, W_DINING, "chairs of a table set are at the table")
+            faces(ch, t, W_DINING, "chairs of a table set face the table")
 
     # ---------------------------------------------------------------- bedroom
     for b, stands in roles.beds:

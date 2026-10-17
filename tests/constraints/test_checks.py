@@ -222,3 +222,25 @@ def test_invited_member_in_zone():
         for r in check_layout(p, layout({"piano": (2, 3.7, S), "bench": (4, 1, N)}))
     }
     assert not away["invited_at_zone[piano:bench]"]
+
+
+def test_ottoman_and_piano_bench_checks():
+    p = problem(
+        [
+            a("sofa", "sofa", 2.0, 0.9),
+            a("pouf", "chair", 0.5, 0.5, subtype="ottoman"),
+            a("upright", "storage", 1.5, 0.6, 1.2, label="piano"),
+            a("pb", "chair", 0.8, 0.4, subtype="piano_bench"),
+        ]
+    )
+    good = {
+        "sofa": (2.5, 0.45, N),
+        "pouf": (2.5, 1.4, N),
+        "upright": (1.0, 3.7, S),
+        "pb": (1.0, 2.9, N),
+    }
+    res = {r.name: r.passed for r in check_layout(p, layout(good))}
+    assert res["ottoman_by_seating[pouf]"] and res["seat_at_front_of[upright:pb]"]
+    bad = {**good, "pouf": (4.5, 3.5, N), "pb": (3.0, 3.7, W)}
+    res = {r.name: r.passed for r in check_layout(p, layout(bad))}
+    assert not res["ottoman_by_seating[pouf]"] and not res["seat_at_front_of[upright:pb]"]

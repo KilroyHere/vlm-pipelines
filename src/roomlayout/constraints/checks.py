@@ -246,6 +246,19 @@ def _invited(problem: LayoutProblem, roles: Roles, P: dict[str, _Placed]) -> lis
     out = []
     by = {a.id: a for a in problem.assets}
     for owner, zone, member in roles.invited:
+        if zone is None:  # a bench paired with an instrument: close, in front of it
+            o = P[owner]
+            lx, ly = o.local(P[member].center)
+            d = o.poly.distance(P[member].poly)
+            ok = ly > o.ymax and abs(lx) <= (o.xmax - o.xmin) / 2 and d <= 0.6
+            out.append(
+                CheckResult(
+                    f"seat_at_front_of[{owner}:{member}]",
+                    ok,
+                    f"{d:.2f} m away, {lx:+.2f} m off centre",
+                )
+            )
+            continue
         z = next(z for z in by[owner].clearance_zones if z.name == zone)
         world = Polygon([P[owner].pose.transform(p) for p in z.polygon.points])
         inside = world.buffer(0.1).contains(Point(P[member].center))
@@ -256,6 +269,9 @@ def _invited(problem: LayoutProblem, roles: Roles, P: dict[str, _Placed]) -> lis
                 f"{member} {'is' if inside else 'is not'} in {owner}'s {zone}",
             )
         )
+    for o, seat in roles.footrests:
+        d = P[o].poly.distance(P[seat].poly)
+        out.append(CheckResult(f"ottoman_by_seating[{o}]", d <= 0.8, f"{d:.2f} m from {seat}"))
     return out
 
 

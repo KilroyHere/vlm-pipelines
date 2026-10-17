@@ -188,3 +188,98 @@ def test_basic_example_solves_quickly():
     p = LayoutProblem.model_validate_json((EXAMPLES / "living_room_basic.json").read_text())
     out = solve_detailed(p, k=3, seed=0, time_budget_s=10, workers=1, min_restarts=2)
     assert out.result.layouts[0].feasible
+
+
+def test_quality_gate_drops_clearly_worse_layouts():
+    """Every returned layout is within cost_margin of the best; disabling the gate can
+    only return more layouts."""
+    p = _small_problem()
+    gated = solve(p, k=6, seed=1, time_budget_s=60, workers=1, **FIXED_WORK)
+    ungated = solve(p, k=6, seed=1, time_budget_s=60, workers=1, cost_margin=None, **FIXED_WORK)
+    best = gated.layouts[0].cost
+    assert all(lay.cost <= best + 1.0 + 1e-9 for lay in gated.layouts)
+    assert len(ungated.layouts) >= len(gated.layouts)
+    tight = solve(p, k=6, seed=1, time_budget_s=60, workers=1, cost_margin=0.0, **FIXED_WORK)
+    assert all(lay.cost <= tight.layouts[0].cost + 1e-9 for lay in tight.layouts)
+    if len(tight.layouts) < 6:
+        assert any("cost margin" in n or "distinct" in n for n in tight.notes)
+
+
+def test_strong_soft_near_ties_form_move_groups():
+    p = make_problem(
+        [box("desk", 1.2, 0.6), box("chair", 0.5, 0.5), box("bed", 1.6, 2.0), box("ns", 0.45, 0.4)],
+        [
+            {
+                "type": "near",
+                "id": "n1",
+                "a": "chair",
+                "b": "desk",
+                "max_distance": 0.15,
+                "weight": 10,
+            },
+            {"type": "near", "id": "n2", "a": "ns", "b": "bed", "max_distance": 0.1, "weight": 1},
+        ],
+        room=box_room(5, 4),
+    )
+    m = Model(p)
+    assert m.followers[m.index["desk"]] == [m.index["chair"]]  # strong soft tie
+    assert m.followers[m.index["bed"]] == []  # weak soft tie: no group
+
+
+def test_walkway_shortcut_matches_brute_force():
+    """Model.eval_walkways skips a narrower walkway once a wider one is clear; on random
+    layouts the narrower one computed explicitly must then be clear as well."""
+    import random
+
+    from roomlayout.solver import rules
+
+    p = make_problem(
+        [
+            box("a", 1.2, 0.6),
+            box("b", 0.9, 0.9),
+            box("c", 1.6, 0.5),
+            box("d", 0.6, 0.6, zones=[front_zone(0.6, 0.6, 0.5)]),
+        ],
+        [
+            {"type": "walkway_width", "id": "hard", "min_width": 0.8, "hard": True},
+            {"type": "walkway_width", "id": "soft", "min_width": 0.9},
+        ],
+        room=box_room(
+            4.0,
+            3.5,
+            openings=[
+                {
+                    "id": "door",
+                    "type": "door",
+                    "wall_id": "w_s",
+                    "offset": 0.6,
+                    "width": 0.8,
+                    "height": 2.0,
+                }
+            ],
+        ),
+    )
+    m = Model(p)
+    rng = random.Random(3)
+    checked = 0
+    for _ in range(150):
+        G = [
+            m.geom(
+                i,
+                (
+                    rng.uniform(0.5, 3.5),
+                    rng.uniform(0.5, 3.0),
+                    rng.choice((0, math.pi / 2, math.pi)),
+                ),
+            )
+            for i in range(m.n)
+        ]
+        fast = m.eval_walkways(G)
+        brute = [rules.walkway(m.room, m.templates, G, w.min_width).violation for w in m.walkways]
+        assert fast[1][0] == pytest.approx(brute[1])  # the wide one is always computed
+        if brute[1] == 0.0:
+            checked += 1
+            assert brute[0] == 0.0 and fast[0][0] == 0.0
+        else:
+            assert fast[0][0] == pytest.approx(brute[0])
+    assert checked > 5

@@ -34,6 +34,10 @@ from .diversity import MIN_LAYOUT_DISTANCE, interchangeable_groups, select_diver
 from .model import Model, Pose, State
 
 DEFAULT_MIN_RESTARTS = 16
+# Quality gate: only feasible layouts whose cost is within this margin of the best one
+# are returned and count toward the stopping rule. 1.0 = e.g. ~4-6 deg beyond a faces
+# limit or 0.1-0.2 m beyond a near limit at rule-library weights (5-15). None disables.
+DEFAULT_COST_MARGIN = 1.0
 DEFAULT_MAX_RESTARTS = 512
 _POSTPROCESS_RESERVE = 0.05  # fraction of the budget kept for selection + reporting
 
@@ -98,11 +102,14 @@ def solve_detailed(
     min_restarts: int = DEFAULT_MIN_RESTARTS,
     max_restarts: int = DEFAULT_MAX_RESTARTS,
     iterations: int | None = None,
+    cost_margin: float | None = DEFAULT_COST_MARGIN,
 ) -> SolveOutcome:
     """Like :func:`solve`, plus diagnostics.
 
+    Only feasible layouts with ``cost <= best feasible cost + cost_margin`` are returned
+    (``None`` disables the gate): fewer, better layouts rather than a padded top-k.
     Search stops at the first restart index ``i >= min_restarts - 1`` at which the
-    results ``0..i`` already contain ``k`` mutually diverse feasible layouts, after
+    results ``0..i`` already contain ``k`` mutually diverse gated layouts, after
     ``max_restarts`` restarts, or when ``time_budget_s`` runs out.
     ``workers`` defaults to ``min(4, cpu_count)``; ``iterations`` (annealing steps per
     restart) defaults to ``300 + 250 * movable assets``.
@@ -126,7 +133,7 @@ def solve_detailed(
         """Extend the index-ordered prefix; return True when the stopping rule fires."""
         while len(prefix) in results:
             prefix.append(results.pop(len(prefix)))
-            if len(prefix) >= min_restarts and _enough(prefix, k, groups):
+            if len(prefix) >= min_restarts and _enough(prefix, k, groups, cost_margin):
                 return True
         return len(prefix) >= max_restarts
 
@@ -185,11 +192,20 @@ def solve_detailed(
             for fut in pending:
                 fut.cancel()
 
-    return _finish(problem, model, prefix, groups, k, seed, t0, time_limited)
+    return _finish(problem, model, prefix, groups, k, seed, t0, time_limited, cost_margin)
 
 
-def _enough(prefix: list[RestartResult], k: int, groups) -> bool:
-    cands = _candidates(prefix, feasible_only=True)
+def _gate(cands, cost_margin: float | None):
+    """Feasible candidates within ``cost_margin`` of the best feasible one."""
+    feasible = [c for c in cands if c[2]]
+    if not feasible or cost_margin is None:
+        return feasible
+    best = min(c[1] for c in feasible)
+    return [c for c in feasible if c[1] <= best + cost_margin + 1e-9]
+
+
+def _enough(prefix: list[RestartResult], k: int, groups, cost_margin: float | None) -> bool:
+    cands = _gate(_candidates(prefix, feasible_only=True), cost_margin)
     if len(cands) < k:
         return False
     return len(select_diverse(cands, k, groups)) >= k
@@ -214,10 +230,12 @@ def _finish(
     seed: int,
     t0: float,
     time_limited: bool,
+    cost_margin: float | None = DEFAULT_COST_MARGIN,
 ) -> SolveOutcome:
     cands = _candidates(prefix)
     feasible = [c for c in cands if c[2]]
-    pool = feasible if feasible else cands
+    gated = _gate(cands, cost_margin)
+    pool = gated if feasible else cands
     chosen = select_diverse(pool, k, groups) if pool else []
     layouts = []
     for rank, ci in enumerate(chosen):
@@ -249,10 +267,18 @@ def _finish(
                 )
             )
     elif len(layouts) < k:
-        notes.append(
-            f"only {len(layouts)} mutually distinct feasible layouts found "
-            f"(min layout distance {MIN_LAYOUT_DISTANCE} m)"
-        )
+        ungated = len(select_diverse(feasible, k, groups))
+        if cost_margin is not None and ungated > len(layouts):
+            notes.append(
+                f"only {len(layouts)} mutually distinct layouts are within the cost margin "
+                f"(best + {cost_margin:g}); {ungated - len(layouts)} more distinct feasible "
+                "layouts were found but are clearly worse and were left out"
+            )
+        else:
+            notes.append(
+                f"only {len(layouts)} mutually distinct feasible layouts found "
+                f"(min layout distance {MIN_LAYOUT_DISTANCE} m)"
+            )
     firsts = [r.first_feasible_at for r in prefix if r.first_feasible_at is not None]
     seconds = time.monotonic() - t0
     evaluations = sum(r.evaluations for r in prefix)

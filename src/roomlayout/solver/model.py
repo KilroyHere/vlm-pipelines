@@ -33,7 +33,8 @@ from . import rules
 from .geometry import WALKER_HEIGHT, AssetTemplate, Posed, RoomGeom, bboxes_overlap
 
 W_HARD = 100.0
-GROUP_NEAR_MAX = 0.3  # m; hard `near` at most this tight makes a rigid group for moves
+GROUP_NEAR_MAX = 0.3  # m; a `near` at most this tight makes a rigid group for moves...
+GROUP_SOFT_WEIGHT = 5.0  # ...if it is hard, or soft with at least this weight
 IMPLICIT_RULES = (
     "inside_room",
     "no_overlap",
@@ -104,14 +105,16 @@ class Model:
         self.wall_soft = [False] * self.n  # prefers a wall (soft against_wall)
         self.partners: list[list[int]] = [[] for _ in range(self.n)]
         self.faces_targets: list[list[int]] = [[] for _ in range(self.n)]
-        # followers[i]: smaller movable assets tied to i by a hard `near` of <= 0.3 m
+        # followers[i]: smaller movable assets tied to i by a hard (or strong soft, weight
+        # >= GROUP_SOFT_WEIGHT) `near` of <= 0.3 m
         # (desk -> chair, bed -> nightstands); they move rigidly with i in group moves
         self.followers: list[list[int]] = [[] for _ in range(self.n)]
         self.prefers_initial = [False] * self.n  # soft `fixed`: search may jump back to it
         self._build_implicit()
         self._build_constraints()
         for c in problem.constraints:
-            if isinstance(c, Near) and c.hard and c.max_distance <= GROUP_NEAR_MAX:
+            strong = c.hard or c.weight >= GROUP_SOFT_WEIGHT if isinstance(c, Near) else False
+            if isinstance(c, Near) and strong and c.max_distance <= GROUP_NEAR_MAX:
                 a, b = self.index[c.a], self.index[c.b]
                 if a == b or self.pinned[a] or self.pinned[b]:
                     continue
@@ -351,6 +354,25 @@ class Model:
     def geom(self, i: int, pose: Pose) -> Posed:
         return self.templates[i].posed(*pose)
 
+    def eval_walkways(self, geoms: Sequence[Posed]) -> list[tuple[float, list[str]]]:
+        """(violation, unreachable targets) per walkway term, widest first with a shortcut:
+        if a walkway of width w is fully satisfied, every narrower one is too, so it is not
+        computed. (The centre locus for width w' < w contains the (w - w') / 2 dilation of
+        the one for w, and the reach tolerance only shrinks by that amount, so every target
+        reached at w is reached at w'; the same holds for the chained zone targets.)"""
+        out: list[tuple[float, list[str]] | None] = [None] * len(self.walkways)
+        clear_width = None
+        for k in sorted(range(len(self.walkways)), key=lambda k: -self.walkways[k].min_width):
+            width = self.walkways[k].min_width
+            if clear_width is not None and width <= clear_width:
+                out[k] = (0.0, [])
+                continue
+            ev = rules.walkway(self.room, self.templates, geoms, width)
+            out[k] = (ev.violation, ev.unreached)
+            if ev.violation <= 0.0 and clear_width is None:
+                clear_width = width
+        return out  # type: ignore[return-value]
+
     def report(self, poses: Sequence[Pose]) -> tuple[list[ConstraintResult], bool, float]:
         """Full (non-incremental) evaluation: per-constraint results, feasibility, cost."""
         G = [self.geom(i, p) for i, p in enumerate(poses)]
@@ -362,11 +384,10 @@ class Model:
                 entry = agg[t.cid]
                 entry[1] += v
                 entry[2].append(f"{t.label}: {v:.3g}{(' ' + t.unit) if t.unit else ''}")
-        for wt in self.walkways:
-            ev = rules.walkway(self.room, self.templates, G, wt.min_width)
-            if ev.violation > 0:
-                agg[wt.cid][1] += ev.violation
-                agg[wt.cid][2].append("unreachable: " + ", ".join(ev.unreached))
+        for wt, (v, unreached) in zip(self.walkways, self.eval_walkways(G), strict=True):
+            if v > 0:
+                agg[wt.cid][1] += v
+                agg[wt.cid][2].append("unreachable: " + ", ".join(unreached))
         results, hard_sum, soft_sum = [], 0.0, 0.0
         weights = {c.id: c.weight for c in self.problem.constraints}
         for cid, (hard, v, parts) in agg.items():
@@ -515,8 +536,7 @@ class State:
             if hard <= 0.0:
                 geoms = [G[j] for j in range(m.n)]
                 walk_hard = walk_soft = 0.0
-                for wt in m.walkways:
-                    v = rules.walkway(m.room, m.templates, geoms, wt.min_width).violation
+                for wt, (v, _) in zip(m.walkways, m.eval_walkways(geoms), strict=True):
                     if wt.hard:
                         walk_hard += v
                     else:
@@ -562,9 +582,7 @@ class State:
             for t in ts:
                 if t.hard and t.fn(self.geoms[t.a], self.geoms[t.b]) > 0:
                     out.append(f"{t.cid} ({t.label})")
-        for wt in m.walkways:
-            if wt.hard:
-                ev = rules.walkway(m.room, m.templates, self.geoms, wt.min_width)
-                if ev.violation > 0:
-                    out.append(f"{wt.cid} (unreachable: {', '.join(ev.unreached)})")
+        for wt, (v, unreached) in zip(m.walkways, m.eval_walkways(self.geoms), strict=True):
+            if wt.hard and v > 0:
+                out.append(f"{wt.cid} (unreachable: {', '.join(unreached)})")
         return out

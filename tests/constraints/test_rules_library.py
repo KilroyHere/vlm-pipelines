@@ -378,9 +378,10 @@ def test_idempotent_on_examples(path, minimal):
     )
 
 
-def test_zone_that_admits_a_category_invites_a_leftover_asset():
-    """A piano's bench zone admits chairs: the otherwise-unassigned bench is invited to it,
-    while desk chairs stay with desks and nothing is invited twice."""
+def test_zone_that_admits_a_category_invites_the_piano_bench_first():
+    """A piano's bench zone admits chairs. The piano bench (taxonomy v0.6 subtype) is
+    invited to it ahead of a stool listed before it, even with a chairless desk in the
+    room: a bench is never a desk chair. One member per zone, so the stool stays out."""
     bench_zone = {
         "name": "bench_area",
         "purpose": "use",
@@ -389,16 +390,80 @@ def test_zone_that_admits_a_category_invites_a_leftover_asset():
     }
     p = problem(
         [
-            a("piano", "piano", 1.5, 0.6, 1.2, clearance_zones=[bench_zone]),
-            a("bench", "chair", 0.8, 0.4, label="piano bench"),
             a("stool", "chair", 0.4, 0.4, label="stool"),
+            a("piano", "piano", 1.5, 0.6, 1.2, clearance_zones=[bench_zone]),
+            a("desk", "table", 1.2, 0.6, subtype="desk"),
+            a("bench", "chair", 0.8, 0.4, label="piano bench"),
         ]
     )
     r = assign_roles(p)
-    assert r.invited == [("piano", "bench_area", "bench")]  # one member per zone
+    assert r.by_id["bench"].subtype == "piano_bench"
+    assert r.invited == [("piano", "bench_area", "bench")]
+    assert r.desk_pairs == []
     cs = ids(implied_constraints(p))
     assert {"rule:near:bench:piano", "rule:faces:bench:piano", "rule:faces:piano:bench"} <= cs
-    assert not any("stool" in c for c in cs if c.startswith("rule:near"))
+    assert not any("stool" in c or "bench:desk" in c for c in cs)
+
+
+def test_piano_bench_without_a_zone_goes_to_the_piano():
+    p = problem(
+        [
+            a("upright", "storage", 1.5, 0.6, 1.2, label="Upright piano"),
+            a("pb", "chair", 0.8, 0.4, subtype="piano_bench"),
+            a("desk", "table", 1.2, 0.6, subtype="desk"),
+        ]
+    )
+    r = assign_roles(p)
+    assert r.invited == [("upright", None, "pb")] and r.desk_pairs == []
+    assert {"rule:near:pb:upright", "rule:faces:pb:upright", "rule:faces:upright:pb"} <= ids(
+        implied_constraints(p)
+    )
+
+
+def test_plain_bench_without_zone_or_piano_gets_no_relation():
+    p = problem(
+        [
+            a("hall_bench", "chair", 1.2, 0.4, subtype="bench"),
+            a("desk", "table", 1.2, 0.6, subtype="desk"),
+        ]
+    )
+    r = assign_roles(p)
+    assert r.invited == [] and r.desk_pairs == []
+    assert not any("hall_bench" in c for c in ids(implied_constraints(p)))
+
+
+def test_ottoman_is_a_footrest_for_the_main_seating():
+    p = problem(
+        [
+            a("arm", "chair", 0.85, 0.85, subtype="armchair"),
+            a("sofa", "sofa", 2.2, 0.95),
+            a("pouf", "chair", 0.5, 0.5, label="pouf"),
+        ]
+    )
+    r = assign_roles(p)
+    assert r.footrests == [("pouf", "sofa")]
+    assert "pouf" not in r.secondary_seating
+    assert "rule:near:pouf:sofa" in ids(implied_constraints(p))
+    alone = problem(
+        [
+            a("arm", "chair", 0.85, 0.85, subtype="armchair"),
+            a("pouf", "chair", 0.5, 0.5, subtype="ottoman"),
+        ]
+    )
+    assert assign_roles(alone).footrests == [("pouf", "arm")]
+
+
+def test_meeting_table_takes_the_generic_chairs():
+    p = problem(
+        [
+            a("t", "table", 1.6, 1.0, label="conference table"),
+            a("c1", "chair", 0.5, 0.5),
+            a("c2", "chair", 0.5, 0.5),
+        ]
+    )
+    r = assign_roles(p)
+    assert r.dining == [("t", ["c1", "c2"])]
+    assert {"rule:near:c1:t", "rule:faces:c2:t"} <= ids(implied_constraints(p))
 
 
 def test_desk_chair_zone_does_not_double_invite():
