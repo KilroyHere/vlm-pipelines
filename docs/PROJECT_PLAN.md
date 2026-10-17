@@ -179,3 +179,8 @@ them.
   (network volumes are Secure-Cloud-only; A6000 out of stock; A40 Secure $0.59/h) + `runpod_bootstrap.sh`.
 - 2026-10-17: HF access approved; Runpod secret `hf_token` created. Spike pod `z8wwqdkf02w7at` (A40, CA-MTL-1,
   $0.59/h, runpod-torch-v220, 100 GB /workspace) created and Jupyter verified. Next: owner runs the bootstrap + spike.
+- 2026-10-17 05:00 UTC: Overnight plan (owner asleep): spike made fully automatic (OWLv2 box -> SAM 2 mask,
+  photos fetched from photo_sources.md; WS-D). Lead runs SAM 3D on pod `z8wwqdkf02w7at`, downloads + scores, then
+  terminates it. Safety check-ins scheduled 08:59 and 12:59 UTC (stop the pod if idle/stuck). The pod's own key cannot
+  stop it (REST 403), so stopping relies on the lead/connector. M4a (RoomPlan ingest) paused by the owner; partial
+  work is in the WIP commits.
