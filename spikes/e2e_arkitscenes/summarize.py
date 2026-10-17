@@ -28,7 +28,8 @@ def table(run_dir: Path) -> str:
         rows.append(
             f"| {r['video_id']} | {geo.count('sam3d')} / {geo.count('box')} "
             f"| {r['real']['user_constraints_satisfied']} | {len(r['real']['checks_failed'])} "
-            f"| {top['feasible'] if top else '-'} | {top['user_constraints_satisfied'] if top else '-'} "
+            f"| {top['feasible'] if top else '-'} "
+            f"| {top['user_constraints_satisfied'] if top else '-'} "
             f"| {len(top['checks_failed']) if top else '-'} | {passing}/{len(r['layouts'])} "
             f"| {top['vs_real']['mean_moved_m'] if top else '-'} |"
         )
