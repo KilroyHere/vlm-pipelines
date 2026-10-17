@@ -20,10 +20,17 @@
     # Or take the alpha channel of a same-size cutout PNG
     python make_mask.py alpha data/sofa_01 cutout.png
 
+    # Automatic (the default path): text prompt -> OWLv2 box -> SAM 2 mask, no clicking.
+    # Needs torch + transformers (a separate venv is fine); runs on CPU (slow) or CUDA.
+    python make_mask.py auto data/sofa_01 data/desk_13      # or: auto data/*/
+    python make_mask.py auto data/tv_stand_18 --prompt "tv stand,media console"
+    python make_mask.py auto data/sofa_01 --box 120 340 1650 1180   # skip detection
+
     # QA: overlay every mask on its image -> data/<item>/mask_check.png
     python make_mask.py check data
 
-Only needs numpy, Pillow and matplotlib (plus sam2 for the sam2 mode).
+Only needs numpy, Pillow and matplotlib (plus sam2 for the sam2 mode and torch +
+transformers for auto; those are imported inside their subcommands).
 """
 
 from __future__ import annotations
@@ -52,9 +59,27 @@ def _load_rgb(item: Path) -> np.ndarray:
         return np.array(ImageOps.exif_transpose(im).convert("RGB"))
 
 
-def _save_mask(item: Path, mask: np.ndarray) -> None:
+def _read_meta(item: Path) -> dict:
+    path = item / "meta.json"
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def _write_meta(item: Path, meta: dict) -> None:
+    (item / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
+
+
+def _save_mask(item: Path, mask: np.ndarray, source: str, extra: dict | None = None) -> None:
+    """Write mask.png and record how it was made (score.py attributes failures by it)."""
     Image.fromarray((mask > 0).astype(np.uint8) * 255).save(item / "mask.png")
     print(f"wrote {item / 'mask.png'} ({int((mask > 0).sum())} px)")
+    meta = _read_meta(item)
+    if meta:
+        meta["mask_source"] = source
+        if extra is not None:
+            meta["auto_mask"] = extra
+        else:
+            meta.pop("auto_mask", None)  # a hand fix replaces the automatic mask
+        _write_meta(item, meta)
 
 
 def strip_tracking(url: str) -> str:
@@ -89,17 +114,25 @@ def build_meta(a) -> dict:
     return meta
 
 
-def cmd_prepare(a) -> None:
-    meta = build_meta(a)  # validate before writing anything
-    item = Path(a.item)
+def prepare_item(photo: Path | str, item: Path | str, meta: dict) -> tuple[int, int]:
+    """Upright (EXIF), size-capped image.jpg + meta.json. Returns the image size."""
+    item = Path(item)
     item.mkdir(parents=True, exist_ok=True)
-    with Image.open(a.photo) as im:
+    with Image.open(photo) as im:
         im = ImageOps.exif_transpose(im).convert("RGB")
         if max(im.size) > MAX_SIDE:
             im.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)
         im.save(item / "image.jpg", quality=95)  # no EXIF orientation left to confuse anyone
-    (item / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
-    print(f"prepared {item}: image {im.size}, meta {meta}")
+    for stale in ("mask.png", "mask_check.png"):  # a new photo invalidates the old mask
+        (item / stale).unlink(missing_ok=True)
+    _write_meta(item, meta)
+    return im.size
+
+
+def cmd_prepare(a) -> None:
+    meta = build_meta(a)  # validate before writing anything
+    size = prepare_item(a.photo, a.item, meta)
+    print(f"prepared {a.item}: image {size}, meta {meta}")
 
 
 def cmd_polygon(a) -> None:
@@ -150,7 +183,7 @@ def cmd_polygon(a) -> None:
     draw = ImageDraw.Draw(mask)
     for p in closed:
         draw.polygon(p, fill=255)
-    _save_mask(item, np.array(mask))
+    _save_mask(item, np.array(mask), "manual_polygon")
 
 
 def cmd_sam2(a) -> None:
@@ -168,7 +201,7 @@ def cmd_sam2(a) -> None:
             box=np.array(a.box, dtype=float), multimask_output=False
         )
     print(f"SAM 2 score {float(np.ravel(scores)[0]):.3f}")
-    _save_mask(item, np.asarray(masks[0]) > 0)
+    _save_mask(item, np.asarray(masks[0]) > 0, "manual_sam2_box")
 
 
 def cmd_alpha(a) -> None:
@@ -184,26 +217,102 @@ def cmd_alpha(a) -> None:
             f"cutout size {alpha.shape[::-1]} != image size {rgb.shape[1::-1]}; "
             "cropped cutouts (e.g. iOS 'Copy Subject') can't be registered, use polygon"
         )
-    _save_mask(item, alpha > 127)
+    _save_mask(item, alpha > 127, "manual_alpha")
+
+
+def write_overlay(item: Path) -> float | None:
+    """mask_check.png: mask in red over the dimmed image, plus the detector box (green) for
+    automatic masks. Returns the mask's image fraction (None if missing / mismatched)."""
+    if not (item / "mask.png").exists():
+        print(f"{item.name}: no mask")
+        return None
+    rgb = _load_rgb(item).astype(float)
+    with Image.open(item / "mask.png") as m:
+        mask = np.array(m)
+    mask = (mask[..., -1] if mask.ndim == 3 else mask) > 0
+    if mask.shape != rgb.shape[:2]:
+        print(f"{item.name}: SIZE MISMATCH mask {mask.shape} image {rgb.shape[:2]}")
+        return None
+    out = rgb * 0.35
+    out[mask] = rgb[mask] * 0.6 + np.array([255, 0, 0]) * 0.4
+    img = Image.fromarray(out.clip(0, 255).astype(np.uint8))
+    box = (_read_meta(item).get("auto_mask") or {}).get("detector_box")
+    if box:
+        ImageDraw.Draw(img).rectangle(box, outline=(0, 255, 0), width=max(2, img.width // 400))
+    img.save(item / "mask_check.png")
+    print(f"{item.name}: {mask.mean():.1%} of the image -> mask_check.png")
+    return float(mask.mean())
 
 
 def cmd_check(a) -> None:
     root = Path(a.data)
     for item in sorted(p for p in root.iterdir() if p.is_dir()):
-        if not (item / "mask.png").exists():
-            print(f"{item.name}: no mask")
-            continue
-        rgb = _load_rgb(item).astype(float)
-        with Image.open(item / "mask.png") as m:
-            mask = np.array(m)
-        mask = (mask[..., -1] if mask.ndim == 3 else mask) > 0
-        if mask.shape != rgb.shape[:2]:
-            print(f"{item.name}: SIZE MISMATCH mask {mask.shape} image {rgb.shape[:2]}")
-            continue
-        out = rgb * 0.35
-        out[mask] = rgb[mask] * 0.6 + np.array([255, 0, 0]) * 0.4
-        Image.fromarray(out.clip(0, 255).astype(np.uint8)).save(item / "mask_check.png")
-        print(f"{item.name}: {mask.mean():.1%} of the image -> mask_check.png")
+        write_overlay(item)
+
+
+def cmd_auto(a) -> None:
+    """Text prompt -> OWLv2 box -> SAM 2 mask for each item folder (models loaded once)."""
+    import automask as am  # torch/transformers load lazily inside the model classes
+
+    items = [Path(p) for p in a.items]
+    for item in items:
+        _image_path(item)  # fail early on a missing image
+        if not _read_meta(item).get("category") and not a.prompt and not a.box:
+            raise SystemExit(f"{item}: meta.json needs 'category' (or pass --prompt / --box)")
+    if a.box and len(items) > 1:
+        raise SystemExit("--box applies to one item")
+    detector = None if a.box else am.OwlDetector(a.detector, a.device)
+    segmenter = am.Sam2Segmenter(a.sam_model, a.device)
+    failed = []
+    for item in items:
+        meta = _read_meta(item)
+        rgb = _load_rgb(item)
+        image = Image.fromarray(rgb)
+        size = image.size
+        targets, distractors = am.queries_for(
+            meta.get("category", ""), a.prompt or meta.get("prompt"), meta.get("subtype")
+        )
+        info: dict = {
+            "prompt": targets,
+            "distractors": distractors,
+            "sam_model": segmenter.name,
+            "device": segmenter.device,
+        }
+        if a.box:
+            det = am.Detection(tuple(a.box), 1.0, "manual box")
+            info.update(box_source="manual", detector=None)
+        else:
+            dets = detector.detect(image, targets, distractors)
+            det = am.select_box(dets, size, min_score=a.min_score, rel_score=a.rel_score)
+            kept = am.filter_boxes(dets, size, a.min_score)
+            info.update(
+                box_source="detector",
+                detector=detector.name,
+                selection_rule=f"largest of boxes with score >= {a.rel_score} x best "
+                f"(min {a.min_score}, area {am.MIN_FRAC:.0%}-{am.MAX_FRAC:.0%}, NMS)",
+                candidates=[d.to_json() for d in kept[:5]],
+            )
+            if det is None:
+                print(f"{item.name}: no detection for {targets}; use --prompt or --box")
+                failed.append(item.name)
+                continue
+        mask, sam_score = segmenter.segment(image, det.box)
+        info.update(
+            detector_box=[round(v, 1) for v in det.box],
+            detector_score=round(det.score, 4),
+            detector_label=det.label,
+            box_area_frac=round(am.box_fraction(det, size), 4),
+            sam_score=round(sam_score, 4),
+            mask_area_frac=round(float(mask.mean()), 4),
+        )
+        _save_mask(item, mask, "auto", info)
+        print(
+            f"{item.name}: box {info['detector_box']} '{det.label}' score {det.score:.3f}, "
+            f"SAM {sam_score:.3f}, mask {mask.mean():.1%}"
+        )
+        write_overlay(item)
+    if failed:
+        raise SystemExit(f"no mask for: {', '.join(failed)}")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -233,10 +342,20 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("cutout")
     s = sub.add_parser("check", help="write mask_check.png overlays for every item")
     s.add_argument("data")
+    s = sub.add_parser("auto", help="automatic mask: OWLv2 text->box, SAM 2 box->mask")
+    s.add_argument("items", nargs="+", help="item folders (data/<item>)")
+    s.add_argument("--prompt", help="comma-separated detector queries (default: from category)")
+    s.add_argument("--box", nargs=4, type=float, metavar=("X0", "Y0", "X1", "Y1"),
+                   help="skip detection and prompt SAM 2 with this box (one item)")
+    s.add_argument("--device", default="auto", help="auto | cpu | cuda")
+    s.add_argument("--detector", default="google/owlv2-base-patch16-ensemble")
+    s.add_argument("--sam-model", default="facebook/sam2.1-hiera-large")
+    s.add_argument("--min-score", type=float, default=0.10)
+    s.add_argument("--rel-score", type=float, default=0.6)
     a = p.parse_args(argv)
-    {"prepare": cmd_prepare, "polygon": cmd_polygon, "sam2": cmd_sam2, "alpha": cmd_alpha}.get(
-        a.cmd, cmd_check
-    )(a)
+    cmds = {"prepare": cmd_prepare, "polygon": cmd_polygon, "sam2": cmd_sam2,
+            "alpha": cmd_alpha, "auto": cmd_auto, "check": cmd_check}
+    cmds[a.cmd](a)
 
 
 if __name__ == "__main__":
