@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import LineString, Point, Polygon
 
 from roomlayout.schema import Asset, Layout, LayoutProblem, Mount, OpeningType, Pose2D
 
@@ -108,6 +108,7 @@ def check_layout(problem: LayoutProblem, layout: Layout) -> list[CheckResult]:
     out: list[CheckResult] = []
     out += _living(problem, roles, P)
     out += _work_dining(roles, P)
+    out += _invited(problem, roles, P)
     out += _bedroom(problem, roles, P)
     out += _storage(problem, roles, P)
     out += _doors(problem, P)
@@ -124,22 +125,42 @@ def _living(problem: LayoutProblem, roles: Roles, P: dict[str, _Placed]) -> list
     if seat and tv:
         s, t = P[seat], P[tv]
         a1, a2 = s.angle_to(t.center), t.angle_to(s.center)
-        out.append(CheckResult(f"seating_faces_tv[{seat}:{tv}]", a1 <= FACING_ANGLE,
-                               f"{a1:.0f} deg off the seat's front"))
-        out.append(CheckResult(f"tv_faces_seating[{tv}:{seat}]", a2 <= TV_FACING_ANGLE,
-                               f"screen turned {a2:.0f} deg away from the seat"))
+        out.append(
+            CheckResult(
+                f"seating_faces_tv[{seat}:{tv}]",
+                a1 <= FACING_ANGLE,
+                f"{a1:.0f} deg off the seat's front",
+            )
+        )
+        out.append(
+            CheckResult(
+                f"tv_faces_seating[{tv}:{seat}]",
+                a2 <= TV_FACING_ANGLE,
+                f"screen turned {a2:.0f} deg away from the seat",
+            )
+        )
         d = s.poly.distance(t.poly)
-        out.append(CheckResult(f"tv_viewing_distance[{seat}:{tv}]", 1.0 <= d <= 4.5,
-                               f"{d:.2f} m (want 1.0-4.5 m)"))
+        out.append(
+            CheckResult(
+                f"tv_viewing_distance[{seat}:{tv}]", 1.0 <= d <= 4.5, f"{d:.2f} m (want 1.0-4.5 m)"
+            )
+        )
         sight = LineString([s.center, t.center])
         blockers = [
-            i for i, q in P.items()
+            i
+            for i, q in P.items()
             if i not in (seat, tv, roles.tv_stand)
-            and q.z1 > LINE_OF_SIGHT_HEIGHT and q.z0 < WALKER_HEIGHT
+            and q.z1 > LINE_OF_SIGHT_HEIGHT
+            and q.z0 < WALKER_HEIGHT
             and q.poly.intersects(sight)
         ]
-        out.append(CheckResult(f"tv_line_of_sight[{seat}:{tv}]", not blockers,
-                               "blocked by " + ", ".join(blockers) if blockers else "clear"))
+        out.append(
+            CheckResult(
+                f"tv_line_of_sight[{seat}:{tv}]",
+                not blockers,
+                "blocked by " + ", ".join(blockers) if blockers else "clear",
+            )
+        )
     if seat and coffee:
         s, c = P[seat], P[coffee]
         if tv:
@@ -149,27 +170,44 @@ def _living(problem: LayoutProblem, roles: Roles, P: dict[str, _Placed]) -> list
             u = ((c.pose.x - s.pose.x) * vx + (c.pose.y - s.pose.y) * vy) / L2 if L2 else 0
             lat = abs((c.pose.x - s.pose.x) * vy - (c.pose.y - s.pose.y) * vx) / math.sqrt(L2)
             ok = 0.0 < u < 1.0 and lat <= max(0.5, (s.xmax - s.xmin) / 2)
-            out.append(CheckResult(f"coffee_table_between_seating_and_tv[{coffee}]", ok,
-                                   f"at {u:.2f} of the seat->TV line, {lat:.2f} m off it"))
+            out.append(
+                CheckResult(
+                    f"coffee_table_between_seating_and_tv[{coffee}]",
+                    ok,
+                    f"at {u:.2f} of the seat->TV line, {lat:.2f} m off it",
+                )
+            )
         lx, ly = s.local(c.center)
         d = s.poly.distance(c.poly)
         ok = ly > s.ymax and abs(lx) <= (s.xmax - s.xmin) / 2 and d <= 0.8
-        out.append(CheckResult(f"coffee_table_in_front_of_seating[{coffee}:{seat}]", ok,
-                               f"{d:.2f} m from the seat, {lx:+.2f} m off its centre line"))
+        out.append(
+            CheckResult(
+                f"coffee_table_in_front_of_seating[{coffee}:{seat}]",
+                ok,
+                f"{d:.2f} m from the seat, {lx:+.2f} m off its centre line",
+            )
+        )
     for sec in roles.secondary_seating:
         targets = [x for x in (coffee, tv, seat) if x]
         if not targets:
             continue
         ang = min(P[sec].angle_to(P[x].center) for x in targets)
-        out.append(CheckResult(f"secondary_seating_oriented[{sec}]",
-                               ang <= SECONDARY_FACING_ANGLE,
-                               f"{ang:.0f} deg off the nearest of {', '.join(targets)}"))
+        out.append(
+            CheckResult(
+                f"secondary_seating_oriented[{sec}]",
+                ang <= SECONDARY_FACING_ANGLE,
+                f"{ang:.0f} deg off the nearest of {', '.join(targets)}",
+            )
+        )
     seats = roles.secondary_seating + ([seat] if seat else [])
     for st in roles.side_tables:
         if seats:
             d = min(P[st].poly.distance(P[x].poly) for x in seats)
-            out.append(CheckResult(f"side_table_by_seating[{st}]", d <= 0.3,
-                                   f"{d:.2f} m from the nearest seat"))
+            out.append(
+                CheckResult(
+                    f"side_table_by_seating[{st}]", d <= 0.3, f"{d:.2f} m from the nearest seat"
+                )
+            )
     return out
 
 
@@ -178,17 +216,46 @@ def _work_dining(roles: Roles, P: dict[str, _Placed]) -> list[CheckResult]:
     for d, ch in roles.desk_pairs:
         desk, chair = P[d], P[ch]
         lx, ly = desk.local(chair.center)
-        ok = (desk.ymax < ly < desk.ymax + 0.7 and abs(lx) <= (desk.xmax - desk.xmin) / 2
-              and chair.angle_to(desk.center) <= FACING_ANGLE)
-        out.append(CheckResult(f"desk_chair_at_desk_front[{d}:{ch}]", ok,
-                               f"chair at ({lx:+.2f}, {ly:+.2f}) in the desk frame"))
+        ok = (
+            desk.ymax < ly < desk.ymax + 0.7
+            and abs(lx) <= (desk.xmax - desk.xmin) / 2
+            and chair.angle_to(desk.center) <= FACING_ANGLE
+        )
+        out.append(
+            CheckResult(
+                f"desk_chair_at_desk_front[{d}:{ch}]",
+                ok,
+                f"chair at ({lx:+.2f}, {ly:+.2f}) in the desk frame",
+            )
+        )
     for t, chairs in roles.dining:
         for ch in chairs:
             d = P[ch].poly.distance(P[t].poly)
             ang = P[ch].angle_to(P[t].center)
-            out.append(CheckResult(f"dining_chair_at_table[{ch}]",
-                                   d <= 0.3 and ang <= FACING_ANGLE,
-                                   f"{d:.2f} m from the table, {ang:.0f} deg off"))
+            out.append(
+                CheckResult(
+                    f"dining_chair_at_table[{ch}]",
+                    d <= 0.3 and ang <= FACING_ANGLE,
+                    f"{d:.2f} m from the table, {ang:.0f} deg off",
+                )
+            )
+    return out
+
+
+def _invited(problem: LayoutProblem, roles: Roles, P: dict[str, _Placed]) -> list[CheckResult]:
+    out = []
+    by = {a.id: a for a in problem.assets}
+    for owner, zone, member in roles.invited:
+        z = next(z for z in by[owner].clearance_zones if z.name == zone)
+        world = Polygon([P[owner].pose.transform(p) for p in z.polygon.points])
+        inside = world.buffer(0.1).contains(Point(P[member].center))
+        out.append(
+            CheckResult(
+                f"invited_at_zone[{owner}:{member}]",
+                inside,
+                f"{member} {'is' if inside else 'is not'} in {owner}'s {zone}",
+            )
+        )
     return out
 
 
@@ -205,11 +272,21 @@ def _bedroom(problem: LayoutProblem, roles: Roles, P: dict[str, _Placed]) -> lis
             beside = half - 0.05 <= abs(lx) <= half + 0.8
             head_end = ly <= bed.ymin + 0.7
             sides.append(math.copysign(1, lx))
-            out.append(CheckResult(f"nightstand_beside_bed_head[{ns}]", beside and head_end,
-                                   f"at ({lx:+.2f}, {ly - bed.ymin:.2f} from the headboard)"))
+            out.append(
+                CheckResult(
+                    f"nightstand_beside_bed_head[{ns}]",
+                    beside and head_end,
+                    f"at ({lx:+.2f}, {ly - bed.ymin:.2f} from the headboard)",
+                )
+            )
         if len(stands) == 2:
-            out.append(CheckResult(f"nightstands_on_both_sides[{b}]", sides[0] != sides[1],
-                                   "opposite sides" if sides[0] != sides[1] else "same side"))
+            out.append(
+                CheckResult(
+                    f"nightstands_on_both_sides[{b}]",
+                    sides[0] != sides[1],
+                    "opposite sides" if sides[0] != sides[1] else "same side",
+                )
+            )
     return out
 
 
@@ -239,18 +316,23 @@ def _doors(problem: LayoutProblem, P: dict[str, _Placed]) -> list[CheckResult]:
         ux, uy = (ex - sx) / length, (ey - sy) / length
         nx, ny = -uy, ux
         t0, t1 = o.offset - o.width / 2, o.offset + o.width / 2
-        rect = Polygon([
-            (sx + ux * t0, sy + uy * t0),
-            (sx + ux * t1, sy + uy * t1),
-            (sx + ux * t1 + nx * DOOR_CLEAR, sy + uy * t1 + ny * DOOR_CLEAR),
-            (sx + ux * t0 + nx * DOOR_CLEAR, sy + uy * t0 + ny * DOOR_CLEAR),
-        ])
+        rect = Polygon(
+            [
+                (sx + ux * t0, sy + uy * t0),
+                (sx + ux * t1, sy + uy * t1),
+                (sx + ux * t1 + nx * DOOR_CLEAR, sy + uy * t1 + ny * DOOR_CLEAR),
+                (sx + ux * t0 + nx * DOOR_CLEAR, sy + uy * t0 + ny * DOOR_CLEAR),
+            ]
+        )
         top = o.sill_height + o.height
-        blockers = [
-            i for i, q in P.items() if q.z0 < top and q.poly.intersection(rect).area > 1e-4
-        ]
-        out.append(CheckResult(f"door_unblocked[{o.id}]", not blockers,
-                               "blocked by " + ", ".join(blockers) if blockers else "clear"))
+        blockers = [i for i, q in P.items() if q.z0 < top and q.poly.intersection(rect).area > 1e-4]
+        out.append(
+            CheckResult(
+                f"door_unblocked[{o.id}]",
+                not blockers,
+                "blocked by " + ", ".join(blockers) if blockers else "clear",
+            )
+        )
     return out
 
 

@@ -40,12 +40,32 @@ def room(openings=()):
     }
 
 
-DOOR = {"id": "door", "type": "door", "wall_id": "w_s", "offset": 0.6, "width": 0.9,
-        "height": 2.1, "swing": {"into_room": True, "hinge": "start"}}
-WINDOW = {"id": "win", "type": "window", "wall_id": "w_n", "offset": 2.5, "width": 1.2,
-          "height": 1.2, "sill_height": 0.9}
-PASSAGE = {"id": "arch", "type": "opening", "wall_id": "w_e", "offset": 2.0, "width": 1.0,
-           "height": 2.1}
+DOOR = {
+    "id": "door",
+    "type": "door",
+    "wall_id": "w_s",
+    "offset": 0.6,
+    "width": 0.9,
+    "height": 2.1,
+    "swing": {"into_room": True, "hinge": "start"},
+}
+WINDOW = {
+    "id": "win",
+    "type": "window",
+    "wall_id": "w_n",
+    "offset": 2.5,
+    "width": 1.2,
+    "height": 1.2,
+    "sill_height": 0.9,
+}
+PASSAGE = {
+    "id": "arch",
+    "type": "opening",
+    "wall_id": "w_e",
+    "offset": 2.0,
+    "width": 1.0,
+    "height": 2.1,
+}
 
 
 def a(id, category, w=1.0, d=0.5, h=0.8, **kw):
@@ -55,8 +75,12 @@ def a(id, category, w=1.0, d=0.5, h=0.8, **kw):
 
 
 def problem(assets, constraints=(), openings=(DOOR, WINDOW), initial=None):
-    data = {"id": "p", "room": room(openings), "assets": list(assets),
-            "constraints": list(constraints)}
+    data = {
+        "id": "p",
+        "room": room(openings),
+        "assets": list(assets),
+        "constraints": list(constraints),
+    }
     if initial:
         data["initial"] = initial
     return LayoutProblem.model_validate(data)
@@ -71,9 +95,15 @@ def by_id(cs):
 
 
 LIVING = [
-    a("sofa", "sofa", 2.2, 0.95,
-      clearance_zones=[{"name": "legroom", "purpose": "use",
-                        "polygon": rect(-1.0, 0.475, 1.0, 0.975)}]),
+    a(
+        "sofa",
+        "sofa",
+        2.2,
+        0.95,
+        clearance_zones=[
+            {"name": "legroom", "purpose": "use", "polygon": rect(-1.0, 0.475, 1.0, 0.975)}
+        ],
+    ),
     a("loveseat", "sofa", 1.4, 0.9),
     a("tv", "television", 1.4, 0.1, 0.8, mount="wall", elevation=1.0),
     a("stand", "storage", 1.6, 0.4, 0.5, subtype="tv_stand"),
@@ -116,8 +146,11 @@ def test_roles_living_room():
 def test_tv_stand_stands_in_for_a_missing_television():
     r = assign_roles(problem([a("sofa", "sofa", 2, 0.9), a("st", "storage", label="TV unit")]))
     assert r.tv == "st"
-    assert "rule:faces:sofa:st" in ids(implied_constraints(
-        problem([a("sofa", "sofa", 2, 0.9), a("st", "storage", label="TV unit")])))
+    assert "rule:faces:sofa:st" in ids(
+        implied_constraints(
+            problem([a("sofa", "sofa", 2, 0.9), a("st", "storage", label="TV unit")])
+        )
+    )
 
 
 # ------------------------------------------------------------------------------ families
@@ -136,11 +169,20 @@ def test_every_emitted_constraint_is_attributed_and_valid():
 
 def test_living_rules():
     cs = by_id(implied_constraints(problem(LIVING)))
-    for cid in ("rule:faces:sofa:tv", "rule:faces:tv:sofa", "rule:near:sofa:tv",
-                "rule:distance_at_least:sofa:tv", "rule:faces:sofa:ct", "rule:near:ct:sofa",
-                "rule:distance_at_least:ct:sofa", "rule:parallel:ct:sofa",
-                "rule:faces:arm:ct", "rule:faces:loveseat:ct", "rule:near:stand:tv",
-                "rule:near:lamp_table:loveseat"):
+    for cid in (
+        "rule:faces:sofa:tv",
+        "rule:faces:tv:sofa",
+        "rule:near:sofa:tv",
+        "rule:distance_at_least:sofa:tv",
+        "rule:faces:sofa:ct",
+        "rule:near:ct:sofa",
+        "rule:distance_at_least:ct:sofa",
+        "rule:parallel:ct:sofa",
+        "rule:faces:arm:ct",
+        "rule:faces:loveseat:ct",
+        "rule:near:stand:tv",
+        "rule:near:lamp_table:loveseat",
+    ):
         assert cid in cs, cid
         assert not cs[cid].hard
     # legroom-consistent coffee table distances: the sofa's zone is 0.5 m deep
@@ -153,15 +195,24 @@ def test_living_rules():
 
 
 def test_coffee_table_without_legroom_zone_uses_defaults():
-    cs = by_id(implied_constraints(problem([a("s", "sofa", 2, 0.9), a("c", "table",
-                                                                       subtype="coffee_table")])))
+    cs = by_id(
+        implied_constraints(
+            problem([a("s", "sofa", 2, 0.9), a("c", "table", subtype="coffee_table")])
+        )
+    )
     assert cs["rule:distance_at_least:c:s"].min_distance == pytest.approx(0.35)
     assert cs["rule:near:c:s"].max_distance == pytest.approx(0.5)
 
 
 def test_work_rules_pair_desks_and_chairs_by_name():
-    p = problem([a("chair_b", "chair"), a("desk_a", "table", subtype="desk"),
-                 a("chair_a", "chair"), a("desk_b", "table", subtype="desk")])
+    p = problem(
+        [
+            a("chair_b", "chair"),
+            a("desk_a", "table", subtype="desk"),
+            a("chair_a", "chair"),
+            a("desk_b", "table", subtype="desk"),
+        ]
+    )
     assert assign_roles(p).desk_pairs == [("desk_a", "chair_a"), ("desk_b", "chair_b")]
     cs = ids(implied_constraints(p))
     for d, c in (("desk_a", "chair_a"), ("desk_b", "chair_b")):
@@ -170,8 +221,7 @@ def test_work_rules_pair_desks_and_chairs_by_name():
 
 def test_dining_rules_are_soft_and_per_chair():
     chairs = [a(f"c{i}", "chair", 0.45, 0.5, label="dining chair") for i in range(4)]
-    cs = implied_constraints(problem([a("t", "table", 1.6, 0.9, subtype="dining_table"),
-                                      *chairs]))
+    cs = implied_constraints(problem([a("t", "table", 1.6, 0.9, subtype="dining_table"), *chairs]))
     m = by_id(cs)
     for i in range(4):
         assert not m[f"rule:near:c{i}:t"].hard and not m[f"rule:faces:c{i}:t"].hard
@@ -179,8 +229,13 @@ def test_dining_rules_are_soft_and_per_chair():
 
 
 def test_bedroom_rules():
-    p = problem([a("bed", "bed", 1.6, 2.0), a("n1", "storage", 0.45, 0.4, label="nightstand"),
-                 a("n2", "storage", 0.45, 0.4, subtype="nightstand")])
+    p = problem(
+        [
+            a("bed", "bed", 1.6, 2.0),
+            a("n1", "storage", 0.45, 0.4, label="nightstand"),
+            a("n2", "storage", 0.45, 0.4, subtype="nightstand"),
+        ]
+    )
     cs = by_id(implied_constraints(p))
     assert isinstance(cs["rule:against_wall:bed"], AgainstWall)
     for n in ("n1", "n2"):
@@ -192,10 +247,13 @@ def test_bedroom_rules():
 
 def test_storage_against_wall_except_pinned_fixed_or_wall_mounted():
     p = problem(
-        [a("shelf", "storage", label="bookshelf"), a("ward", "storage", subtype="wardrobe"),
-         a("built_in", "storage", subtype="cabinet", movable=False),
-         a("dresser", "storage", subtype="dresser"),
-         a("wall_shelf", "storage", subtype="bookshelf", mount="wall", elevation=1.2)],
+        [
+            a("shelf", "storage", label="bookshelf"),
+            a("ward", "storage", subtype="wardrobe"),
+            a("built_in", "storage", subtype="cabinet", movable=False),
+            a("dresser", "storage", subtype="dresser"),
+            a("wall_shelf", "storage", subtype="bookshelf", mount="wall", elevation=1.2),
+        ],
         [{"type": "fixed", "id": "keep", "a": "dresser", "weight": 0.5}],
         initial={"built_in": {"x": 1, "y": 0.25}, "dresser": {"x": 3, "y": 0.25}},
     )
@@ -224,8 +282,14 @@ def test_user_faces_on_a_subject_suppresses_all_implied_faces_of_that_subject():
 
 
 def test_user_distance_on_a_pair_suppresses_implied_near_and_distance_on_it():
-    user = {"type": "distance_at_least", "id": "u", "a": "sofa", "b": "ct",
-            "min_distance": 0.6, "origin": "vlm"}
+    user = {
+        "type": "distance_at_least",
+        "id": "u",
+        "a": "sofa",
+        "b": "ct",
+        "min_distance": 0.6,
+        "origin": "vlm",
+    }
     cs = ids(implied_constraints(problem(LIVING, [user])))
     assert "rule:near:ct:sofa" not in cs and "rule:distance_at_least:ct:sofa" not in cs
     assert "rule:faces:sofa:ct" in cs and "rule:parallel:ct:sofa" in cs
@@ -237,24 +301,35 @@ def test_user_parallel_suppresses_implied_parallel_on_the_pair():
 
 
 def test_against_wall_already_constrained_or_fixed_is_skipped():
-    users = [{"type": "against_wall", "id": "u", "a": "books", "wall_id": "w_w"},
-             {"type": "fixed", "id": "f", "a": "stand", "hard": True}]
+    users = [
+        {"type": "against_wall", "id": "u", "a": "books", "wall_id": "w_w"},
+        {"type": "fixed", "id": "f", "a": "stand", "hard": True},
+    ]
     cs = ids(implied_constraints(problem(LIVING, users, initial={"stand": {"x": 2, "y": 0.2}})))
     assert "rule:against_wall:books" not in cs and "rule:against_wall:stand" not in cs
 
 
 def test_no_relation_between_two_pinned_assets():
-    users = [{"type": "fixed", "id": "f1", "a": "sofa", "hard": True},
-             {"type": "fixed", "id": "f2", "a": "tv", "hard": True}]
-    cs = ids(implied_constraints(problem(
-        LIVING, users, initial={"sofa": {"x": 2.5, "y": 3.5}, "tv": {"x": 2.5, "y": 0.05}})))
+    users = [
+        {"type": "fixed", "id": "f1", "a": "sofa", "hard": True},
+        {"type": "fixed", "id": "f2", "a": "tv", "hard": True},
+    ]
+    cs = ids(
+        implied_constraints(
+            problem(
+                LIVING, users, initial={"sofa": {"x": 2.5, "y": 3.5}, "tv": {"x": 2.5, "y": 0.05}}
+            )
+        )
+    )
     assert not any(":sofa:tv" in c or ":tv:sofa" in c for c in cs)
     assert "rule:faces:sofa:ct" in cs  # the coffee table can still move
 
 
 def test_existing_safety_rules_are_not_duplicated():
-    users = [{"type": "walkway_width", "id": "w", "min_width": 1.0, "hard": True},
-             {"type": "keep_clear", "id": "k", "opening_id": "door", "distance": 1.2}]
+    users = [
+        {"type": "walkway_width", "id": "w", "min_width": 1.0, "hard": True},
+        {"type": "keep_clear", "id": "k", "opening_id": "door", "distance": 1.2},
+    ]
     cs = implied_constraints(problem(LIVING, users))
     assert not any(isinstance(c, WalkwayWidth) for c in cs)
     assert [c.opening_id for c in cs if isinstance(c, KeepClear)] == ["win"]
@@ -262,8 +337,14 @@ def test_existing_safety_rules_are_not_duplicated():
 
 def test_rule_origin_constraints_do_not_count_as_user_intent():
     # a rule-library constraint someone kept with a *different* id does not suppress rules
-    kept = {"type": "near", "id": "old_rule", "a": "ct", "b": "sofa", "max_distance": 0.4,
-            "origin": "rule_library"}
+    kept = {
+        "type": "near",
+        "id": "old_rule",
+        "a": "ct",
+        "b": "sofa",
+        "max_distance": 0.4,
+        "origin": "rule_library",
+    }
     assert "rule:near:ct:sofa" in ids(implied_constraints(problem(LIVING, [kept])))
 
 
@@ -282,10 +363,56 @@ def test_idempotent_on_examples(path, minimal):
     p = LayoutProblem.model_validate_json(path.read_text())
     if minimal:
         p = LayoutProblem.model_validate(
-            {**p.model_dump(),
-             "constraints": [c.model_dump() for c in p.constraints if isinstance(c, Fixed)]}
+            {
+                **p.model_dump(),
+                "constraints": [c.model_dump() for c in p.constraints if isinstance(c, Fixed)],
+            }
         )
     first = implied_constraints(p)
     assert implied_constraints(_with(p, first)) == []
-    assert all(isinstance(c, Faces | Near | DistanceAtLeast | Parallel | AgainstWall
-                          | WalkwayWidth | KeepClear) for c in first)
+    assert all(
+        isinstance(
+            c, Faces | Near | DistanceAtLeast | Parallel | AgainstWall | WalkwayWidth | KeepClear
+        )
+        for c in first
+    )
+
+
+def test_zone_that_admits_a_category_invites_a_leftover_asset():
+    """A piano's bench zone admits chairs: the otherwise-unassigned bench is invited to it,
+    while desk chairs stay with desks and nothing is invited twice."""
+    bench_zone = {
+        "name": "bench_area",
+        "purpose": "use",
+        "allowed_categories": ["chair"],
+        "polygon": rect(-0.75, 0.3, 0.75, 1.2),
+    }
+    p = problem(
+        [
+            a("piano", "piano", 1.5, 0.6, 1.2, clearance_zones=[bench_zone]),
+            a("bench", "chair", 0.8, 0.4, label="piano bench"),
+            a("stool", "chair", 0.4, 0.4, label="stool"),
+        ]
+    )
+    r = assign_roles(p)
+    assert r.invited == [("piano", "bench_area", "bench")]  # one member per zone
+    cs = ids(implied_constraints(p))
+    assert {"rule:near:bench:piano", "rule:faces:bench:piano", "rule:faces:piano:bench"} <= cs
+    assert not any("stool" in c for c in cs if c.startswith("rule:near"))
+
+
+def test_desk_chair_zone_does_not_double_invite():
+    chair_zone = {
+        "name": "chair_zone",
+        "purpose": "use",
+        "allowed_categories": ["chair"],
+        "polygon": rect(-0.6, 0.3, 0.6, 1.0),
+    }
+    p = problem(
+        [
+            a("desk", "table", 1.2, 0.6, subtype="desk", clearance_zones=[chair_zone]),
+            a("c", "chair", 0.5, 0.5),
+        ]
+    )
+    r = assign_roles(p)
+    assert r.desk_pairs == [("desk", "c")] and r.invited == []
