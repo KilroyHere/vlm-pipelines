@@ -57,12 +57,12 @@ paper (arXiv 2511.16624v2).
 
 ## 2. GPU and cost
 
-Prices change weekly. Check the live page before renting. Snapshot (Sept–Oct 2026):
+Prices change weekly; the Runpod plan below is from live reads. Market snapshot (Sept–Oct 2026):
 
 | GPU (VRAM) | Vast.ai (marketplace) | RunPod Community | RunPod Secure | Lambda | fit |
 |---|---|---|---|---|---|
-| RTX A6000 (48 GB) | from ~$0.28/h | ~$0.49/h | ~$0.76/h | $1.09/h | **first choice** |
-| A40 (48 GB) | varies | ~$0.44–0.49/h | | – | equally good |
+| RTX A6000 (48 GB) | from ~$0.28/h | ~$0.49/h | ~$0.76/h | $1.09/h | out of stock on Runpod 2026-10-17 |
+| A40 (48 GB) | varies | no stock | **$0.59/h (live)** | – | **chosen** |
 | L40S (48 GB) | from ~$0.47/h | ~$0.86–0.89/h | ~$1.09–1.19/h | – | good |
 | A100 (80 GB) | varies | | $1.79/h | | fallback if 48 GB OOMs |
 | RTX 5090 / Blackwell | | | | | **incompatible** (see above) |
@@ -71,19 +71,33 @@ Sources: [Hostinger comparison, Sept 2026](https://www.hostinger.com/tutorials/?
 [RunPod pricing](https://www.runpod.io/gpu-cloud/pricing),
 [RunPod price changes, Sept 2026](https://pricingsaas.com/companies/runpod/diffs/2026W37).
 
-**Chosen provider (2026-10-17): RunPod**, Community Cloud A40 or RTX A6000 with a network volume.
+### Runpod plan (live catalog reads via the Runpod connector, 2026-10-17)
 
-**Cheapest alternative:** Vast.ai A6000. It's a marketplace of third-party hosts, so filter for
-*verified* hosts with reliability ≥ 99%, ≥ 100 GB disk and good download bandwidth (the
-checkpoints are large). Vast also bills disk while an instance is stopped, so **destroy**
-it when done. **Least hassle:** RunPod Community A40/A6000 at roughly double the price,
-with a persistent network volume so a restart doesn't rebuild the env. Either way, pick a
-CUDA **12.1 devel** image (e.g. `pytorch/pytorch:2.5.1-cuda12.1-cudnn9-devel`): pytorch3d
-compiles from source and needs `nvcc`.
+| Choice | Value | Why (read) |
+|---|---|---|
+| GPU | **NVIDIA A40, 48 GB, Secure Cloud, $0.59/h** | cheapest ≥ 32 GB card in stock (`list-gpu-types`): CA-MTL-1 medium, EU-SE-1 low. Its $0.35 Community price had no Community stock. RTX A6000: out of stock. |
+| Data center | CA-MTL-1 | highest A40 stock |
+| Template / image | `runpod-torch-v220` = `runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04` | official template (`list-public-templates`): CUDA 12.1 toolkit for the pytorch3d build, allowed host CUDA 12.1–12.9, Jupyter on 8888 for a browser terminal + uploads |
+| CUDA floor | `gpu.minCudaVersion = "12.1"` | the image's CUDA line |
+| Storage | pod volume disk 100 GB at `/workspace` (+ 50 GB container disk) | survives stop/start, deleted on terminate. **No network volume:** Runpod network volumes attach to Secure Cloud pods only ([docs](https://docs.runpod.io/storage/network-volumes)), and neither A40 data center offers them. A network volume would mean RTX 6000 Ada ($0.99/h) or L40S ($1.09/h) in US-IL-1. Not worth it for a 3–4 h run. |
+| Ports | `8888/http` only | Jupyter terminal + file upload; no SSH needed |
+| Env | `HF_TOKEN={{ RUNPOD_SECRET_hf_token }}` | create a Runpod secret `hf_token` in the console first (never paste the token into chat or code) |
+
+Fallbacks if A40 stock is gone: L40S (US-IL-1, $1.09/h Secure / $0.79 Community),
+RTX 6000 Ada ($0.99/h Secure), A100 80 GB PCIe ($1.79/h Secure). **Never** a Blackwell card
+(RTX 5090, RTX PRO 6000/4500, B200/B300); the bootstrap script refuses them.
+
+Setup on the pod is one command: `bash runpod_bootstrap.sh --smoke` (this folder). It builds
+the env, downloads checkpoints, sets up the roomlayout venv and runs Meta's demo, all under
+`/workspace`, idempotently.
+
+**Cheapest alternative provider:** Vast.ai A6000 (verified hosts, reliability ≥ 99 %,
+≥ 100 GB disk; destroy when done, stopped instances still bill disk).
 
 Budget: env build ~45–60 min (pytorch3d compile), checkpoint download, then ~20 items.
-About **3–4 GPU-hours: ~$1–2 on Vast, ~$2–4 on RunPod Community**. Prepare photos and
-masks on your laptop first (section 3) so no GPU time is spent on prep.
+About **3–4 GPU-hours ≈ $2–2.50 on the A40**, plus volume disk while stopped. Prepare photos
+and masks on your laptop first (section 3) so no GPU time is spent on prep. **Terminate the
+pod when done** (after copying `outputs/` home).
 
 ## 3. Before renting the GPU (laptop, CPU)
 
@@ -136,6 +150,20 @@ masks on your laptop first (section 3) so no GPU time is spent on prep.
 5. Dry run: `python run_sam3d.py --data data --out outputs --dry-run` must report 0 invalid.
 
 ## 4. Runbook on the rented GPU
+
+### Runpod quickstart (the plan in section 2)
+1. Console → Settings → Secrets: create `hf_token` with your Hugging Face token (needs the
+   approved access to `facebook/sam-3d-objects`).
+2. Create the pod per section 2 (or ask Claude to create it via the Runpod connector), then
+   open Jupyter (`https://<podId>-8888.proxy.runpod.net`) → Terminal.
+3. Put this repo at `/workspace/vlm-pipelines`: `git clone <repo URL> /workspace/vlm-pipelines`
+   (a private repo needs a GitHub token), or upload a tarball through Jupyter and extract it.
+4. `bash /workspace/vlm-pipelines/spikes/sam3d/runpod_bootstrap.sh --smoke` (~1 h first time).
+5. Upload your prepared `spikes/sam3d/data/` folder through Jupyter into the same path.
+6. Run the command the script prints. Then zip `outputs/`, download it through Jupyter, and
+   **terminate the pod**.
+
+The manual equivalent of steps 2–4 on any provider:
 
 ```bash
 # 0. Instance: Ubuntu 22.04, 1x 48 GB GPU (A6000/L40S/6000 Ada), >= 100 GB disk,
