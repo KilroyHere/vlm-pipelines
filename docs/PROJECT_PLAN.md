@@ -12,6 +12,7 @@ Scope: see "v1 scope" in [ARCHITECTURE.md](ARCHITECTURE.md). Contracts:
 | WS-B | Asset normalization + SAM 3D spike (Step 2) | Engineer B | `roomlayout.assets`, `spikes/sam3d/` | WS-0 |
 | WS-C | Rule library (M3a) | Engineer A | `roomlayout.constraints.rules` | WS-0, M1 |
 | WS-D | VLM constraint extraction (M3b) | Engineer D | `roomlayout.constraints.vlm` | WS-0 |
+| WS-E | RoomPlan ingest (M4a) | Engineer B | `roomlayout.ingest` | WS-0 |
 | EXT | GPU access, LiDAR device + Mac, API credentials | Product owner | — | — |
 
 WS-A and WS-B share **only** `roomlayout.schema`. Neither imports the other.
@@ -96,7 +97,20 @@ Integration checkpoint 2 in `tests/test_integration.py`: user words → (offline
 answer → rule library → solver → feasible layout honouring the user's hard request and passing
 every sensibility check; user intent overrides defaults; a refused parse still yields a problem.
 
-### M4+: RoomPlan ingest + iOS capture, end-to-end. Not started.
+### M4a: RoomPlan ingest, Python side (WS-E)
+- [ ] `roomlayout.ingest.roomplan`: Apple RoomPlan `CapturedRoom` JSON → `LayoutProblem`
+      skeleton (Room + box Assets with `dimensions_from="roomplan"` + `initial` poses, no
+      constraints). ARKit Y-up → our Z-up at this boundary only (ADR-0001).
+- [ ] Walls → CCW floor polygon (prefer RoomPlan floor polygon when present), doors/windows/
+      openings mapped onto walls with offset, width, height, sill; fixtures (kitchen/bath
+      appliances, fireplace, stairs) immovable.
+- [ ] Every field we read verified against Apple's documentation or marked unverified;
+      synthetic fixtures with known geometry; graceful errors on multi-room/odd scans.
+- [ ] CLI `python -m roomlayout.ingest.roomplan CAPTURE.json --out problem.json` whose output
+      solves with the rule library.
+- [ ] Real-capture validation: needs a LiDAR iPhone/iPad export (EXT).
+
+### M4b+: iOS capture app, per-object frames for SAM 3D, end-to-end. Not started.
 
 **Requirement learned in M1:** layout quality is driven by *constraint completeness*,
 not the solver. With only `faces(sofa, tv)`, the solver correctly put the coffee
@@ -155,3 +169,5 @@ them.
   unique constraint ids). ADR-0006 amended (`create` + raw schema; evidence-driven vocabulary growth).
 - 2026-10-17: M3a accepted (ADR-0007). Contract v0.6.0 (taxonomy: bench, piano_bench, ottoman, meeting_table).
   M3c landed: `build_constraints` + integration checkpoint 2. WS-A on solver quality (top-k gate, group moves).
+- 2026-10-17: Runpod agent plugin install blocked by session policy (self-modification); owner offered connector or
+  `RUNPOD_API_KEY` env secret instead. M4a (RoomPlan ingest) kicked off with WS-B as WS-E.
