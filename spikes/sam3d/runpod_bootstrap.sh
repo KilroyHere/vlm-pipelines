@@ -86,7 +86,8 @@ if [ -f "$REPO_DIR/pyproject.toml" ]; then
     command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.local/bin:$PATH"
     # The pod image ships Python 3.10; roomlayout needs >= 3.11, so let uv fetch 3.12.
-    (cd "$REPO_DIR" && uv venv -q -p 3.12 && uv pip install -q -e ".[assets]")
+    # --python: with the SAM 3D conda env active, a bare `uv pip install` targets conda
+    (cd "$REPO_DIR" && uv venv -q -p 3.12 && uv pip install -q --python .venv/bin/python -e ".[assets]")
     echo "roomlayout ready: $REPO_DIR/.venv/bin/python"
 else
     echo "$REPO_DIR not found: clone or upload the repo there, then re-run." >&2

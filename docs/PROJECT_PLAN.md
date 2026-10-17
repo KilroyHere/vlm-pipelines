@@ -150,6 +150,7 @@ them.
 | Layouts satisfy rules but look bad | Core value | WS-A / M3 | Confirmed cause: under-specified constraints. Rule library emits implied relations (M3); visual review; VLM critic later | open: understood |
 | Wrong furniture size | Silently wrong layouts | WS-B | Measured dimensions always win (ADR-0004); mismatch report | mitigated by design |
 | Schema churn between workstreams | Integration rework | Lead | Single owner, version bumps, integration test | mitigated |
+| Capture walk too close to furniture: big objects never fully in one frame (ARKitScenes: sofas 39-58% visible) | asset quality from the user's own video | WS-E / M4b | capture flow adds one step-back photo per large RoomPlan object; frame picker already ranks by visible share | open (found by the e2e run, 2026-10-17) |
 
 ## Status log
 - 2026-10-16: Contract v0.1.0, ADRs 0001–0004, and the plan landed. WS-A and WS-B kicked off.
@@ -193,3 +194,11 @@ them.
   proportions within 15% of manufacturer dims, L-sectional preserved, front heuristic 6/6, 14-20 s/item on A40.
   Promising, not yet go/no-go (needs 20 items). Details: spikes/sam3d/PILOT_RESULTS.md. Both pods terminated;
   Runpod spend today $5.17 (pilot ~$0.60, idle night ~$4).
+- 2026-10-17 16:20 UTC: **First end-to-end on real rooms** (3 ARKitScenes living rooms, LiDAR scan + capture
+  video standing in for the user's own scan; spikes/e2e_arkitscenes/RESULTS.md). Scan -> room + boxes -> best frame
+  per object by camera pose -> SAM 2 mask from the projected box -> SAM 3D (21 objects, median 15 s) -> normalize ->
+  request -> constraints -> solve -> checks. All 3 rooms: feasible layouts meeting the whole request, passing checks
+  (one flag on a user-pinned cabinet). Found and fixed 2 rule-library precedence bugs (ADR-0007 amendment). Asset
+  quality from capture frames is below the photo pilot (21% mean proportion mismatch, 16/21 good shapes): capture
+  must add a step-back photo per large object. Not yet exercised: doors/windows, live VLM, RoomPlan importer.
+  Pod `v39xw1o6z9hkyu` terminated (~$0.65).

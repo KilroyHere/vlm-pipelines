@@ -28,6 +28,7 @@ import json
 import math
 from pathlib import Path
 
+from roomlayout.assets.meshio import load_mesh
 from roomlayout.constraints import build_constraints
 from roomlayout.constraints.checks import check_layout
 from roomlayout.constraints.vlm.offline import offline_client, synthetic_response
@@ -144,12 +145,16 @@ def render_3d(problem: LayoutProblem, layout: Layout, path: Path, title: str) ->
         pose = poses[a.id]
         cols = None
         if a.mesh is not None and Path(a.mesh.uri).exists():
-            m = trimesh.load(a.mesh.uri, force="mesh")
+            m = load_mesh(a.mesh.uri)  # GLBs are glTF Y-up; this returns our Z-up frame
+            vc = getattr(m.visual, "vertex_colors", None)
+            src = (m.vertices.copy(), vc[:, :3] / 255.0) if vc is not None else None
             if len(m.faces) > 4000:
                 m = m.simplify_quadric_decimation(face_count=4000)
-            vc = getattr(m.visual, "vertex_colors", None)
-            if vc is not None and len(vc) == len(m.vertices):
-                cols = vc[m.faces].mean(1)[:, :3] / 255.0
+            if src is not None:  # decimation drops colours: take the nearest original vertex's
+                from scipy.spatial import cKDTree
+
+                _, idx = cKDTree(src[0]).query(m.vertices)
+                cols = src[1][idx][m.faces].mean(1)
         else:
             m = trimesh.creation.box(
                 extents=(a.dimensions.width, a.dimensions.depth, a.dimensions.height)
