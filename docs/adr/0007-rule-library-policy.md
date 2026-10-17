@@ -24,3 +24,25 @@ impossible in a particular room; hard ones would turn an awkward room into "no l
   (`roomlayout.constraints.checks`) and the solver's top-k quality gate rather than by
   hardness.
 - Weights are tuned on our suite; revisit with real scans.
+
+## Amendment (2026-10-17): first check against real rooms (ARKitScenes end-to-end)
+
+Running the full chain on three real living rooms (`spikes/e2e_arkitscenes/`) showed two
+places where the user did *not* actually take precedence:
+
+- **Soft user requests weighed 1.0 against rules at ×5.** An armchair's default "faces the
+  coffee table" (weight 5) pulled the table away from the sofa the user named (weight 1).
+  Soft VLM/user constraints now get `USER_SOFT_WEIGHT = 3 × WEIGHT_SCALE` (15, the
+  strongest default relation, seating↔TV). Hard requests are unaffected.
+- **Faces precedence was per subject.** "The sofa faces the TV" suppressed every implied
+  `faces(sofa, *)`, including "the coffee table is in front of the sofa", so the table
+  drifted beside the sofa (2 of 3 rooms). An implied `faces(seat, coffee_table)` now
+  survives a user `faces(seat, tv)`: the library emits that pair itself and the two agree
+  when the table sits between seat and TV. Any other user `faces(seat, x)` still
+  suppresses it.
+
+Effect on the three rooms (box assets, k=3, same inputs before/after): layouts passing
+every sensibility check, not counting the flag on a cabinet the user pinned with "don't
+move it", went from 2 of 9 to 7 of 7 (one room now returns a single layout; the top-k
+quality gate drops the costlier alternatives). User constraints satisfied in the top
+layout went from 2/3, 5/5, 4/5 to 3/3, 5/5, 5/5.

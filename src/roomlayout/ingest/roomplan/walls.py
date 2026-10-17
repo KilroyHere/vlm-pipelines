@@ -165,9 +165,7 @@ def floor_from_walls(
     return clean_polygon(hull)
 
 
-def orient_and_order(
-    segs: list[WallSeg], floor: np.ndarray, warnings: list[str]
-) -> list[WallSeg]:
+def orient_and_order(segs: list[WallSeg], floor: np.ndarray, warnings: list[str]) -> list[WallSeg]:
     """Orient each wall with the floor on its left; flag partitions; sort along boundary."""
     boundary = []
     for s in segs:

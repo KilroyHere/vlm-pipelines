@@ -164,7 +164,11 @@ def test_conversion_to_contract():
     assert isinstance(c0, Faces) and c0.origin == "vlm" and c0.hard
     assert c0.rationale == "I want the sofa facing the TV"
     assert c0.max_angle_deg == 20.0  # null -> contract default
-    assert result.constraints[1].hard is False and result.constraints[1].weight == 1.0
+    # a soft request weighs as much as the strongest default rule (ADR-0007 amendment)
+    from roomlayout.constraints.rules import USER_SOFT_WEIGHT
+
+    assert result.constraints[1].hard is False
+    assert result.constraints[1].weight == USER_SOFT_WEIGHT
     assert result.constraints[2].distance == 0.6
     assert result.restatements[1] == "If possible, the bookshelf goes against the west wall."
     assert len(result.restatements) == len(result.constraints)

@@ -281,6 +281,21 @@ def test_user_faces_on_a_subject_suppresses_all_implied_faces_of_that_subject():
     assert "rule:faces:tv:sofa" in cs  # other subjects are untouched
 
 
+def test_user_faces_tv_keeps_the_coffee_table_in_front_of_the_seat():
+    # found by the ARKitScenes end-to-end run: "sofa faces the TV" used to drop
+    # faces(sofa, coffee table), and the table drifted to the side of the sofa
+    user = {"type": "faces", "id": "u", "a": "sofa", "b": "tv", "origin": "vlm"}
+    cs = ids(implied_constraints(problem(LIVING, [user])))
+    assert "rule:faces:sofa:ct" in cs
+    assert "rule:faces:sofa:tv" not in cs  # the user's own faces(sofa, tv) stands
+
+
+def test_user_faces_elsewhere_still_suppresses_the_coffee_table_faces():
+    user = {"type": "faces", "id": "u", "a": "sofa", "b": "books", "origin": "vlm"}
+    cs = ids(implied_constraints(problem(LIVING, [user])))
+    assert not any(c.startswith("rule:faces:sofa:") for c in cs)
+
+
 def test_user_distance_on_a_pair_suppresses_implied_near_and_distance_on_it():
     user = {
         "type": "distance_at_least",

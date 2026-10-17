@@ -26,6 +26,7 @@ from roomlayout.schema import (
     WalkwayWidth,
 )
 
+from ..rules import USER_SOFT_WEIGHT
 from .output import (
     AgainstWallItem,
     DistanceAtLeastItem,
@@ -179,6 +180,8 @@ def to_constraint(item: LLMItem, cid: str) -> Constraint:
         "origin": "vlm",
         "rationale": item.source_text,
     }
+    if not item.hard:
+        common["weight"] = USER_SOFT_WEIGHT
 
     def opt(**kw: float | str | None) -> dict[str, Any]:
         return {k: v for k, v in kw.items() if v is not None}

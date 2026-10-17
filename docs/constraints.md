@@ -107,7 +107,7 @@ User/VLM constraints (`origin` ≠ `rule_library`) override rules on the same su
 
 | implied rule | skipped when |
 |---|---|
-| `faces(a, *)` | any non-rule `faces(a, *)` exists (the user has said where `a` faces) |
+| `faces(a, *)` | any non-rule `faces(a, *)` exists (the user has said where `a` faces). Exception: `faces(seat, coffee_table)` survives a user `faces(seat, tv)`; the library emits that pair itself and they agree when the table is between them (found by the ARKitScenes end-to-end run) |
 | `near` / `distance_at_least` on {a, b} | any non-rule `near` or `distance_at_least` on the same pair, either order |
 | `parallel` on {a, b} | any non-rule `parallel` on the pair |
 | `against_wall(a)` | `a` already has any `against_wall`; `a` has any `fixed` (hard or soft); `a` is immovable; `a` is wall-mounted |

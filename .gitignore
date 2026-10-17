@@ -11,3 +11,5 @@ out/
 spikes/sam3d/data/
 spikes/sam3d/outputs/
 !tests/fixtures/**/*.glb
+spikes/e2e_arkitscenes/data/
+spikes/e2e_arkitscenes/out/

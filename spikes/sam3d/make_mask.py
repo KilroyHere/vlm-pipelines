@@ -25,6 +25,8 @@
     python make_mask.py auto data/sofa_01 data/desk_13      # or: auto data/*/
     python make_mask.py auto data/tv_stand_18 --prompt "tv stand,media console"
     python make_mask.py auto data/sofa_01 --box 120 340 1650 1180   # skip detection
+    # (an item whose meta.json has "prompt_box", e.g. a scanned 3D box projected into a
+    #  video frame, uses that box and also skips detection)
 
     # QA: overlay every mask on its image -> data/<item>/mask_check.png
     python make_mask.py check data
@@ -257,11 +259,14 @@ def cmd_auto(a) -> None:
     items = [Path(p) for p in a.items]
     for item in items:
         _image_path(item)  # fail early on a missing image
-        if not _read_meta(item).get("category") and not a.prompt and not a.box:
+        meta = _read_meta(item)
+        if not meta.get("category") and not a.prompt and not a.box and not meta.get("prompt_box"):
             raise SystemExit(f"{item}: meta.json needs 'category' (or pass --prompt / --box)")
     if a.box and len(items) > 1:
         raise SystemExit("--box applies to one item")
-    detector = None if a.box else am.OwlDetector(a.detector, a.device)
+    # meta "prompt_box": a box from the scan (3D object box projected into the frame)
+    need_detector = not a.box and any(not _read_meta(i).get("prompt_box") for i in items)
+    detector = am.OwlDetector(a.detector, a.device) if need_detector else None
     segmenter = am.Sam2Segmenter(a.sam_model, a.device)
     failed = []
     for item in items:
@@ -281,6 +286,9 @@ def cmd_auto(a) -> None:
         if a.box:
             det = am.Detection(tuple(a.box), 1.0, "manual box")
             info.update(box_source="manual", detector=None)
+        elif meta.get("prompt_box"):
+            det = am.Detection(tuple(meta["prompt_box"]), 1.0, "scan box projection")
+            info.update(box_source="scan_projection", detector=None)
         else:
             dets = detector.detect(image, targets, distractors)
             det = am.select_box(dets, size, min_score=a.min_score, rel_score=a.rel_score)
@@ -345,16 +353,27 @@ def main(argv: list[str] | None = None) -> None:
     s = sub.add_parser("auto", help="automatic mask: OWLv2 text->box, SAM 2 box->mask")
     s.add_argument("items", nargs="+", help="item folders (data/<item>)")
     s.add_argument("--prompt", help="comma-separated detector queries (default: from category)")
-    s.add_argument("--box", nargs=4, type=float, metavar=("X0", "Y0", "X1", "Y1"),
-                   help="skip detection and prompt SAM 2 with this box (one item)")
+    s.add_argument(
+        "--box",
+        nargs=4,
+        type=float,
+        metavar=("X0", "Y0", "X1", "Y1"),
+        help="skip detection and prompt SAM 2 with this box (one item)",
+    )
     s.add_argument("--device", default="auto", help="auto | cpu | cuda")
     s.add_argument("--detector", default="google/owlv2-base-patch16-ensemble")
     s.add_argument("--sam-model", default="facebook/sam2.1-hiera-large")
     s.add_argument("--min-score", type=float, default=0.10)
     s.add_argument("--rel-score", type=float, default=0.6)
     a = p.parse_args(argv)
-    cmds = {"prepare": cmd_prepare, "polygon": cmd_polygon, "sam2": cmd_sam2,
-            "alpha": cmd_alpha, "auto": cmd_auto, "check": cmd_check}
+    cmds = {
+        "prepare": cmd_prepare,
+        "polygon": cmd_polygon,
+        "sam2": cmd_sam2,
+        "alpha": cmd_alpha,
+        "auto": cmd_auto,
+        "check": cmd_check,
+    }
     cmds[a.cmd](a)
 
 

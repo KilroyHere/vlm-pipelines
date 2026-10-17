@@ -47,6 +47,10 @@ ORIGIN = "rule_library"
 # per unit; relations weighted ~1 get settled only after the hard rules and can be frozen
 # out in crowded rooms, so rule weights live on a ~5-30 scale (docs/constraints.md).
 WEIGHT_SCALE = 5.0
+# Soft weight of a user/VLM request: as strong as the strongest default relation
+# (W_SEAT_TV), so a soft request is never outvoted by a rule of the library (ADR-0007
+# amendment: at weight 1 an armchair's default pulled the user's coffee table away).
+USER_SOFT_WEIGHT = 3.0 * WEIGHT_SCALE
 
 # --- safety -------------------------------------------------------------------------
 WALKWAY_WIDTH = 0.9  # m, preferred: common clear-circulation guidance (~36 in)
@@ -268,7 +272,13 @@ class _Precedence:
         cs = problem.constraints
         user = [c for c in cs if c.origin != ORIGIN]
         self.ids = {c.id for c in cs}
-        self.faces_subjects = {c.a for c in user if isinstance(c, Faces)}
+        self.faces_targets: dict[str, set[str]] = {}
+        for c in user:
+            if isinstance(c, Faces):
+                self.faces_targets.setdefault(c.a, set()).add(c.b)
+        # implied faces(a, b) that may coexist with user faces(a, t) for every t in the set:
+        # pairs the library itself always emits together (see implied_constraints)
+        self.compatible_faces: dict[tuple[str, str], set[str]] = {}
         self.distance_pairs = {
             frozenset((c.a, c.b)) for c in user if isinstance(c, Near | DistanceAtLeast)
         }
@@ -293,7 +303,12 @@ class _Precedence:
         if len(refs) == 2 and all(r in self.pinned for r in refs):
             return False  # nothing can move: the relation is a constant
         if isinstance(c, Faces):
-            return c.a not in self.faces_subjects
+            targets = self.faces_targets.get(c.a)
+            if not targets:
+                return True
+            if c.b in targets:
+                return False
+            return targets <= self.compatible_faces.get((c.a, c.b), set())
         if isinstance(c, Near | DistanceAtLeast):
             return frozenset((c.a, c.b)) not in self.distance_pairs
         if isinstance(c, Parallel):
@@ -407,6 +422,10 @@ def implied_constraints(problem: LayoutProblem) -> list[Constraint]:
 
     # ---------------------------------------------------------------- living
     seat, tv, coffee = roles.primary_seating, roles.tv, roles.coffee_table
+    if seat and tv and coffee:
+        # "the sofa faces the TV" does not cancel "the coffee table is in front of the sofa":
+        # the library emits both itself, and they agree when the table is between them
+        prec.compatible_faces[(seat, coffee)] = {tv}
     if seat and tv:
         faces(seat, tv, W_SEAT_TV, "the main seating faces the TV", SEAT_TV_ANGLE)
         faces(tv, seat, W_SEAT_TV, "the screen is turned towards the main seating", TV_SEAT_ANGLE)

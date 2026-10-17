@@ -105,7 +105,7 @@ def parse_transform(raw) -> np.ndarray:
 def _enum_case(raw) -> tuple[str, dict]:
     """Swift enum Codable: ``{"door": {"isOpen": false}}`` -> ("door", {...})."""
     if isinstance(raw, dict) and len(raw) == 1:
-        (name, payload), = raw.items()
+        ((name, payload),) = raw.items()
         return str(name), payload if isinstance(payload, dict) else {}
     if isinstance(raw, str):  # unverified
         return raw, {}

@@ -1,0 +1,146 @@
+{
+ "_note": "One request per scene, in the user's words. 'vlm_answer' is the structured output the VLM step returns (roomlayout.constraints.vlm output format). No Anthropic API key is configured in this environment, so these answers are hand-written by the tech lead in that exact format and served through the real SDK offline (offline_client), like tests/test_integration.py. Re-run with a live client once a key exists. 'Y in front of X' follows the prompt's mapping (faces(X, Y) + near(Y, X) <= 0.5 m, as in eval case lr-08).",
+ "42445441": {
+  "text": "I want the sofa to face the TV. Keep the little table right next to the sofa as a side table, and leave the middle of the room open.",
+  "vlm_answer": {
+   "constraints": [
+    {
+     "type": "faces",
+     "a": "sofa_1",
+     "b": "tv_stand_1",
+     "max_angle_deg": null,
+     "hard": true,
+     "restatement": "The sofa faces the TV.",
+     "source_text": "I want the sofa to face the TV"
+    },
+    {
+     "type": "near",
+     "a": "table_1",
+     "b": "sofa_1",
+     "max_distance": 0.15,
+     "hard": false,
+     "restatement": "The small table stands right next to the sofa.",
+     "source_text": "Keep the little table right next to the sofa as a side table"
+    },
+    {
+     "type": "walkway_width",
+     "min_width": 0.9,
+     "hard": false,
+     "restatement": "There is at least 0.9 m of free walking space through the room.",
+     "source_text": "leave the middle of the room open"
+    }
+   ],
+   "unexpressed": []
+  }
+ },
+ "47204607": {
+  "text": "Put the big sofa against a wall, facing the TV, with the coffee table in front of it. Don't move the cabinet.",
+  "vlm_answer": {
+   "constraints": [
+    {
+     "type": "against_wall",
+     "a": "sofa_2",
+     "wall_id": null,
+     "max_gap": null,
+     "hard": true,
+     "restatement": "The big sofa's back is against a wall.",
+     "source_text": "Put the big sofa against a wall"
+    },
+    {
+     "type": "faces",
+     "a": "sofa_2",
+     "b": "tv_stand_1",
+     "max_angle_deg": null,
+     "hard": true,
+     "restatement": "The big sofa faces the TV.",
+     "source_text": "facing the TV"
+    },
+    {
+     "type": "faces",
+     "a": "sofa_2",
+     "b": "table_1",
+     "max_angle_deg": null,
+     "hard": false,
+     "restatement": "The big sofa faces the coffee table.",
+     "source_text": "with the coffee table in front of it"
+    },
+    {
+     "type": "near",
+     "a": "table_1",
+     "b": "sofa_2",
+     "max_distance": 0.5,
+     "hard": false,
+     "restatement": "The coffee table is within 0.5 m of the big sofa.",
+     "source_text": "with the coffee table in front of it"
+    },
+    {
+     "type": "fixed",
+     "a": "cabinet_1",
+     "hard": true,
+     "restatement": "The cabinet stays where it is.",
+     "source_text": "Don't move the cabinet"
+    }
+   ],
+   "unexpressed": []
+  }
+ },
+ "48018379": {
+  "text": "The long sofa should face the TV with the coffee table in front of it. Keep the bookshelves against the walls. I'd like it to feel bright.",
+  "vlm_answer": {
+   "constraints": [
+    {
+     "type": "faces",
+     "a": "sofa_2",
+     "b": "tv_stand_1",
+     "max_angle_deg": null,
+     "hard": true,
+     "restatement": "The long sofa faces the TV.",
+     "source_text": "The long sofa should face the TV"
+    },
+    {
+     "type": "faces",
+     "a": "sofa_2",
+     "b": "table_1",
+     "max_angle_deg": null,
+     "hard": false,
+     "restatement": "The long sofa faces the coffee table.",
+     "source_text": "with the coffee table in front of it"
+    },
+    {
+     "type": "near",
+     "a": "table_1",
+     "b": "sofa_2",
+     "max_distance": 0.5,
+     "hard": false,
+     "restatement": "The coffee table is within 0.5 m of the long sofa.",
+     "source_text": "with the coffee table in front of it"
+    },
+    {
+     "type": "against_wall",
+     "a": "bookshelf_1",
+     "wall_id": null,
+     "max_gap": null,
+     "hard": true,
+     "restatement": "The first bookshelf stands against a wall.",
+     "source_text": "Keep the bookshelves against the walls"
+    },
+    {
+     "type": "against_wall",
+     "a": "bookshelf_2",
+     "wall_id": null,
+     "max_gap": null,
+     "hard": true,
+     "restatement": "The second bookshelf stands against a wall.",
+     "source_text": "Keep the bookshelves against the walls"
+    }
+   ],
+   "unexpressed": [
+    {
+     "text": "I'd like it to feel bright.",
+     "kind": "out_of_vocabulary",
+     "reason": "Brightness depends on lighting and windows, which this scan does not include."
+    }
+   ]
+  }
+ }
+}

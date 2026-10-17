@@ -85,7 +85,8 @@ step "roomlayout (CPU side, its own venv; ADR-0004)"
 if [ -f "$REPO_DIR/pyproject.toml" ]; then
     command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.local/bin:$PATH"
-    (cd "$REPO_DIR" && uv venv -q && uv pip install -q -e ".[assets]")
+    # The pod image ships Python 3.10; roomlayout needs >= 3.11, so let uv fetch 3.12.
+    (cd "$REPO_DIR" && uv venv -q -p 3.12 && uv pip install -q -e ".[assets]")
     echo "roomlayout ready: $REPO_DIR/.venv/bin/python"
 else
     echo "$REPO_DIR not found: clone or upload the repo there, then re-run." >&2
