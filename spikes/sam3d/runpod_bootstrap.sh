@@ -47,7 +47,9 @@ step "SAM 3D Objects source @ $SAM3D_COMMIT"
 if [ ! -d "$SAM3D_DIR/.git" ]; then
     git clone https://github.com/facebookresearch/sam-3d-objects.git "$SAM3D_DIR"
 fi
-git -C "$SAM3D_DIR" checkout -q "$SAM3D_COMMIT"
+git -C "$SAM3D_DIR" checkout -q -f "$SAM3D_COMMIT"
+# Their pyproject.toml also names pypi.ngc.nvidia.com, which no longer resolves (2026-10-17).
+sed -i 's#https://pypi.ngc.nvidia.com#https://pypi.nvidia.com#g' "$SAM3D_DIR/pyproject.toml"
 
 step "Conda env (doc/setup.md; slow: pytorch3d compiles from source)"
 cd "$SAM3D_DIR"
