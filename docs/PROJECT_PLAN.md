@@ -146,7 +146,7 @@ them.
 | SAM 3D license blocks commercial use | Must swap generator | EXT | Counsel confirmed our intended use is fine (2026-10-17) | **closed** |
 | Hugging Face checkpoint approval delay | M2b blocked | EXT | Access requested 2026-10-16; prepare photos + masks while waiting | open: awaiting approval |
 | Front heuristic wrong on real (blobby/hallucinated) meshes | Assets face the wall | WS-B | Contact sheets for VLM/user confirmation; `front_confidence` surfaced in the schema | open |
-| No GPU available for the spike | M2b blocked | EXT | Runpod connected. Plan from live reads: A40 Secure $0.59/h in CA-MTL-1, template `runpod-torch-v220`, pod volume disk (network volumes are Secure-only and absent where A40s are); bootstrap script. **No Blackwell** | pod `z8wwqdkf02w7at` STOPPED 13:05 UTC with SAM 3D env + checkpoints on /workspace; run pending data |
+| No GPU available for the spike | M2b blocked | EXT | Runpod connected. Plan from live reads: A40 Secure $0.59/h in CA-MTL-1, template `runpod-torch-v220`, pod volume disk (network volumes are Secure-only and absent where A40s are); bootstrap script. **No Blackwell** | pilot done; both pods terminated 2026-10-17 | closed for the pilot |
 | Layouts satisfy rules but look bad | Core value | WS-A / M3 | Confirmed cause: under-specified constraints. Rule library emits implied relations (M3); visual review; VLM critic later | open: understood |
 | Wrong furniture size | Silently wrong layouts | WS-B | Measured dimensions always win (ADR-0004); mismatch report | mitigated by design |
 | Schema churn between workstreams | Integration rework | Lead | Single owner, version bumps, integration test | mitigated |
@@ -189,3 +189,7 @@ them.
   produced) and interrupted the 08:59 check-in before its stop. The 12:59 check-in stopped the pod. Runpod spend
   today $4.56 (GPU $4.41, disk $0.15); ~$4 of it idle 05:47-13:05. Lesson: in-session agents and watchers don't
   survive worker restarts; long unattended GPU work needs a pod-side job with its own deadline.
+- 2026-10-17 14:40 UTC: **SAM 3D pilot done (7 web items, fully automatic).** All 7 usable (mean shape 4.0/5),
+  proportions within 15% of manufacturer dims, L-sectional preserved, front heuristic 6/6, 14-20 s/item on A40.
+  Promising, not yet go/no-go (needs 20 items). Details: spikes/sam3d/PILOT_RESULTS.md. Both pods terminated;
+  Runpod spend today $5.17 (pilot ~$0.60, idle night ~$4).
