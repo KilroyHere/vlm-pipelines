@@ -10,6 +10,9 @@
 # a Runpod secret named hf_token in the console. The token is never printed or logged.
 set -euo pipefail
 
+SMOKE=${1:-}
+set --   # conda's activate script reads "$@": don't let it see our flags
+
 WS=/workspace
 SAM3D_COMMIT=f91db41            # the commit spikes/sam3d/README.md documents
 CONDA_DIR=$WS/miniforge3
@@ -85,7 +88,7 @@ else
     echo "$REPO_DIR not found: clone or upload the repo there, then re-run." >&2
 fi
 
-if [ "${1:-}" = "--smoke" ] && [ -d "$SAM3D_DIR/checkpoints/hf" ]; then
+if [ "$SMOKE" = "--smoke" ] && [ -d "$SAM3D_DIR/checkpoints/hf" ]; then
     step "Smoke test (Meta's demo.py)"
     python demo.py
 fi
