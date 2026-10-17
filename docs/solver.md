@@ -330,20 +330,20 @@ results / restarts used. "time" = max wall time over seeds, incl. pool start-up.
 
 | problem | assets | first feasible [s] (min / max) | feasible in top-10 (s0 / s1 / s2) | best cost | feasible restarts / restarts used | time [s] (max) |
 |---|---|---|---|---|---|---|
-| `angled_reading_room` | 6 | 0.07 / 0.19 | 10 / 10 / 10 | 0 / 0 / 0 | 14/16 / 13/16 / 14/16 | 4.7 |
-| `bedroom_basic` | 6 | 0.13 / 0.21 | 10 / 10 / 10 | 0 / 0 / 0 | 18/22 / 13/17 / 16/30 | 5.3 |
-| `crowded_studio` | 10 | 0.66 / 1.45 | 7 / 8 / 10 | 0.234 / 0.249 / 0.249 | 5/49 / 6/51 / 7/28 | 9.6 |
-| `dining_room` | 8 | 0.17 / 0.41 | 10 / 10 / 10 | 0 / 0 / 0 | 8/16 / 10/24 / 10/16 | 6.8 |
-| `fixed_piano_room` | 7 | 0.04 / 0.06 | 10 / 10 / 10 | 0 / 0 / 0 | 13/16 / 13/16 / 12/16 | 3.1 |
-| `infeasible_conflicting_constraints` | 3 | - | 0 / 0 / 0 | 100 / 100 / 397 | 0/231 / 0/226 / 0/205 | 9.6 |
-| `infeasible_tiny_bedroom` | 3 | - | 0 / 0 / 0 | 307 / 307 / 1.56e+03 | 0/108 / 0/103 / 0/106 | 9.6 |
-| `l_shaped_living_dining` | 9 | 0.31 / 0.58 | 10 / 10 / 10 | 0 / 0 / 0 | 7/16 / 8/22 / 8/18 | 6.5 |
-| `living_room_basic` | 5 | 0.04 / 0.05 | 10 / 10 / 10 | 0 / 0 / 0 | 14/16 / 16/16 / 13/16 | 3.9 |
-| `narrow_study` | 6 | 0.09 / 0.18 | 10 / 10 / 10 | 0 / 0 / 0 | 16/16 / 13/16 / 16/16 | 3.8 |
-| `office_with_column` | 8 | 0.09 / 0.29 | 10 / 10 / 10 | 0 / 0 / 0 | 15/16 / 15/16 / 16/16 | 5.5 |
-| `wall_tv_living` | 7 | 0.05 / 0.17 | 10 / 10 / 10 | 0 / 0 / 0 | 9/16 / 9/16 / 8/16 | 4.4 |
+| `angled_reading_room` | 6 | 0.08 / 0.13 | 10 / 10 / 10 | 0 / 0 / 0 | 14/16 / 13/16 / 14/16 | 4.3 |
+| `bedroom_basic` | 6 | 0.14 / 0.19 | 10 / 10 / 10 | 0 / 0 / 0 | 18/22 / 13/17 / 16/30 | 5.1 |
+| `crowded_studio` | 10 | 0.55 / 1.38 | 7 / 8 / 10 | 0.234 / 0.249 / 0.249 | 5/50 / 6/51 / 7/28 | 9.6 |
+| `dining_room` | 8 | 0.15 / 0.41 | 10 / 10 / 10 | 0 / 0 / 0 | 8/16 / 10/24 / 10/16 | 5.9 |
+| `fixed_piano_room` | 7 | 0.04 / 0.05 | 10 / 10 / 10 | 0 / 0 / 0 | 13/16 / 13/16 / 13/17 | 3.0 |
+| `infeasible_conflicting_constraints` | 3 | - | 0 / 0 / 0 | 100 / 100 / 397 | 0/245 / 0/236 / 0/232 | 9.6 |
+| `infeasible_tiny_bedroom` | 3 | - | 0 / 0 / 0 | 307 / 307 / 1.56e+03 | 0/123 / 0/123 / 0/122 | 9.6 |
+| `l_shaped_living_dining` | 9 | 0.23 / 0.61 | 10 / 10 / 10 | 0 / 0 / 0 | 11/26 / 9/28 / 11/22 | 7.9 |
+| `living_room_basic` | 5 | 0.04 / 0.06 | 10 / 10 / 10 | 0.000347 / 0.000307 / 2.68e-05 | 15/16 / 13/16 / 14/16 | 3.3 |
+| `narrow_study` | 6 | 0.07 / 0.16 | 10 / 10 / 10 | 0 / 0 / 0 | 16/16 / 13/16 / 16/16 | 3.7 |
+| `office_with_column` | 8 | 0.11 / 0.23 | 10 / 10 / 10 | 0 / 0 / 0 | 15/16 / 15/16 / 16/16 | 5.5 |
+| `wall_tv_living` | 7 | 0.05 / 0.15 | 10 / 10 / 10 | 0 / 0 / 0 | 9/16 / 10/18 / 11/29 | 5.8 |
 
-Measured 2026-10-16 on the shared 4-core dev box. Another workstream's test runs
+Measured 2026-10-17 (after the quality gate, soft group ties and walkway shortcut; within noise of the 2026-10-16 numbers) on the shared 4-core dev box. Another workstream's test runs
 sometimes competed for CPU, so treat the times as upper bounds. Feasible problems stop
 early via the stopping rule (k diverse feasible layouts after ≥ 16 restarts); infeasible
 ones use the whole budget.

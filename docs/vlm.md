@@ -8,13 +8,15 @@ with **one Claude API call** (ADR-0006). It imports only `roomlayout.schema` and
 ```python
 from roomlayout.constraints.vlm import parse_request
 
-result = parse_request(problem, "Put the couch against the south wall, facing the TV. Keep it cozy.")
-result.status        # "ok" | "refused" | "truncated" | "invalid_output"
-result.constraints   # list[Constraint], origin="vlm", rationale = the user's words
+result = parse_request(
+    problem, "Put the couch against the south wall, facing the TV. Keep it cozy."
+)
+result.status  # "ok" | "refused" | "truncated" | "invalid_output"
+result.constraints  # list[Constraint], origin="vlm", rationale = the user's words
 result.restatements  # restatements[i] confirms constraints[i] in plain English
-result.unexpressed   # [{text, kind, reason}], e.g. "Keep it cozy." / out_of_vocabulary
-result.dropped       # [{item, reason, code, repairable}], e.g. unknown asset id
-result.warnings      # conflicting requests ("within 1 m" vs "at least 2.5 m apart")
+result.unexpressed  # [{text, kind, reason}], e.g. "Keep it cozy." / out_of_vocabulary
+result.dropped  # [{item, reason, code, repairable}], e.g. unknown asset id
+result.warnings  # conflicting requests ("within 1 m" vs "at least 2.5 m apart")
 result.attempts, result.usage, result.cost_usd, result.latency_s
 ```
 

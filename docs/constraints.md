@@ -159,20 +159,20 @@ default 10 s budget and 4 workers. `tests/constraints/test_rules_eval.py` (slow)
 that the top layout is feasible and passes every check. The table covers seeds 0 / 1 / 2.
 "good" = layouts in the returned top-10 that are feasible and pass all checks.
 
-| problem (minimal) | rules emitted | top feasible (s0/s1/s2) | top-layout checks passed | good layouts in top-k | max first feasible [s] |
-|---|---|---|---|---|---|
-| `angled_reading_room` | 10 (2 hard) | y / y / y | 4/4 / 4/4 / 4/4 | 10/10 / 10/10 / 10/10 | 0.12 |
-| `bedroom_basic` | 17 (2 hard) | y / y / y | 7/7 / 7/7 / 7/7 | 4/5 / 2/5 / 4/5 | 1.17 |
-| `crowded_studio` | 20 (2 hard) | y / y / y | 12/12 / 12/12 / 12/12 | 2/6 / 2/3 / 3/3 | 2.87 |
-| `dining_room` | 18 (3 hard) | y / y / y | 9/9 / 9/9 / 9/9 | 4/10 / 3/8 / 2/8 | 2.95 |
-| `fixed_piano_room` | 14 (2 hard) | y / y / y | 5/5 / 5/5 / 5/5 | 9/10 / 9/10 / 9/10 | 0.08 |
-| `l_shaped_living_dining` | 24 (3 hard) | y / y / y | 14/14 / 14/14 / 14/14 | 3/7 / 6/8 / 3/10 | 1.78 |
-| `living_room_basic` | 16 (2 hard) | y / y / y | 10/10 / 10/10 / 10/10 | 10/10 / 10/10 / 10/10 | 0.12 |
-| `narrow_study` | 11 (2 hard) | y / y / y | 5/5 / 5/5 / 5/5 | 10/10 / 7/7 / 5/7 | 0.33 |
-| `office_with_column` | 15 (2 hard) | y / y / y | 6/6 / 6/6 / 6/6 | 10/10 / 10/10 / 10/10 | 0.23 |
-| `wall_tv_living` | 17 (2 hard) | y / y / y | 10/10 / 10/10 / 10/10 | 7/10 / 8/10 / 5/10 | 0.22 |
+| problem (minimal) | rules emitted | top feasible (s0/s1/s2) | top-layout checks passed | good / returned in top-k, before gate | **after gate + soft groups** | max first feasible [s] before → after |
+|---|---|---|---|---|---|---|
+| `angled_reading_room` | 10 (2 hard) | y / y / y | 4/4 / 4/4 / 4/4 | 10/10 / 10/10 / 10/10 | **10/10 / 10/10 / 10/10** | 0.12 → 0.10 |
+| `bedroom_basic` | 17 (2 hard) | y / y / y | 7/7 / 7/7 / 7/7 | 4/5 / 2/5 / 4/5 | **2/2 / 4/4 / 8/8** | 1.17 → 2.06 |
+| `crowded_studio` | 20 (2 hard) | y / y / y | 12/12 / 12/12 / 12/12 | 2/6 / 2/3 / 3/3 | **3/3 / 1/1 / 5/5** | 2.87 → 4.18 |
+| `dining_room` | 18 (3 hard) | y / y / y | 9/9 / 9/9 / 9/9 | 4/10 / 3/8 / 2/8 | **10/10 / 10/10 / 10/10** | 2.95 → 0.64 |
+| `fixed_piano_room` | 14 (2 hard) | y / y / y | 5/5 / 5/5 / 5/5 | 10/10 / 10/10 / 10/10 | **10/10 / 10/10 / 10/10** | 0.11 → 0.07 |
+| `l_shaped_living_dining` | 24 (3 hard) | y / y / y | 14/14 / 14/14 / 14/14 | 3/7 / 6/8 / 3/10 | **10/10 / 10/10 / 10/10** | 1.78 → 1.15 |
+| `living_room_basic` | 16 (2 hard) | y / y / y | 10/10 / 10/10 / 10/10 | 10/10 / 10/10 / 10/10 | **10/10 / 10/10 / 10/10** | 0.12 → 0.07 |
+| `narrow_study` | 11 (2 hard) | y / y / y | 5/5 / 5/5 / 5/5 | 10/10 / 7/7 / 5/7 | **10/10 / 10/10 / 10/10** | 0.33 → 0.40 |
+| `office_with_column` | 15 (2 hard) | y / y / y | 6/6 / 6/6 / 6/6 | 10/10 / 10/10 / 10/10 | **10/10 / 10/10 / 10/10** | 0.23 → 0.08 |
+| `wall_tv_living` | 17 (2 hard) | y / y / y | 10/10 / 10/10 / 10/10 | 7/10 / 8/10 / 5/10 | **10/10 / 8/10 / 10/10** | 0.22 → 1.04 |
 
-All 30 top layouts (10 problems × 3 seeds) are feasible and pass every applicable check. The weaker number is the rest of the top-k (see Known gaps). Some runs return fewer than 10 layouts: the minimal problems carry two walkway checks, so restarts are slower, and the diversity filter finds fewer distinct feasible layouts within 10 s.
+Totals over 3 seeds: before, 200 of 252 returned layouts passed every check; after, **261 of 263**. Every top layout is feasible and passes all checks in both rounds. Problems where only a few distinct good arrangements exist (`bedroom_basic`, `crowded_studio`) now return fewer layouts instead of padding the list with poor ones. Max first-feasible times move both ways (search dynamics changed with the soft group moves) and stay well inside the 10 s budget.
 
 ## Known gaps
 

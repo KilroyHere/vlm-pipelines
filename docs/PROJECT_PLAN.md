@@ -73,8 +73,10 @@ Estimated spike cost: 3–4 GPU-hours on a 48 GB card, < $10.
 Result: from a problem with no relational constraints, the rule library alone yields a top layout
 that is feasible and passes every sensibility check on all 10 feasible suite rooms × 3 seeds
 (30/30); lead re-verified on an unseen seed. Policy: ADR-0007. Details: [constraints.md](constraints.md).
-In progress (WS-A): solver top-k quality gate + group moves for strong soft ties, so lower-ranked
-layouts are as good as the top one.
+Solver quality (WS-A): top-k quality gate (`cost_margin`, default 1.0), group moves for strong soft
+ties, exact single-pass walkway check. Minimal variants: 261/263 returned layouts pass every check
+(was 200/252); original suite unchanged within noise. Tight rooms may return fewer than k layouts
+(crowded_studio seed 1: one) by design; product decision pending on a UI minimum.
 
 ### M3b: VLM constraint extraction (WS-D), ADR-0006
 - [x] `parse_request(problem, text, client=...) -> ParseResult` (constraints with
@@ -171,3 +173,5 @@ them.
   M3c landed: `build_constraints` + integration checkpoint 2. WS-A on solver quality (top-k gate, group moves).
 - 2026-10-17: Runpod agent plugin install blocked by session policy (self-modification); owner offered connector or
   `RUNPOD_API_KEY` env secret instead. M4a (RoomPlan ingest) kicked off with WS-B as WS-E.
+- 2026-10-17: WS-A solver quality accepted (lead re-ran fast + slow suites: green). Runpod skill added by owner;
+  picks up in a new session.
