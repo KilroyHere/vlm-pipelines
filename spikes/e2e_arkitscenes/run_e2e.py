@@ -131,28 +131,22 @@ def render_3d(problem: LayoutProblem, layout: Layout, path: Path, title: str) ->
     from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
     fig = plt.figure(figsize=(10, 8), dpi=110)
-    ax = fig.add_subplot(111, projection="3d")
+    # explicit layering: floor, then all furniture faces in ONE collection (mplot3d depth-
+    # sorts within a collection, not across collections), then translucent low walls
+    ax = fig.add_subplot(111, projection="3d", computed_zorder=False)
     floor = problem.room.floor.points
-    ax.add_collection3d(Poly3DCollection([[(x, y, 0) for x, y in floor]], fc="#ece6dc", ec="none"))
-    for w in problem.room.walls:
-        (x0, y0), (x1, y1) = w.start, w.end
-        ax.add_collection3d(
-            Poly3DCollection(
-                [[(x0, y0, 0), (x1, y1, 0), (x1, y1, 1.0), (x0, y0, 1.0)]],
-                fc="#b9b2a7",
-                ec="#8d867b",
-                alpha=0.35,
-                lw=0.3,
-            )
-        )
+    ax.add_collection3d(
+        Poly3DCollection([[(x, y, 0) for x, y in floor]], fc="#ece6dc", ec="#8d867b", zorder=0)
+    )
     poses = {p.asset_id: p.pose for p in layout.placements}
+    tris_all, cols_all = [], []
     for a in problem.assets:
         pose = poses[a.id]
+        cols = None
         if a.mesh is not None and Path(a.mesh.uri).exists():
             m = trimesh.load(a.mesh.uri, force="mesh")
             if len(m.faces) > 4000:
                 m = m.simplify_quadric_decimation(face_count=4000)
-            cols = None
             vc = getattr(m.visual, "vertex_colors", None)
             if vc is not None and len(vc) == len(m.vertices):
                 cols = vc[m.faces].mean(1)[:, :3] / 255.0
@@ -161,27 +155,49 @@ def render_3d(problem: LayoutProblem, layout: Layout, path: Path, title: str) ->
                 extents=(a.dimensions.width, a.dimensions.depth, a.dimensions.height)
             )
             m.apply_translation((0, 0, a.dimensions.height / 2))
-            cols = None
         T = trimesh.transformations.rotation_matrix(pose.yaw, (0, 0, 1))
         T[:3, 3] = (pose.x, pose.y, a.elevation)
         m.apply_transform(T)
-        tris = m.vertices[m.faces]
         shade = 0.55 + 0.45 * np.clip(m.face_normals @ np.array([0.3, -0.5, 0.8]), 0, 1)
-        base = cols if cols is not None else np.tile([0.55, 0.62, 0.75], (len(tris), 1))
-        ax.add_collection3d(
-            Poly3DCollection(
-                tris, facecolors=np.clip(base * shade[:, None], 0, 1), edgecolors="none"
-            )
-        )
+        base = cols if cols is not None else np.tile([0.55, 0.62, 0.75], (len(m.faces), 1))
+        tris_all.append(m.vertices[m.faces])
+        cols_all.append(np.clip(base * shade[:, None], 0, 1))
         ax.text(
-            pose.x, pose.y, a.elevation + a.dimensions.height + 0.15, a.id, fontsize=7, ha="center"
+            pose.x,
+            pose.y,
+            a.elevation + a.dimensions.height + 0.15,
+            a.id,
+            fontsize=7,
+            ha="center",
+            zorder=5,
         )
+    ax.add_collection3d(
+        Poly3DCollection(
+            np.concatenate(tris_all),
+            facecolors=np.concatenate(cols_all),
+            edgecolors="none",
+            zorder=2,
+        )
+    )
+    walls = [
+        [
+            (w.start[0], w.start[1], 0),
+            (w.end[0], w.end[1], 0),
+            (w.end[0], w.end[1], 0.6),
+            (w.start[0], w.start[1], 0.6),
+        ]
+        for w in problem.room.walls
+    ]
+    ax.add_collection3d(
+        Poly3DCollection(walls, fc="#b9b2a7", ec="#6f685d", alpha=0.25, lw=0.5, zorder=3)
+    )
     xs, ys = [p[0] for p in floor], [p[1] for p in floor]
     span = max(max(xs) - min(xs), max(ys) - min(ys))
     ax.set_xlim(min(xs), min(xs) + span)
     ax.set_ylim(min(ys), min(ys) + span)
-    ax.set_zlim(0, span)
-    ax.view_init(elev=38, azim=-60)
+    ax.set_zlim(0, span * 0.5)
+    ax.set_box_aspect((1, 1, 0.5))
+    ax.view_init(elev=42, azim=-60)
     ax.set_axis_off()
     ax.set_title(title)
     fig.savefig(path, bbox_inches="tight")
