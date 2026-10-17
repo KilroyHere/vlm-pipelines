@@ -24,6 +24,9 @@ assets = [
     "shapely>=2.0",
     "matplotlib>=3.8",
 ]
+vlm = [
+    "anthropic>=1.0",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.5",

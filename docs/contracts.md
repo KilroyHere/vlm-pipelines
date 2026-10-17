@@ -40,6 +40,12 @@ RoomPlan/ARKit use a Y-up frame. Conversion happens **only** at the ingest bound
   `cost`, `feasible`, and per-constraint `results`, plus `notes` explaining
   infeasibility.
 
+## Furniture vocabulary
+
+`roomlayout.schema.taxonomy`: RoomPlan categories, subtypes (each maps to one category)
+and aliases (everyday words). `assets.categories` must stay consistent with it
+(enforced by `tests/test_integration.py`).
+
 ## Constraint vocabulary (closed set)
 
 Every constraint has `id`, `hard`, `weight` (soft only), `origin`
@@ -84,6 +90,8 @@ constraints.vlm (later) ──► Constraint[] (validated against this vocabular
 ```
 
 ## Changelog
+- 0.4.0: additive. `roomlayout.schema.taxonomy`: shared category/subtype/alias vocabulary
+  (`resolve(name) -> (category, subtype)`), promoted from `assets.categories` for M3.
 - 0.3.0: `Asset.elevation`; `SolveStats.restarts`, `time_to_first_feasible_s`,
   `time_limited`; immovable assets require an `initial` pose; documented implicit
   `wall_mount`, walkway targets and the zone/wall policy (requested by WS-A).

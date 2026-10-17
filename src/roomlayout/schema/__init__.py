@@ -28,9 +28,14 @@ from .layout import (
     SolveStats,
 )
 from .room import DoorSwing, Obstacle, Opening, OpeningType, Room, Wall
+from .taxonomy import ALIASES, ROOMPLAN_CATEGORIES, SUBTYPES, resolve
 
 __all__ = [
+    "ALIASES",
+    "ROOMPLAN_CATEGORIES",
     "SCHEMA_VERSION",
+    "SUBTYPES",
+    "resolve",
     "AgainstWall",
     "Asset",
     "AssetSource",

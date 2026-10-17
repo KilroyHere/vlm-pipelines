@@ -78,3 +78,15 @@ def test_generated_asset_solves_in_a_real_problem(normalized_asset):
     assert result.layouts and result.layouts[0].feasible, result.notes
     placed = {p.asset_id for p in result.layouts[0].placements}
     assert placed == {a.id for a in problem.assets}
+
+
+def test_asset_category_table_matches_shared_taxonomy():
+    from roomlayout.assets import categories
+    from roomlayout.schema import taxonomy
+
+    assert set(categories.ROOMPLAN_CATEGORIES) == set(taxonomy.ROOMPLAN_CATEGORIES)
+    for key, profile in categories.PROFILES.items():
+        assert taxonomy.resolve(key) is not None, key
+        assert taxonomy.resolve(key)[0] == profile.roomplan, key
+    for alias in categories.ALIASES:
+        assert taxonomy.resolve(alias) is not None, alias

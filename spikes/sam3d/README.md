@@ -70,7 +70,9 @@ Sources: [Hostinger comparison, Sept 2026](https://www.hostinger.com/tutorials/?
 [RunPod pricing](https://www.runpod.io/gpu-cloud/pricing),
 [RunPod price changes, Sept 2026](https://pricingsaas.com/companies/runpod/diffs/2026W37).
 
-**Cheapest:** Vast.ai A6000. It's a marketplace of third-party hosts, so filter for
+**Chosen provider (2026-10-17): RunPod**, Community Cloud A40 or RTX A6000 with a network volume.
+
+**Cheapest alternative:** Vast.ai A6000. It's a marketplace of third-party hosts, so filter for
 *verified* hosts with reliability ≥ 99%, ≥ 100 GB disk and good download bandwidth (the
 checkpoints are large). Vast also bills disk while an instance is stopped, so **destroy**
 it when done. **Least hassle:** RunPod Community A40/A6000 at roughly double the price,

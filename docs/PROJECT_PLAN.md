@@ -10,7 +10,9 @@ Scope: see "v1 scope" in [ARCHITECTURE.md](ARCHITECTURE.md). Contracts:
 | WS-0 | Contract, integration, docs | Tech lead | `roomlayout.schema`, `docs/` | — |
 | WS-A | Layout solver (Step 1) | Engineer A | `roomlayout.solver` | WS-0 |
 | WS-B | Asset normalization + SAM 3D spike (Step 2) | Engineer B | `roomlayout.assets`, `spikes/sam3d/` | WS-0 |
-| EXT | GPU access, LiDAR device + Mac, license decision | Product owner | — | — |
+| WS-C | Rule library (M3a) | Engineer A | `roomlayout.constraints.rules` | WS-0, M1 |
+| WS-D | VLM constraint extraction (M3b) | Engineer D | `roomlayout.constraints.vlm` | WS-0 |
+| EXT | GPU access, LiDAR device + Mac, API credentials | Product owner | — | — |
 
 WS-A and WS-B share **only** `roomlayout.schema`. Neither imports the other.
 
@@ -58,7 +60,28 @@ Verified SAM 3D facts (details and sources: `spikes/sam3d/README.md`): linux x86
 not metric; SAM License has no non-commercial clause (engineering reading, **not** legal advice).
 Estimated spike cost: 3–4 GPU-hours on a 48 GB card, < $10.
 
-### M3+: constraints (VLM), RoomPlan ingest + iOS capture, end-to-end. Not started.
+### M3a: Rule library (WS-C)
+- [ ] `implied_constraints(problem) -> list[Constraint]` (origin `rule_library`, each with a
+      rationale) covering seating↔TV, coffee table, desk + chair, dining set, bed +
+      nightstands, storage against walls, door/window/walkway safety rules.
+- [ ] Precedence: never emits an implied relation for a subject the user/VLM constrained.
+- [ ] "Minimal" variants of the suite problems (user essentials only) solve to layouts
+      that pass automated sensibility checks (e.g. coffee table between sofa and TV).
+- [ ] docs/constraints.md (rule table with rationale).
+
+### M3b: VLM constraint extraction (WS-D), ADR-0006
+- [ ] `parse_request(problem, text, client=...) -> ParseResult` (constraints with
+      `origin="vlm"`, restatements, unexpressed items, dropped items with reasons).
+- [ ] Structured-output schema accepted by the API (anyOf, no oneOf); static across
+      requests; prompt caching on the static prefix.
+- [ ] Fully tested without credentials (recorded responses); live eval script over
+      ≥ 50 realistic requests with expected constraints, runnable when credentials exist.
+
+### M3c: orchestration (lead)
+- [ ] `build_constraints(problem, text)` = VLM + rule library + precedence, plus an
+      integration test from user text to solved layouts.
+
+### M4+: RoomPlan ingest + iOS capture, end-to-end. Not started.
 
 **Requirement learned in M1:** layout quality is driven by *constraint completeness*,
 not the solver. With only `faces(sofa, tv)`, the solver correctly put the coffee
@@ -84,10 +107,10 @@ them.
 | Risk | Impact | Owner | Mitigation | Status |
 |---|---|---|---|---|
 | SAM 3D quality too low on real room photos | Lose the novelty feature | WS-B / EXT | Spike with go/no-go rubric; fallback: catalog retrieval, Object Capture | open |
-| SAM 3D license blocks commercial use | Must swap generator | EXT | License text has no non-commercial clause; counsel to confirm. Generator boundary (ADR-0004) keeps a swap cheap | open: needs legal confirmation |
+| SAM 3D license blocks commercial use | Must swap generator | EXT | Counsel confirmed our intended use is fine (2026-10-17) | **closed** |
 | Hugging Face checkpoint approval delay | M2b blocked | EXT | Access requested 2026-10-16; prepare photos + masks while waiting | open: awaiting approval |
 | Front heuristic wrong on real (blobby/hallucinated) meshes | Assets face the wall | WS-B | Contact sheets for VLM/user confirmation; `front_confidence` surfaced in the schema | open |
-| No GPU available for the spike | M2b blocked | EXT | Vast.ai A6000 (~$0.28/h) or RunPod Community A40/A6000 (~$0.45–0.5/h); **no Blackwell** (torch 2.5.1+cu121) | open: rent after HF approval |
+| No GPU available for the spike | M2b blocked | EXT | **RunPod** Community A40/A6000 (~$0.45–0.5/h) with a network volume; **no Blackwell** (torch 2.5.1+cu121) | open: rent after HF approval |
 | Layouts satisfy rules but look bad | Core value | WS-A / M3 | Confirmed cause: under-specified constraints. Rule library emits implied relations (M3); visual review; VLM critic later | open: understood |
 | Wrong furniture size | Silently wrong layouts | WS-B | Measured dimensions always win (ADR-0004); mismatch report | mitigated by design |
 | Schema churn between workstreams | Integration rework | Lead | Single owner, version bumps, integration test | mitigated |
@@ -105,3 +128,6 @@ them.
   (Hugging Face checkpoint access, GPU, license confirmation). Next: M3 constraints + rule library.
 - 2026-10-16: HF checkpoint access requested. GPU plan: 48 GB Ampere/Ada card on Vast.ai or RunPod Community;
   Blackwell excluded (SAM 3D's torch 2.5.1+cu121 has no sm_120 kernels).
+- 2026-10-17: Counsel confirmed SAM 3D license is fine for our use. GPU provider: RunPod. Contract v0.4.0
+  (shared `taxonomy`). ADR-0006 (VLM extraction design). M3a (rule library, WS-C) and M3b (VLM, WS-D)
+  kicked off. No API credentials in the dev environment yet: VLM is built and tested offline.
