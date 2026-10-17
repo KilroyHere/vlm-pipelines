@@ -146,7 +146,7 @@ them.
 | SAM 3D license blocks commercial use | Must swap generator | EXT | Counsel confirmed our intended use is fine (2026-10-17) | **closed** |
 | Hugging Face checkpoint approval delay | M2b blocked | EXT | Access requested 2026-10-16; prepare photos + masks while waiting | open: awaiting approval |
 | Front heuristic wrong on real (blobby/hallucinated) meshes | Assets face the wall | WS-B | Contact sheets for VLM/user confirmation; `front_confidence` surfaced in the schema | open |
-| No GPU available for the spike | M2b blocked | EXT | Runpod connected. Plan from live reads: A40 Secure $0.59/h in CA-MTL-1, template `runpod-torch-v220`, pod volume disk (network volumes are Secure-only and absent where A40s are); bootstrap script. **No Blackwell** | open: create pod after HF approval |
+| No GPU available for the spike | M2b blocked | EXT | Runpod connected. Plan from live reads: A40 Secure $0.59/h in CA-MTL-1, template `runpod-torch-v220`, pod volume disk (network volumes are Secure-only and absent where A40s are); bootstrap script. **No Blackwell** | in progress: pod `z8wwqdkf02w7at` running since 2026-10-17 04:46 UTC; terminate after the run |
 | Layouts satisfy rules but look bad | Core value | WS-A / M3 | Confirmed cause: under-specified constraints. Rule library emits implied relations (M3); visual review; VLM critic later | open: understood |
 | Wrong furniture size | Silently wrong layouts | WS-B | Measured dimensions always win (ADR-0004); mismatch report | mitigated by design |
 | Schema churn between workstreams | Integration rework | Lead | Single owner, version bumps, integration test | mitigated |
@@ -177,3 +177,5 @@ them.
   picks up in a new session.
 - 2026-10-17: Runpod connector connected (no pods/volumes on the account). Runbook corrected from live reads
   (network volumes are Secure-Cloud-only; A6000 out of stock; A40 Secure $0.59/h) + `runpod_bootstrap.sh`.
+- 2026-10-17: HF access approved; Runpod secret `hf_token` created. Spike pod `z8wwqdkf02w7at` (A40, CA-MTL-1,
+  $0.59/h, runpod-torch-v220, 100 GB /workspace) created and Jupyter verified. Next: owner runs the bootstrap + spike.
