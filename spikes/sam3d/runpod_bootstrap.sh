@@ -41,7 +41,7 @@ if [ ! -x "$CONDA_DIR/bin/mamba" ]; then
     bash /tmp/miniforge.sh -b -p "$CONDA_DIR"
 fi
 # shellcheck disable=SC1091
-source "$CONDA_DIR/bin/activate"
+set +u; source "$CONDA_DIR/bin/activate"; set -u   # conda hooks read unset vars
 
 step "SAM 3D Objects source @ $SAM3D_COMMIT"
 if [ ! -d "$SAM3D_DIR/.git" ]; then
@@ -53,7 +53,7 @@ step "Conda env (doc/setup.md; slow: pytorch3d compiles from source)"
 cd "$SAM3D_DIR"
 if [ ! -f "$ENV_DIR/.roomlayout_ready" ]; then
     [ -d "$ENV_DIR" ] || mamba env create -f environments/default.yml -p "$ENV_DIR"
-    conda activate "$ENV_DIR"
+    set +u; conda activate "$ENV_DIR"; set -u
     export PIP_EXTRA_INDEX_URL="https://pypi.ngc.nvidia.com https://download.pytorch.org/whl/cu121"
     pip install -e '.[dev]'
     pip install -e '.[p3d]'
@@ -62,7 +62,7 @@ if [ ! -f "$ENV_DIR/.roomlayout_ready" ]; then
     ./patching/hydra
     touch "$ENV_DIR/.roomlayout_ready"
 else
-    conda activate "$ENV_DIR"
+    set +u; conda activate "$ENV_DIR"; set -u
 fi
 python -c "import torch; print('torch', torch.__version__, 'cuda ok:', torch.cuda.is_available())"
 
