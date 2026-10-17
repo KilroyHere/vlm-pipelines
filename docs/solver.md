@@ -149,6 +149,15 @@ last exact value; such candidates already pay `W_HARD` and are infeasible anyway
 is feasible only if its walkway was evaluated exactly. Final layouts are re-evaluated from
 scratch by `Model.report`.
 
+*Several walkways* (the rule library emits 0.8 m hard + 0.9 m soft): `Model.eval_walkways`
+evaluates them widest first, and once one is fully satisfied every narrower one is too, so
+it is skipped. Why that holds: the centre locus for a narrower width `w'` contains the
+`(w − w')/2` dilation of the locus for `w`, while the reach tolerance `r + 5 cm` shrinks
+by exactly that amount, so any target reached at `w` is reached at `w'`. The same goes for
+chained zone targets. A property test checks this against brute force on random layouts.
+In the common late-search case this halves the walkway cost. Search and report use the
+same helper, so they cannot disagree.
+
 ## Cost function
 
 ```
@@ -186,8 +195,9 @@ violation above typical soft totals.
    - **back**: return to the initial pose (soft `fixed` only).
 
    Wall-bound assets mostly slide and snap.
-   - *Group moves* (p = 0.5): smaller assets tied to the moved one by a hard `near` of
-     ≤ 0.3 m (desk → chair, bed → nightstands, table → chairs) follow it rigidly.
+   - *Group moves* (p = 0.5): smaller assets tied to the moved one by a `near` of
+     ≤ 0.3 m that is hard **or soft with weight ≥ 5** (`GROUP_SOFT_WEIGHT`; the rule
+     library's desk → chair, bed → nightstands, table → chairs ties) follow it rigidly.
    - *Focus* (p = 0.5): after 30% of the schedule, while the state is infeasible, the moved
      asset is drawn from those involved in a violated hard term.
 3. *Result:* the best state seen, by (infeasible, cost), plus up to 3 late "just became
@@ -201,8 +211,21 @@ Restarts run in a process pool: `min(4, cpu)` workers, with `fork` where availab
 (otherwise `spawn`). Results are consumed in restart-index order.
 
 Search stops at the first index `i ≥ min_restarts − 1` (default 16) at which restarts
-`0..i` contain `k` mutually diverse feasible layouts, or at `max_restarts` (512), or when
-the time budget is used up (5% is reserved for selection and reporting).
+`0..i` contain `k` mutually diverse layouts **that pass the quality gate** (below), or at
+`max_restarts` (512), or when the time budget is used up (5% is reserved for selection and
+reporting).
+
+**Quality gate** (`cost_margin`, default `1.0`; `None` disables it): only feasible layouts
+with `cost ≤ best feasible cost + cost_margin` are returned, and only those count toward
+the stopping rule.
+- Rationale: with soft-only relations (the rule library), "feasible" says little about
+  quality, and diversity used to pad the top-k with feasible but visibly wrong layouts
+  (nightstands on one side, the chair at the desk's end). Fewer, better layouts are the
+  right answer.
+- Scale of 1.0: with rule-library weights of 5–15, that is about 4–6° beyond a `faces`
+  limit or 0.1–0.2 m beyond a `near` limit.
+- When fewer than `k` layouts pass, `SolveResult.notes` says how many more distinct
+  feasible layouts were found and left out.
 
 **Determinism:** the result depends only on (problem, k, seed, limits), not on the number
 of workers or scheduling (tested, workers 1 vs 2). The caveat: if the *time budget* rather
@@ -227,7 +250,8 @@ its distance to every kept layout is ≥ **0.3 m** (`MIN_LAYOUT_DISTANCE`). As a
 0.3 m: with 5 movable assets, moving one of them 1.5 m clears it, and so does turning
 three of them 90°.
 
-If there are fewer than `k` distinct feasible layouts, fewer are returned, with a note;
+If there are fewer than `k` distinct feasible layouts within the cost margin, fewer are
+returned, with a note;
 infeasible layouts are never used to pad a feasible result. If nothing is feasible, the
 best diverse infeasible layouts are returned with `feasible: false`.
 

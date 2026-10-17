@@ -39,7 +39,10 @@ A word-derived subtype is accepted only if it belongs to the asset's category. S
 | TV | the widest `television`; if there is none, the first `tv_stand` stands in for it |
 | coffee table | the largest `coffee_table` |
 | desk + chair | each `desk` gets an `office_chair`, paired by shared id tokens (`desk_a` ↔ `chair_a`), then order. Generic chairs (`chair`, no subtype) fill missing desk chairs. |
-| dining set | `dining_table` / `round_table` + `dining_chair`s, plus the generic chairs left over; split round-robin over several tables |
+| table set | `dining_table` / `round_table` / `meeting_table` + `dining_chair`s, plus the generic chairs left over; split round-robin over several tables |
+| zone invitations | assets left without a role, in this order: `piano_bench`, `bench`, generic chairs, `stool`. Each clearance zone whose `allowed_categories` admit one gets one member (desks and table sets excluded: their chairs are assigned above). Benches and stools never become desk or dining chairs. |
+| piano bench, no zone | a `piano_bench` that no zone invited goes to a piano-labelled asset (`piano` is matched on words: it is not a taxonomy category) |
+| ottoman | each `ottoman` is a footrest for the primary seating, else the first secondary seat |
 | bed + nightstands | each `bed` + `nightstand`s, round-robin over beds |
 | wall storage | `bookshelf`, `wardrobe`, `dresser`, `sideboard`, `cabinet`, `tv_stand` |
 
@@ -75,8 +78,10 @@ are still subject to the safety rules.
 | free-standing TV | television that is not wall-mounted | `against_wall(tv)` | soft 10 | back to a wall (wall-mounted ones are already handled by the solver's `implicit:wall_mount`) |
 | desk + chair | each desk/chair pair | `near(chair, desk, 0.15)`, `faces(chair, desk)`, `faces(desk, chair)` | soft 10 each | the chair is pulled up at the desk's **front**. Mutual `faces` is what excludes "beside the desk's end" (M1). |
 | desk on wall | each desk | `against_wall(desk)` | soft 2.5 | weak preference; desks can face into a room |
-| zone invitation | an asset (not a desk / dining table) has a clearance zone with `allowed_categories`, and an otherwise unassigned asset of that category exists (leftover generic chair, stool) | `near(member, owner, 0.3)`, `faces(member, owner)`, and `faces(owner, member)` if the zone is in front of the owner | soft 7.5 each | the data already says the member belongs there: a piano's `bench_area` admits chairs, so the piano bench goes in it. One member per zone, no taxonomy entry needed. |
-| dining | each chair of a dining set | `near(chair, table, 0.15)`, `faces(chair, table)` | soft 5 each | chairs at the table, facing it. There is no even-distribution primitive, so none is faked (two chairs at one end is valid). |
+| zone invitation | an asset (not a desk / table set) has a clearance zone with `allowed_categories`, and an otherwise unassigned asset of that category exists (piano bench, bench, leftover generic chair, stool) | `near(member, owner, 0.3)`, `faces(member, owner)`, and `faces(owner, member)` if the zone is in front of the owner | soft 7.5 each | the data already says the member belongs there: a piano's `bench_area` admits chairs, so the piano bench goes in it. One member per zone, no taxonomy entry needed. |
+| ottoman | each ottoman | `near(ottoman, seat, 0.6)` | soft 5 | footrest / extra seat by the main seating |
+| piano bench at a piano | a `piano_bench` without an inviting zone, and a piano-labelled asset | `near(bench, piano, 0.3)`, `faces(bench, piano)`, `faces(piano, bench)` | soft 7.5 each | the bench is at the keyboard (the piano's front) |
+| table set | each chair of a dining / meeting table set | `near(chair, table, 0.15)`, `faces(chair, table)` | soft 5 each | chairs at the table, facing it. There is no even-distribution primitive, so none is faked (two chairs at one end is valid). |
 | bed | each bed | `against_wall(bed)` | soft 15 | the headboard (the bed's back, local −y) is against a wall |
 | nightstands | each nightstand of a bed | `near(ns, bed, 0.1)`, `parallel(ns, bed)`, `against_wall(ns)` | soft 7.5 / 2.5 / 5 | right next to the bed, squared to it, against the headboard wall. Together with the bed's own `against_wall` this puts it beside the head end. |
 | nightstands on both sides | a bed with exactly 2 nightstands | `distance_at_least(ns1, ns2, 0.8 × bed width)` | soft 5 | proxy for "one on each side": two nightstands next to the bed and that far apart can't be on the same side |
@@ -139,6 +144,8 @@ non-optimal.
 | `nightstands_on_both_sides[bed]` | two nightstands on opposite sides |
 | `storage_against_wall[x]` / `tv_against_wall[tv]` | as for the bed (immovable storage is skipped) |
 | `invited_at_zone[owner:member]` | the member's centre lies in the inviting zone (+0.1 m) |
+| `seat_at_front_of[piano:bench]` | the bench is in front of the piano, within its width, ≤ 0.6 m away |
+| `ottoman_by_seating[o]` | ≤ 0.8 m from its seat |
 | `door_unblocked[door]` | no footprint below the opening's top in the first 0.6 m in front of a door / passage |
 
 The checks are the precursor to the VLM critic, and they turn "layouts look sensible"
@@ -169,25 +176,24 @@ All 30 top layouts (10 problems × 3 seeds) are feasible and pass every applicab
 
 ## Known gaps
 
-- **Lower-ranked layouts.** The top layout passes everywhere, but further down the top-10
-  some layouts are feasible with large soft cost (nightstands on one side, a chair at
-  the desk's end). The solver's diversity selection and its early-stop rule only look at
-  feasibility, so with soft rules it fills the top-k with whatever is distinct. This is a
-  solver change, recommended (not done, outside WS-C):
-  - drop layouts whose cost exceeds `best + τ` (e.g. τ = 1, or a relative gap);
-  - count only those towards the stopping rule.
-- **Group moves.** The solver moves desk+chair, bed+nightstands and table+chairs
-  together only when they are tied by a *hard* `near` ≤ 0.3 m. Rule-library ties are
-  soft, so this M1 search aid is unused. Extending the follower rule to soft `near`
-  with weight ≥ ~5 would help crowded rooms (solver change).
+- **Lower-ranked layouts** (fixed in the solver, v0.6 round):
+  - The top-k used to be padded with feasible but poor layouts. The solver's quality gate
+    now returns only layouts within `cost_margin` (1.0) of the best, and counts only those
+    toward early stopping.
+  - Desk+chair, bed+nightstand and table+chair ties (soft `near` ≤ 0.3 m, weight ≥ 5) now
+    move as rigid groups in the search.
+  - See the before/after table under Evaluation.
 - **Head end of the bed.** There is no "beside the head end" primitive. It's approximated
   by `near` + `against_wall` + `parallel` + the both-sides distance; checked by
   `nightstand_beside_bed_head`.
 - **Even distribution** of dining chairs and **line of sight** are not expressible (backlog,
   per the tech lead). Line of sight is checked, not enforced.
-- **Taxonomy gaps.** There is no `piano`, `bench`, `ottoman`, `plant` or `meeting_table`.
-  Before the zone-invitation rule the minimal `fixed_piano_room` placed the bench next to
-  the bookshelf; the rule now handles it from the piano's `allowed_categories` alone.
-  A bench or ottoman without such a zone still gets no relation.
+- **Taxonomy.** v0.6.0 added `bench`, `piano_bench`, `ottoman` and `meeting_table`, with
+  roles above. `piano` and `plant` are still not categories (deferred: they need a policy
+  for non-RoomPlan categories), so pianos are matched on words.
+  - The example `angled_reading_room` declares its ottoman as category `table`. The word
+    "ottoman" resolves to a `chair` subtype, so the category check rejects it and that
+    ottoman gets no role. That's an authoring issue in the example; the rule is correct.
+  - A plain `bench` with no inviting zone gets no relation (a hall bench needs none).
 - **Generic chairs** (category `chair`, no subtype, no telling label/id) are guessed:
   first to desks lacking a chair, then to dining tables, otherwise no role.
