@@ -12,13 +12,12 @@ Layout:
     data/<item_id>/mask.png        object mask, same size as the image (non-zero = object)
     data/<item_id>/meta.json       {"category": "sofa", "dims": {"width": 2.1, "depth": 0.9,
                                     "height": 0.82}, "dims_provenance": "tape_measured",
-                                    "set": "go_no_go", "source_url": "...",
+                                    "source_url": "...",
                                     "condition": ["in_room", "occluded"], "notes": "..."}
 
-    meta "set": "go_no_go" (default) | "dev_web" (web-sourced warm-up set; never used for
-    go/no-go, see EVAL.md). "dims_provenance": tape_measured | manufacturer | seller_reported |
-    estimated, mapped to the contract's dims_from (DIMS_FROM below). A legacy "dims_from" is
-    still accepted when there is no provenance.
+    meta "dims_provenance": tape_measured | manufacturer | seller_reported | estimated is
+    informational and maps to the contract's dims_from (DIMS_FROM below); "source_url" records
+    where a web photo came from. A legacy "dims_from" is still accepted without provenance.
 
     outputs/<item_id>/sam3d.glb           raw SAM 3D mesh (glTF Y-up, vertex colours)
     outputs/<item_id>/splat.ply           Gaussian splat (--save-splat)
@@ -57,7 +56,6 @@ from pathlib import Path
 
 IMAGE_NAMES = ("image.jpg", "image.jpeg", "image.png")
 RAW_MESH = "sam3d.glb"
-SETS = ("go_no_go", "dev_web")
 # Finer dimension provenance -> AssetSource.dimensions_from in the contract.
 DIMS_FROM = {
     "tape_measured": "manual",
@@ -85,10 +83,6 @@ class Item:
     problems: list[str] = field(default_factory=list)
 
     @property
-    def set(self) -> str:
-        return self.meta.get("set", "go_no_go")
-
-    @property
     def dims(self) -> tuple[float, float, float] | None:
         d = self.meta.get("dims")
         if not d:
@@ -101,7 +95,6 @@ class Summary:
     item_id: str
     category: str = ""
     condition: str = ""
-    set: str = "go_no_go"
     source_url: str = ""
     dims_provenance: str = ""  # finer than the contract's dims_from; kept for evaluation
     dims_from: str = ""
@@ -157,8 +150,6 @@ def discover(data_dir: Path, only: set[str] | None) -> list[Item]:
                     problems.append(f"dims look wrong (meters?): {vals}")
             except (KeyError, TypeError, ValueError):
                 problems.append("meta.json 'dims' needs width/depth/height in meters")
-        if meta.get("set", "go_no_go") not in SETS:
-            problems.append(f"meta.json 'set' must be one of {SETS}")
         prov = meta.get("dims_provenance")
         if prov is not None and prov not in DIMS_FROM:
             problems.append(f"meta.json 'dims_provenance' must be one of {tuple(DIMS_FROM)}")
@@ -423,7 +414,6 @@ def main(argv: list[str] | None = None) -> int:
             item.item_id,
             category=item.meta.get("category", ""),
             condition=",".join(item.meta.get("condition", [])),
-            set=item.meta.get("set", "go_no_go"),
             source_url=item.meta.get("source_url", ""),
             dims_provenance=item.meta.get("dims_provenance", ""),
         )
@@ -440,18 +430,13 @@ def main(argv: list[str] | None = None) -> int:
         flag = "OK " if not item.problems else "BAD"
         dims = item.dims or "NO DIMS"
         print(
-            f"[{flag}] {item.item_id:24s} {s.set:8s} {s.category:14s} {dims} "
+            f"[{flag}] {item.item_id:24s} {s.category:14s} {dims} "
             f"{'; '.join(item.problems)}"
         )
         if not item.problems and item.dims is None:
             print(f"      {item.item_id}: no measured dims; the asset will be flagged 'mesh'")
-        if s.set == "dev_web" and not s.source_url:
-            print(f"      {item.item_id}: dev_web item without source_url (record it)")
-        if s.set == "go_no_go" and s.dims_provenance not in ("", "tape_measured"):
-            print(
-                f"      {item.item_id}: go_no_go item with {s.dims_provenance} dims; EVAL.md "
-                "requires tape-measured dims (move it to dev_web?)"
-            )
+        if s.dims_provenance in ("manufacturer", "seller_reported") and not s.source_url:
+            print(f"      {item.item_id}: {s.dims_provenance} dims but no source_url (record it)")
 
     if args.dry_run:
         bad = sum(1 for i in items if i.problems)
@@ -473,10 +458,6 @@ def main(argv: list[str] | None = None) -> int:
     for s in summaries.values():
         counts[s.status] = counts.get(s.status, 0) + 1
     print("done:", ", ".join(f"{k}={v}" for k, v in sorted(counts.items())))
-    for name in SETS:
-        n = sum(1 for i in items if i.set == name)
-        if n:
-            print(f"  {name}: {n} items")
     print(f"summary: {args.out / 'summary.csv'}")
     return 0
 

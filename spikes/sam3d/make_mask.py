@@ -3,11 +3,11 @@
 
     # Prepare an item folder: EXIF-rotate the photo upright, cap its size, write meta.json
     python make_mask.py prepare PHOTO.jpg data/sofa_01 --category sofa --dims 2.1 0.92 0.83 \\
-        --condition in_room occluded --notes "throw pillows"     # go_no_go, tape-measured
+        --dims-provenance tape_measured --condition in_room occluded --notes "throw pillows"
 
-    # Web-sourced warm-up item (never counts for go/no-go)
-    python make_mask.py prepare listing.jpg data/dev03_sectional --category sectional \\
-        --dims 2.9 1.7 0.85 --dims-provenance seller_reported --set dev_web \\
+    # Item from a web listing: record where the photo and the dims came from
+    python make_mask.py prepare listing.jpg data/sectional_03 --category sectional \\
+        --dims 2.9 1.7 0.85 --dims-provenance seller_reported \\
         --source-url "https://offerup.com/item/detail/..."
 
     # Draw the mask: click polygon corners around the object, Enter to finish.
@@ -71,27 +71,21 @@ def strip_tracking(url: str) -> str:
 def build_meta(a) -> dict:
     meta = {
         "category": a.category,
-        "set": a.set,
         "condition": a.condition or [],
         "notes": a.notes or "",
     }
     if a.source_url:
         meta["source_url"] = strip_tracking(a.source_url)
-    elif a.set == "dev_web":
-        print("warning: dev_web item without --source-url; record where the photo came from")
     provenance = a.dims_provenance
     if a.dims:
         meta["dims"] = dict(zip(("width", "depth", "height"), a.dims, strict=True))
         if provenance is None:
-            if a.set != "go_no_go":
-                raise SystemExit(
-                    "dev_web items need --dims-provenance (where did W/D/H come from?)"
-                )
-            provenance = "tape_measured"  # EVAL.md: go/no-go items are tape-measured
+            # Items come from tape measures and web listings alike: say which.
+            raise SystemExit("--dims needs --dims-provenance (where did W/D/H come from?)")
     if provenance is not None:
         meta["dims_provenance"] = provenance
-    if a.set == "go_no_go" and provenance not in (None, "tape_measured"):
-        print(f"warning: go_no_go item with {provenance} dims; EVAL.md requires tape-measured")
+    if provenance in ("manufacturer", "seller_reported") and not a.source_url:
+        print("warning: listing dims without --source-url; record where the photo came from")
     return meta
 
 
@@ -223,13 +217,7 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument(
         "--dims-provenance",
         choices=["tape_measured", "manufacturer", "seller_reported", "estimated"],
-        help="where W/D/H came from (default for go_no_go: tape_measured)",
-    )
-    s.add_argument(
-        "--set",
-        default="go_no_go",
-        choices=["go_no_go", "dev_web"],
-        help="dev_web = web-sourced warm-up item, never used for go/no-go",
+        help="where W/D/H came from (required with --dims; informational provenance)",
     )
     s.add_argument("--source-url", help="where the photo came from (tracking params stripped)")
     s.add_argument("--condition", nargs="*", help="e.g. product in_room occluded low_light clutter")
