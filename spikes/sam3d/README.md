@@ -177,7 +177,7 @@ git clone https://github.com/facebookresearch/sam-3d-objects.git ~/sam-3d-object
 cd ~/sam-3d-objects && git checkout f91db41   # the commit we read; drop to try newer
 mamba env create -f environments/default.yml
 mamba activate sam3d-objects
-export PIP_EXTRA_INDEX_URL="https://pypi.ngc.nvidia.com https://download.pytorch.org/whl/cu121"
+export PIP_EXTRA_INDEX_URL="https://pypi.nvidia.com https://download.pytorch.org/whl/cu121"  # pypi.ngc.nvidia.com no longer resolves
 pip install -e '.[dev]'
 pip install -e '.[p3d]'
 export PIP_FIND_LINKS="https://nvidia-kaolin.s3.us-east-2.amazonaws.com/torch-2.5.1_cu121.html"

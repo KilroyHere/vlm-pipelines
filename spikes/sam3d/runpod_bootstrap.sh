@@ -54,7 +54,8 @@ cd "$SAM3D_DIR"
 if [ ! -f "$ENV_DIR/.roomlayout_ready" ]; then
     [ -d "$ENV_DIR" ] || mamba env create -f environments/default.yml -p "$ENV_DIR"
     set +u; conda activate "$ENV_DIR"; set -u
-    export PIP_EXTRA_INDEX_URL="https://pypi.ngc.nvidia.com https://download.pytorch.org/whl/cu121"
+    # pypi.ngc.nvidia.com (in SAM 3D's doc/setup.md) no longer resolves (2026-10-17); use NVIDIA's current index
+    export PIP_EXTRA_INDEX_URL="https://pypi.nvidia.com https://download.pytorch.org/whl/cu121"
     pip install -e '.[dev]'
     pip install -e '.[p3d]'
     export PIP_FIND_LINKS="https://nvidia-kaolin.s3.us-east-2.amazonaws.com/torch-2.5.1_cu121.html"
