@@ -51,6 +51,23 @@ with a 0.8 m wide chaise at the right front and 0.9 m deep main seats:
 For a rectangle the IoU is almost guaranteed by the fit to dims. The informative items are
 the L-sofas, round/oval tables and chairs with splayed legs. Report them separately.
 
+### Dev set (web-sourced): not part of the go/no-go set
+
+A separate warm-up set of web photos (retailer pages, resale/estate-sale listings) mapped
+1:1 to the 20 cases above; sources in [dev_web_sources.md](dev_web_sources.md).
+- **Purpose:** exercise masks, generation, normalization and scoring as soon as GPU access
+  arrives, and catch failure modes cheaply.
+- **Limits:** dims are manufacturer, seller-reported or estimated (unverified). There are
+  usually no true footprints, and phone/capture settings are unknown. **These items can't
+  inform go/no-go.**
+- **Mechanics:** `meta.json` `"set": "dev_web"` (default `"go_no_go"`), plus
+  `"dims_provenance"` (`tape_measured` | `manufacturer` | `seller_reported` | `estimated`)
+  and `"source_url"`. Dev items are rated with the same rubric (section 2). `score.py`
+  reports them in their own section and **never** in a G1-G5 denominator.
+- Go/no-go items must be tape-measured (`dims_provenance: tape_measured`, the default for
+  `make_mask.py prepare`). A dev photo that becomes a properly captured, measured item
+  (e.g. case #6 shot by the product owner) moves to `go_no_go`.
+
 ## 2. Rubric (manual, per item, in `outputs/scores.csv`)
 
 **Shape fidelity, 1-5** (look at the raw `sam3d.glb` in a viewer and the contact sheet;
@@ -102,11 +119,15 @@ in the results. The model-load time (once per process) is reported separately in
 | sofa_01 | sofa | in_room | ok | | | | | / | | / ( ) | |
 | ... | | | | | | | | | | | |
 
-Summary block: the five criteria below with value, threshold and pass/FAIL, then texture
-pass rate and front-heuristic accuracy. Also write a short paragraph on the
+Summary block: the five criteria below with value, threshold and pass/FAIL, computed over
+`go_no_go` items only (the report states the count), then texture pass rate and
+front-heuristic accuracy. The `dev_web` items follow in their own section with the same
+per-item columns and descriptive statistics, but no verdict. Also write a short paragraph on the
 dominant failure tags and one contact-sheet example each of the best and worst item.
 
 ## 5. Go / no-go thresholds
+
+All rates below are over **`go_no_go` items only**. Dev-set items are excluded.
 
 Blocking (all must pass for GO):
 

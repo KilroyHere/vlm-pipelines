@@ -12,6 +12,7 @@ CPU and is tested (`tests/assets/test_asset_spike_harness.py`). **The generation
 | `make_mask.py` | prepare item folders (upright image + meta.json), draw/derive masks, QA overlays |
 | `score.py` | footprint IoU vs. true footprints, merge manual ratings, go/no-go table |
 | `EVAL.md` | test set spec, rubric, thresholds, results template |
+| `dev_web_sources.md` | web-sourced warm-up photos (dev set, never go/no-go) + data-handling note |
 
 `data/` and `outputs/` are gitignored. Never commit photos or meshes.
 
@@ -119,6 +120,39 @@ masks on your laptop first (section 3) so no GPU time is spent on prep.
    IoU metric (EVAL.md section 3).
 5. Dry run: `python run_sam3d.py --data data --out outputs --dry-run` must report 0 invalid.
 
+### 3b. Dev set (web-sourced)
+
+**Purpose:** shake out the whole pipeline (masks, generation, normalization, scoring) and
+catch failure modes cheaply, before the real photos exist. Sources are in
+[dev_web_sources.md](dev_web_sources.md), including its data-handling note: download
+manually into `data/`, never commit, internal use only.
+
+**Limits:** web photos have unverified dims (manufacturer/seller/estimated), no true
+footprints and unknown capture settings. So the dev set **can't inform go/no-go**.
+`score.py` reports it in a separate section and never mixes it into a G1-G5 denominator.
+
+Per item (ids `devNN_<name>`):
+
+```bash
+python make_mask.py prepare kivik.jpg data/dev01_kivik --category sofa \
+    --dims W D H --dims-provenance manufacturer --set dev_web --condition product \
+    --source-url https://www.ikea.com/us/en/p/kivik-sofa-gunnared-light-green-s19499706/
+python make_mask.py prepare img.jpg data/dev03_sectional --category sectional \
+    --dims W D H --dims-provenance seller_reported --set dev_web --condition in_room \
+    --source-url URL
+python make_mask.py sam2 data/dev01_kivik --box X0 Y0 X1 Y1   # or: make_mask.py polygon ...
+```
+
+- Product photos on white backgrounds: use `make_mask.py sam2 --box` (a box around the
+  product is usually enough) or `polygon`. `alpha` only works for a same-size RGBA cutout.
+- `--dims-provenance` is required for dev items: `manufacturer` / `seller_reported` map to
+  the contract's `dims_from = listing`, while `estimated` and `tape_measured` map to `manual`.
+  The finer value stays in the per-item summary. Without dims (e.g. #10) leave out `--dims`.
+  The asset is then marked `dimensions_from = mesh`, which is fine for the dev set.
+- No `true_footprint` needed. IoU is reported only where one exists.
+- Dev and go/no-go items can share `data/` and one run. `meta.json` `set` keeps them apart
+  (`go_no_go` is the default).
+
 ## 4. Runbook on the rented GPU
 
 ```bash
@@ -175,6 +209,10 @@ python score.py --data data --out outputs    # 1st run writes outputs/scores.csv
 # and a GLB viewer on outputs/<id>/sam3d.glb, then:
 python score.py --data data --out outputs    # -> outputs/results.md with the verdict
 ```
+
+`results.md` has a go/no-go section computed over `go_no_go` items only, and a separate
+`dev_web` section (shape/texture, failure tags, mismatch, runtime/VRAM, IoU where a true
+footprint exists). `results.json` holds the same numbers in machine-readable form.
 
 To normalize a single mesh by hand (this is what the harness runs):
 

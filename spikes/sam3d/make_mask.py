@@ -3,7 +3,12 @@
 
     # Prepare an item folder: EXIF-rotate the photo upright, cap its size, write meta.json
     python make_mask.py prepare PHOTO.jpg data/sofa_01 --category sofa --dims 2.1 0.92 0.83 \\
-        --condition in_room occluded --notes "throw pillows"
+        --condition in_room occluded --notes "throw pillows"     # go_no_go, tape-measured
+
+    # Web-sourced warm-up item (never counts for go/no-go)
+    python make_mask.py prepare listing.jpg data/dev03_sectional --category sectional \\
+        --dims 2.9 1.7 0.85 --dims-provenance seller_reported --set dev_web \\
+        --source-url "https://offerup.com/item/detail/..."
 
     # Draw the mask: click polygon corners around the object, Enter to finish.
     # Several polygons are allowed (union). Backspace undoes a point, Esc clears.
@@ -27,6 +32,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageOps
@@ -51,7 +57,46 @@ def _save_mask(item: Path, mask: np.ndarray) -> None:
     print(f"wrote {item / 'mask.png'} ({int((mask > 0).sum())} px)")
 
 
+def strip_tracking(url: str) -> str:
+    """Drop utm_* (and similar) tracking parameters from a URL."""
+    parts = urlsplit(url.strip())
+    query = [
+        (k, v)
+        for k, v in parse_qsl(parts.query, keep_blank_values=True)
+        if not k.lower().startswith("utm_") and k.lower() not in ("fbclid", "gclid")
+    ]
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
+def build_meta(a) -> dict:
+    meta = {
+        "category": a.category,
+        "set": a.set,
+        "condition": a.condition or [],
+        "notes": a.notes or "",
+    }
+    if a.source_url:
+        meta["source_url"] = strip_tracking(a.source_url)
+    elif a.set == "dev_web":
+        print("warning: dev_web item without --source-url; record where the photo came from")
+    provenance = a.dims_provenance
+    if a.dims:
+        meta["dims"] = dict(zip(("width", "depth", "height"), a.dims, strict=True))
+        if provenance is None:
+            if a.set != "go_no_go":
+                raise SystemExit(
+                    "dev_web items need --dims-provenance (where did W/D/H come from?)"
+                )
+            provenance = "tape_measured"  # EVAL.md: go/no-go items are tape-measured
+    if provenance is not None:
+        meta["dims_provenance"] = provenance
+    if a.set == "go_no_go" and provenance not in (None, "tape_measured"):
+        print(f"warning: go_no_go item with {provenance} dims; EVAL.md requires tape-measured")
+    return meta
+
+
 def cmd_prepare(a) -> None:
+    meta = build_meta(a)  # validate before writing anything
     item = Path(a.item)
     item.mkdir(parents=True, exist_ok=True)
     with Image.open(a.photo) as im:
@@ -59,10 +104,6 @@ def cmd_prepare(a) -> None:
         if max(im.size) > MAX_SIDE:
             im.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)
         im.save(item / "image.jpg", quality=95)  # no EXIF orientation left to confuse anyone
-    meta = {"category": a.category, "condition": a.condition or [], "notes": a.notes or ""}
-    if a.dims:
-        meta["dims"] = dict(zip(("width", "depth", "height"), a.dims, strict=True))
-        meta["dims_from"] = a.dims_from
     (item / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
     print(f"prepared {item}: image {im.size}, meta {meta}")
 
@@ -179,7 +220,18 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("item")
     s.add_argument("--category", required=True)
     s.add_argument("--dims", nargs=3, type=float, metavar=("W", "D", "H"))
-    s.add_argument("--dims-from", default="manual", choices=["manual", "listing", "roomplan"])
+    s.add_argument(
+        "--dims-provenance",
+        choices=["tape_measured", "manufacturer", "seller_reported", "estimated"],
+        help="where W/D/H came from (default for go_no_go: tape_measured)",
+    )
+    s.add_argument(
+        "--set",
+        default="go_no_go",
+        choices=["go_no_go", "dev_web"],
+        help="dev_web = web-sourced warm-up item, never used for go/no-go",
+    )
+    s.add_argument("--source-url", help="where the photo came from (tracking params stripped)")
     s.add_argument("--condition", nargs="*", help="e.g. product in_room occluded low_light clutter")
     s.add_argument("--notes")
     s = sub.add_parser("polygon", help="draw the mask by clicking polygon corners")
