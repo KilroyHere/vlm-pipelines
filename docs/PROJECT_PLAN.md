@@ -146,7 +146,7 @@ them.
 | SAM 3D license blocks commercial use | Must swap generator | EXT | Counsel confirmed our intended use is fine (2026-10-17) | **closed** |
 | Hugging Face checkpoint approval delay | M2b blocked | EXT | Access requested 2026-10-16; prepare photos + masks while waiting | open: awaiting approval |
 | Front heuristic wrong on real (blobby/hallucinated) meshes | Assets face the wall | WS-B | Contact sheets for VLM/user confirmation; `front_confidence` surfaced in the schema | open |
-| No GPU available for the spike | M2b blocked | EXT | Runpod connected. Plan from live reads: A40 Secure $0.59/h in CA-MTL-1, template `runpod-torch-v220`, pod volume disk (network volumes are Secure-only and absent where A40s are); bootstrap script. **No Blackwell** | in progress: pod `z8wwqdkf02w7at` running since 2026-10-17 04:46 UTC; terminate after the run |
+| No GPU available for the spike | M2b blocked | EXT | Runpod connected. Plan from live reads: A40 Secure $0.59/h in CA-MTL-1, template `runpod-torch-v220`, pod volume disk (network volumes are Secure-only and absent where A40s are); bootstrap script. **No Blackwell** | pod `z8wwqdkf02w7at` STOPPED 13:05 UTC with SAM 3D env + checkpoints on /workspace; run pending data |
 | Layouts satisfy rules but look bad | Core value | WS-A / M3 | Confirmed cause: under-specified constraints. Rule library emits implied relations (M3); visual review; VLM critic later | open: understood |
 | Wrong furniture size | Silently wrong layouts | WS-B | Measured dimensions always win (ADR-0004); mismatch report | mitigated by design |
 | Schema churn between workstreams | Integration rework | Lead | Single owner, version bumps, integration test | mitigated |
@@ -184,3 +184,8 @@ them.
   terminates it. Safety check-ins scheduled 08:59 and 12:59 UTC (stop the pod if idle/stuck). The pod's own key cannot
   stop it (REST 403), so stopping relies on the lead/connector. M4a (RoomPlan ingest) paused by the owner; partial
   work is in the WIP commits.
+- 2026-10-17 13:05 UTC: SAM 3D env built and Meta's demo passed on the pod at 05:47 (torch 2.5.1+cu121, 13 GB
+  checkpoints). Spike NOT run: the session worker restarted, which ended the WS-D data agent (no photo package
+  produced) and interrupted the 08:59 check-in before its stop. The 12:59 check-in stopped the pod. Runpod spend
+  today $4.56 (GPU $4.41, disk $0.15); ~$4 of it idle 05:47-13:05. Lesson: in-session agents and watchers don't
+  survive worker restarts; long unattended GPU work needs a pod-side job with its own deadline.
