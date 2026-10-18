@@ -99,18 +99,20 @@ Integration checkpoint 2 in `tests/test_integration.py`: user words → (offline
 answer → rule library → solver → feasible layout honouring the user's hard request and passing
 every sensibility check; user intent overrides defaults; a refused parse still yields a problem.
 
-### M4a: RoomPlan ingest, Python side (WS-E)
-- [ ] `roomlayout.ingest.roomplan`: Apple RoomPlan `CapturedRoom` JSON → `LayoutProblem`
+### M4a: RoomPlan ingest, Python side (WS-E) (done except real-capture validation)
+- [x] `roomlayout.ingest.roomplan`: Apple RoomPlan `CapturedRoom` JSON → `LayoutProblem`
       skeleton (Room + box Assets with `dimensions_from="roomplan"` + `initial` poses, no
       constraints). ARKit Y-up → our Z-up at this boundary only (ADR-0001).
-- [ ] Walls → CCW floor polygon (prefer RoomPlan floor polygon when present), doors/windows/
+- [x] Walls → CCW floor polygon (prefer RoomPlan floor polygon when present), doors/windows/
       openings mapped onto walls with offset, width, height, sill; fixtures (kitchen/bath
-      appliances, fireplace, stairs) immovable.
-- [ ] Every field we read verified against Apple's documentation or marked unverified;
-      synthetic fixtures with known geometry; graceful errors on multi-room/odd scans.
-- [ ] CLI `python -m roomlayout.ingest.roomplan CAPTURE.json --out problem.json` whose output
-      solves with the rule library.
-- [ ] Real-capture validation: needs a LiDAR iPhone/iPad export (EXT).
+      appliances, fireplace) and built-in cabinetry immovable; stairs obstacles.
+- [x] Every field we read verified against Apple's documentation or the 12 public exports,
+      or marked unverified (docs/ingest.md); synthetic fixtures with known geometry
+      (tests/ingest); graceful errors on multi-room/multi-story/malformed scans.
+- [x] CLI `python -m roomlayout.ingest.roomplan CAPTURE.json --out problem.json`, plus
+      `python -m roomlayout.pipeline CAPTURE.json --out DIR [--request TEXT]` (ADR-0008) for
+      scan → zones → rules → layouts.
+- [ ] Real-capture validation: needs a LiDAR iPhone/iPad export from the owner (EXT).
 
 ### M4b+: iOS capture app, per-object frames for SAM 3D, end-to-end. Not started.
 
@@ -128,7 +130,12 @@ them.
   medium, per-tag accuracy. See docs/vlm.md.
 - Line of sight for `faces` (only tall assets block view): WS-A request, deferred.
 - Even distribution of chairs around a table: deferred.
-- Height-banded footprints (chair tucked under desk): ADR-0003, deferred.
+- Height-banded footprints (chair tucked under desk): ADR-0003, deferred. **Now evidenced by
+  real scans:** dining rooms with 10-13 chairs tucked under the table (public RoomPlan
+  exports s2, s4) find no feasible layout even with 90 s, because chairs may not overlap
+  the table footprint. Top solver item after the own-room test.
+- Multi-room scans (several rooms in one capture, partition walls): v1 warns and plans one
+  outline; per-room planning later.
 
 ## Integration checkpoints (tech lead)
 1. ✅ An asset from M2a loads into a `LayoutProblem` and solves with M1
@@ -202,3 +209,20 @@ them.
   quality from capture frames is below the photo pilot (21% mean proportion mismatch, 16/21 good shapes): capture
   must add a step-back photo per large object. Not yet exercised: doors/windows, live VLM, RoomPlan importer.
   Pod `v39xw1o6z9hkyu` terminated (~$0.65).
+- 2026-10-18: **M4a RoomPlan importer done** (except validation on the owner's own scan).
+  `roomlayout.ingest.roomplan` + CLI, `roomlayout.pipeline` (ADR-0008), 18 ingest tests on
+  synthetic captures. All 12 public exports convert, and floors, walls and openings match the
+  raw RoomPlan walls. Real scans forced 6 mapping rules (docs/ingest.md):
+  - kitchen cabinetry and wall cabinets are fixed;
+  - a TV one room over is dropped;
+  - L/U sofa pieces are merged;
+  - wide doors have no swing arc;
+  - doors in partitions are gaps;
+  - passages need at least 0.8 m.
+  One solver policy also changed: rules among pinned assets alone are facts (ADR-0008), and
+  a `hard_terms` crash on infeasible problems with pinned assets is fixed.
+  Rule library + solver on the 12 exports (30 s):
+  - feasible layouts for all 7 rooms with no or light furniture;
+  - no layout for 5 crowded ones (2 dining rooms with tucked-in chairs, see backlog; a U-sofa
+    room; a 17-item open-plan kitchen/living room; a multi-room scan).
+

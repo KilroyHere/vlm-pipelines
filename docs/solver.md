@@ -102,6 +102,14 @@ applies). Asset clearance zones may overlap a swing.
 `movable: false` assets are pinned at their `initial` pose too (the contract requires one
 since v0.3.0). A pair constraint relating an asset to itself is ignored, with a note.
 
+**Pinned assets are facts (ADR-0008).** Implicit rules only cover terms with at least one
+movable asset: a pinned asset has no unary implicit terms (inside room, clear of
+obstacles, own zones vs walls/obstacles, door swing, wall mount), and two pinned assets
+have no no-overlap or zone term between them. Scanned fixtures (a fireplace recessed
+into its wall, abutting kitchen cabinets, wall cabinets above base cabinets) would
+otherwise make every real kitchen infeasible. Movable assets still respect pinned ones
+fully, and pinned assets still count for the walkway check and user constraints.
+
 ### Elevation (contract v0.3.0)
 
 Each asset occupies the vertical extent `[elevation, elevation + height]`.
@@ -264,7 +272,8 @@ When nothing feasible is found, `SolveResult.notes` contains:
   - an asset larger than the room's bounding box in both orientations;
   - a hard `near` max smaller than a hard `distance_at_least` min on the same pair;
   - a hard `against_wall(wall_id)` wider than the longest usable run of that wall;
-  - pinned assets already violating hard rules.
+  - pinned assets already violating hard rules (user constraints and the walkway; implicit
+    rules among pinned assets alone don't apply, see above).
 - **Heuristic:** footprints plus their own zones need > 85% of the free floor ("very
   crowded").
 - **Statistics:**

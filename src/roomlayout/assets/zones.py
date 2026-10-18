@@ -15,9 +15,9 @@ from shapely import affinity
 from shapely.geometry import Polygon
 from shapely.geometry.polygon import orient
 
-from roomlayout.schema import ClearanceZone, Polygon2D
+from roomlayout.schema import Asset, ClearanceZone, Polygon2D
 
-from .categories import ZoneSpec
+from .categories import ZoneSpec, profile_for
 
 SIDE_DIRECTIONS = {
     "front": (0.0, 1.0),
@@ -71,3 +71,16 @@ def build_zones(footprint: Polygon2D, specs: tuple[ZoneSpec, ...]) -> list[Clear
                 )
             )
     return zones
+
+
+def with_default_zones(asset: Asset) -> Asset:
+    """``asset`` with its category's default clearance zones, if it has none yet.
+
+    For assets that never went through :func:`roomlayout.assets.normalize` (e.g. scanned
+    boxes from RoomPlan ingest): zones come from the subtype's profile, else the category's.
+    """
+    if asset.clearance_zones:
+        return asset
+    profile = profile_for(asset.subtype or asset.category)
+    zones = build_zones(asset.effective_footprint(), profile.zones)
+    return asset.model_copy(update={"clearance_zones": zones})

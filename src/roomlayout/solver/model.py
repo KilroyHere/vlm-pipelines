@@ -131,8 +131,14 @@ class Model:
     def _build_implicit(self) -> None:
         room = self.room
         H = True
+        # Pinned assets (immovable, or a hard `fixed`) are facts of the room: a scanned
+        # fireplace recessed into a wall, abutting kitchen cabinets, wall cabinets above
+        # base cabinets. Implicit rules among facts alone are constants the search can't
+        # change, so they apply only to terms involving at least one movable asset.
         for t in self.templates:
             i = t.idx
+            if self.pinned[i]:
+                continue
             self.unary[i].append(
                 Term(
                     implicit_id("inside_room"),
@@ -203,6 +209,8 @@ class Model:
                 )
         for i in range(self.n):
             for j in range(i + 1, self.n):
+                if self.pinned[i] and self.pinned[j]:
+                    continue
                 ti, tj = self.templates[i], self.templates[j]
                 if ti.z0 < tj.z1 and tj.z0 < ti.z1:  # vertical extents overlap
                     self._add_pair(
@@ -573,16 +581,21 @@ class State:
         """Labels of currently violated hard terms (for infeasibility statistics)."""
         m = self.model
         out = []
+        G = self.geoms  # inactive assets (pose None) are skipped, as everywhere in State
         for i in range(m.n):
-            g = self.geoms[i]
+            if G[i] is None:
+                continue
             for t in m.unary[i]:
-                if t.hard and t.fn(g) > 0:
+                if t.hard and t.fn(G[i]) > 0:
                     out.append(f"{t.cid} ({t.label})")
         for ts in m.pair.values():
             for t in ts:
-                if t.hard and t.fn(self.geoms[t.a], self.geoms[t.b]) > 0:
+                if G[t.a] is None or G[t.b] is None:
+                    continue
+                if t.hard and t.fn(G[t.a], G[t.b]) > 0:
                     out.append(f"{t.cid} ({t.label})")
-        for wt, (v, unreached) in zip(m.walkways, m.eval_walkways(self.geoms), strict=True):
-            if wt.hard and v > 0:
-                out.append(f"{wt.cid} (unreachable: {', '.join(unreached)})")
+        if all(g is not None for g in G):  # the walkway check needs every asset placed
+            for wt, (v, unreached) in zip(m.walkways, m.eval_walkways(G), strict=True):
+                if wt.hard and v > 0:
+                    out.append(f"{wt.cid} (unreachable: {', '.join(unreached)})")
         return out

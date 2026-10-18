@@ -12,6 +12,7 @@ from .categories import ROOMPLAN_CATEGORIES, CategoryProfile, lookup, profile_fo
 from .footprint import FootprintOptions, extract_footprint
 from .meshio import MeshLoadError, export_glb, load_mesh
 from .pipeline import NormalizeOptions, NormalizeResult, normalize, write_outputs
+from .zones import with_default_zones
 
 __all__ = [
     "ROOMPLAN_CATEGORIES",
@@ -26,5 +27,6 @@ __all__ = [
     "lookup",
     "normalize",
     "profile_for",
+    "with_default_zones",
     "write_outputs",
 ]

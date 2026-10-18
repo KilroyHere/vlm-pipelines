@@ -433,3 +433,37 @@ def test_walkway_ignores_assets_above_walker_height():
     data["assets"][1]["elevation"] = 1.9  # wall cabinet above head height
     res, ok = results(type(p).model_validate(data), poses)
     assert ok and res["ww"].satisfied
+
+
+# ------------------------------------------------------- pinned assets are facts
+
+
+def test_rules_between_pinned_assets_alone_are_not_enforced():
+    # two immovable fixtures that overlap each other and cross the wall as scanned
+    # (a recessed fireplace, abutting built-ins): constants, not constraints
+    room = box_room(4, 3)
+    fixtures = [
+        box("fireplace", 1.2, 0.5, movable=False),
+        box("cabinet", 0.8, 0.5, movable=False),
+    ]
+    p = make_problem(
+        [*fixtures, box("chair", 0.5, 0.5)],
+        room=room,
+        initial={
+            "fireplace": {"x": 1.0, "y": 0.1, "yaw": 0.0},  # 0.15 m into the south wall
+            "cabinet": {"x": 1.8, "y": 0.25, "yaw": 0.0},  # overlaps the fireplace
+            "chair": {"x": 3.0, "y": 2.0, "yaw": 0.0},
+        },
+    )
+    by, feasible = results(p, {})
+    assert feasible
+    assert by["implicit:inside_room"].satisfied and by["implicit:no_overlap"].satisfied
+
+
+def test_movable_assets_still_may_not_overlap_pinned_ones():
+    p = make_problem(
+        [box("fireplace", 1.2, 0.5, movable=False), box("chair", 0.5, 0.5)],
+        initial={"fireplace": {"x": 1.0, "y": 0.3, "yaw": 0.0}},
+    )
+    by, feasible = results(p, {"chair": (1.0, 0.4, 0.0)})
+    assert not feasible and not by["implicit:no_overlap"].satisfied
