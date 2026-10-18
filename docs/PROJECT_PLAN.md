@@ -222,7 +222,11 @@ them.
   One solver policy also changed: rules among pinned assets alone are facts (ADR-0008), and
   a `hard_terms` crash on infeasible problems with pinned assets is fixed.
   Rule library + solver on the 12 exports (30 s):
-  - feasible layouts for all 7 rooms with no or light furniture;
-  - no layout for 5 crowded ones (2 dining rooms with tucked-in chairs, see backlog; a U-sofa
-    room; a 17-item open-plan kitchen/living room; a multi-room scan).
+  - 7 rooms get feasible layouts: 5 empty, a bedroom (4 items) and a meeting room (8 items);
+  - 5 crowded rooms don't:
+    - 2 dining rooms with 10-13 tucked-in chairs, still infeasible at 90 s (see backlog);
+    - a room with a 3.5 x 2.5 m U-sofa;
+    - an open-plan kitchen/dining/living room with 17 items, needing 94% of the free floor
+      for footprints and zones;
+    - a multi-room scan (now warned).
 
