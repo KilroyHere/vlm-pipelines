@@ -82,3 +82,35 @@ One A40 Secure pod (`v39xw1o6z9hkyu`, $0.59/h) from 14:52 to ~15:57 UTC, termina
 environment build on a fresh volume (pytorch3d compile); generation itself took 7 min (416 s for 21 items).
 The bootstrap's last bug (roomlayout installed into the conda env instead of its venv)
 is fixed, so the next run can normalize on the pod.
+
+## Furnishing an emptied room with new furniture (ADR-0009), 2026-10-18
+
+`furnish_demo.py`: each room is emptied of its scanned furniture
+(`pipeline.empty_room`), then refurnished with the pilot's SAM 3D assets made from
+retailer product photos (manufacturer sizes). Request, the same for every room: *"Put the
+sofa against a wall with the coffee table in front of it, and the armchair by the
+coffee table so we can talk. I need a small work spot: the desk against a wall with the
+chair at it. The dresser goes against a wall too."* (VLM answer hand-written in its
+output format, as above; 9 constraints, 6 without the work spot). Solver: 30 s, k=3.
+
+| room (free floor) | variant | furniture footprint (m²) | fits | request met (layout 1) | layouts passing all checks |
+|---|---|---|---|---|---|
+| 47204607 (21.05 m²) | sectional | 5.85 | yes | 9/9 | 3/3 |
+| 47204607 (21.05 m²) | sofa | 4.92 | yes | 9/9 | 3/3 |
+| 47204607 (21.05 m²) | sofa, no desk | 3.98 | yes | 6/6 | 3/3 |
+| 48018379 (18.11 m²) | sectional | 5.85 | yes | 9/9 | 2/2 |
+| 48018379 (18.11 m²) | sofa | 4.92 | yes | 9/9 | 3/3 |
+| 48018379 (18.11 m²) | sofa, no desk | 3.98 | yes | 6/6 | 3/3 |
+| 42445441 (10.99 m²) | sectional | 5.85 | no | 7/9 | 0/3 |
+| 42445441 (10.99 m²) | sofa | 4.92 | no | 9/9 | 0/3 |
+| 42445441 (10.99 m²) | sofa, no desk | 3.98 | yes | 6/6 | 1/1 |
+
+Variants are sets the user is choosing between: sectional = KIVIK sectional, armchair,
+coffee table, desk, chair, dresser; sofa = the same with a 3-seat sofa instead of the
+sectional.
+
+The small room is the useful case: the solver says the sectional set doesn't fit
+("footprints plus clearance zones need about 9.85 m² of 10.99 m² free floor (90%)"), the
+sofa set doesn't either (no walkway reaches everything), and the set without the work spot
+does. That is the product's answer to "will it fit?". Contact sheet:
+`out/furnish/demo_sheet.png` (not committed).

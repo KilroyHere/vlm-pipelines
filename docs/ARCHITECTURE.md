@@ -14,7 +14,12 @@ engine.
 
 ## v1 scope (build this first)
 
-v1 keeps the novel part (**your own furniture, generated in 3D**) and the core value
+**Product (ADR-0009): "will it fit, and how should I arrange it?"** The scanned room is
+emptied of its movable furniture (fixtures and built-ins stay), and the user adds new
+pieces from product photos plus listing sizes. Rearranging the user's own furniture
+(the flow below with scan frames) is a later mode; the pipeline supports both.
+
+v1 keeps the novel part (**furniture generated in 3D from a photo**) and the core value
 (**good layouts**), and defers the hardest research pieces. The full pipeline below
 remains the long-term target.
 
@@ -34,7 +39,7 @@ user rules ─► VLM (one call) ─► constraint JSON ─► simulated anneali
 |---|---|---|
 | 0 + 1b Room | **Apple RoomPlan** (iOS, LiDAR): walls, doors, windows, and furniture as labeled boxes, all in meters | Video SfM, plane fitting, non-LiDAR devices |
 | 1a Photoreal room | Clean "dollhouse" render of the RoomPlan geometry | 3DGS + GOR-IS |
-| 2 Asset generation | **SAM 3D Objects** on a GPU server. Input is the best scan frame of the item (cropped by its RoomPlan box), or a product photo for new purchases. | Object Capture, LGM |
+| 2 Asset generation | **SAM 3D Objects** on a GPU server. v1 input: a product photo of the new piece (ADR-0009). Later mode (own furniture): the best scan frame, cropped by its RoomPlan box. | Object Capture, LGM |
 | 3 Asset processing | **Scale and orient the mesh to fit its RoomPlan box** (or the listing's dimensions). The front is chosen by VLM on renders and confirmed by the user. Cleanup + decimation. Footprint = the mesh projected onto the floor. | Convex decomposition, mass/inertia, height-banded footprints (chair-under-table) |
 | 4 Constraints | One VLM call → fixed-schema JSON + deterministic rule library | — |
 | 5 Search | Simulated annealing on (x, y, yaw) using mesh footprints, yaw snapped to 90°, many restarts, diverse top-k | CP-SAT, gradient refinement |

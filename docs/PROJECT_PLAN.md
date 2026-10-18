@@ -229,4 +229,16 @@ them.
     - an open-plan kitchen/dining/living room with 17 items, needing 94% of the free floor
       for footprints and zones;
     - a multi-room scan (now warned).
+- 2026-10-18: **Pivot (owner, ADR-0009): v1 furnishes an emptied room with new furniture from
+  product photos.** Rearranging the user's own furniture becomes a later mode.
+  - `roomlayout.pipeline` gains `empty_room`, `load_asset` and `furnish`, plus CLI
+    `--empty --add ASSET.json` (tests).
+  - Demo (spikes/e2e_arkitscenes/furnish_demo.py, RESULTS.md): 3 real ARKitScenes rooms
+    emptied, refurnished with the pilot's 7 product-photo assets.
+  - Two bigger rooms: both the KIVIK sectional set and the 3-seat sofa set fit, meeting the
+    whole 9-rule request with all checks passing.
+  - Small 3x4 m room: neither fits (the sectional set needs 90% of the free floor). The set
+    without the desk does fit (6/6).
+  - Next: product-photo intake (listing parser + manual photo/size), hosted SAM 3D, web viewer
+    MVP; the owner's own-room scan is still the real-capture test.
 
