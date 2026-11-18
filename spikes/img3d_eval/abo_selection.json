@@ -1,0 +1,347 @@
+[
+ {
+  "id": "sectional_01",
+  "category": "sectional",
+  "abo_type": "SOFA",
+  "name": "Amazon Brand – Stone & Beam Andover Modern Right U-Sectional Sofa, 134\"W, Charco",
+  "model_id": "B07BWLJR4Q",
+  "model_path": "Q/B07BWLJR4Q.glb",
+  "image_id": "91HZkY1L55L",
+  "image_path": "2d/2dea0d1e.jpg",
+  "extent_xyz": [
+   3.2382155656814575,
+   0.8527671694755554,
+   2.550685405731201
+  ]
+ },
+ {
+  "id": "sofa_01",
+  "category": "sofa",
+  "abo_type": "SOFA",
+  "name": "Amazon Brand – Stone & Beam Lauren Down-Filled Oversized Loveseat with Hardwood ",
+  "model_id": "B0723H8HLM",
+  "model_path": "M/B0723H8HLM.glb",
+  "image_id": "81MuzoQyfHL",
+  "image_path": "f9/f9a30ca5.jpg",
+  "extent_xyz": [
+   1.8546754121780396,
+   0.9798206686973572,
+   0.9616721570491791
+  ]
+ },
+ {
+  "id": "chair_01",
+  "category": "chair",
+  "abo_type": "CHAIR",
+  "name": "Amazon Brand – Ravenna Home Jase Slope Tufted Accent Chair, 29.9\"W, Dark Grey",
+  "model_id": "B07DBLN3V2",
+  "model_path": "2/B07DBLN3V2.glb",
+  "image_id": "A1nVjVI107L",
+  "image_path": "4b/4b499904.jpg",
+  "extent_xyz": [
+   0.6553316414356232,
+   0.891173779964447,
+   0.7705073952674866
+  ]
+ },
+ {
+  "id": "chair_02",
+  "category": "chair",
+  "abo_type": "CHAIR",
+  "name": "Amazon Brand – Stone & Beam Classic Spindle-Back Armless Wood Dining Chair, 19\"W",
+  "model_id": "B07QGWM3CY",
+  "model_path": "Y/B07QGWM3CY.glb",
+  "image_id": "71xxH7ra0SL",
+  "image_path": "40/40661190.jpg",
+  "extent_xyz": [
+   0.5058491230010986,
+   0.8436377048492432,
+   0.48259997367858887
+  ]
+ },
+ {
+  "id": "chair_03",
+  "category": "chair",
+  "abo_type": "CHAIR",
+  "name": "Amazon Brand – Rivet Theresa Modern Upholstered Accent Chair, 30\"W, Charcoal",
+  "model_id": "B082QC5N35",
+  "model_path": "5/B082QC5N35.glb",
+  "image_id": "71fEjRyfOPL",
+  "image_path": "76/761e9f8e.jpg",
+  "extent_xyz": [
+   0.7619999647140503,
+   0.8381999731063843,
+   0.7873999774456024
+  ]
+ },
+ {
+  "id": "chair_04",
+  "category": "chair",
+  "abo_type": "CHAIR",
+  "name": "AmazonBasics Big & Tall Swivel Office Chair - Mesh with Lumbar Support, 450-Poun",
+  "model_id": "B0758HV5FG",
+  "model_path": "G/B0758HV5FG.glb",
+  "image_id": "81zUku8lNhL",
+  "image_path": "af/afabdb32.jpg",
+  "extent_xyz": [
+   0.7391400039196014,
+   1.0286999940872192,
+   0.7137399911880493
+  ]
+ },
+ {
+  "id": "table_01",
+  "category": "table",
+  "abo_type": "TABLE",
+  "name": "Amazon Brand – Ravenna Home Classic Console Table with Storage Drawers, 44\"W, Bl",
+  "model_id": "B084MM451K",
+  "model_path": "K/B084MM451K.glb",
+  "image_id": "71ohRuZwsJL",
+  "image_path": "87/87ea26f1.jpg",
+  "extent_xyz": [
+   1.1176646947860718,
+   0.749292254447937,
+   0.3985348790884018
+  ]
+ },
+ {
+  "id": "table_02",
+  "category": "table",
+  "abo_type": "TABLE",
+  "name": "Amazon Brand – Rivet Modern Six-Compartment TV Media Console, Walnut",
+  "model_id": "B072ZRPFJL",
+  "model_path": "L/B072ZRPFJL.glb",
+  "image_id": "71Y63Ikx+GL",
+  "image_path": "2f/2ffb62dd.jpg",
+  "extent_xyz": [
+   1.481807827949524,
+   0.4091832935810089,
+   0.36589719355106354
+  ]
+ },
+ {
+  "id": "table_03",
+  "category": "table",
+  "abo_type": "TABLE",
+  "name": "Amazon Brand – Rivet Rustic Reclaimed Fir Wood Coffee Table, 39\"W, Natural and G",
+  "model_id": "B07B7GQ1J2",
+  "model_path": "2/B07B7GQ1J2.glb",
+  "image_id": "91JFDiTc2aL",
+  "image_path": "e0/e0c3558b.jpg",
+  "extent_xyz": [
+   1.0001362562179565,
+   0.4555811882019043,
+   1.1536946296691895
+  ]
+ },
+ {
+  "id": "table_04",
+  "category": "table",
+  "abo_type": "TABLE",
+  "name": "Amazon Brand – Rivet Campbell Mid-Century Media Console with Tapered Legs, 20\"W,",
+  "model_id": "B07QJLJRWW",
+  "model_path": "W/B07QJLJRWW.glb",
+  "image_id": "81lz66td1wL",
+  "image_path": "1a/1aa336cf.jpg",
+  "extent_xyz": [
+   0.5082481205463409,
+   0.5590704083442688,
+   0.4052663743495941
+  ]
+ },
+ {
+  "id": "desk_01",
+  "category": "desk",
+  "abo_type": "DESK",
+  "name": "Amazon Brand – Ravenna Home Sullivan Modern Desk, 54.5\"W, White",
+  "model_id": "B07QJLWJMY",
+  "model_path": "Y/B07QJLWJMY.glb",
+  "image_id": "71mgqBf0f8L",
+  "image_path": "19/199a368d.jpg",
+  "extent_xyz": [
+   1.3795190453529358,
+   0.761877715587616,
+   0.8066148161888123
+  ]
+ },
+ {
+  "id": "desk_02",
+  "category": "desk",
+  "abo_type": "DESK",
+  "name": "Amazon Brand – Rivet Anne Mid-Century Modern Wood Office Computer Desk, 62\"W, Wa",
+  "model_id": "B07B7DL32P",
+  "model_path": "P/B07B7DL32P.glb",
+  "image_id": "81DV+dV0+5L",
+  "image_path": "14/1478021a.jpg",
+  "extent_xyz": [
+   1.5748624801635742,
+   0.7618351578712463,
+   0.7244501113891602
+  ]
+ },
+ {
+  "id": "bed_01",
+  "category": "bed",
+  "abo_type": "BED",
+  "name": "Amazon Brand – Rivet Imogene Oiled Bronze King Bed, 80.5\"W, Dark Bronze",
+  "model_id": "B07B4XK5V3",
+  "model_path": "3/B07B4XK5V3.glb",
+  "image_id": "816qE9ljSPL",
+  "image_path": "75/75347621.jpg",
+  "extent_xyz": [
+   1.9930529594421387,
+   1.172817349433899,
+   2.1512540578842163
+  ]
+ },
+ {
+  "id": "bed_02",
+  "category": "bed",
+  "abo_type": "BED",
+  "name": "Amazon Brand – Stone & Beam Prudence Tufted Queen Bed, 66\"W, Classic Cream",
+  "model_id": "B07B4YXWNT",
+  "model_path": "T/B07B4YXWNT.glb",
+  "image_id": "81eG3lHJwiL",
+  "image_path": "99/9949a339.jpg",
+  "extent_xyz": [
+   1.6980767250061035,
+   1.4271643161773682,
+   2.386691689491272
+  ]
+ },
+ {
+  "id": "bed_03",
+  "category": "bed",
+  "abo_type": "BED_FRAME",
+  "name": "Amazon Brand - Solimo Senna Metal Glossy King Bed (Black)",
+  "model_id": "B08FTN8KHY",
+  "model_path": "Y/B08FTN8KHY.glb",
+  "image_id": "819hduztRQL",
+  "image_path": "6a/6a0b7757.jpg",
+  "extent_xyz": [
+   1.8799999952316284,
+   0.9399999374735573,
+   2.0399997234344482
+  ]
+ },
+ {
+  "id": "bookshelf_01",
+  "category": "bookshelf",
+  "abo_type": "SHELF",
+  "name": "Amazon Brand - Movian Oker 2-Door Cabinet/Bookcase with 8 Shelves, 100 x 140cm, ",
+  "model_id": "B07H8SQ2NZ",
+  "model_path": "Z/B07H8SQ2NZ.glb",
+  "image_id": "510S5AL4e4L",
+  "image_path": "c3/c366667b.jpg",
+  "extent_xyz": [
+   0.9951016008853912,
+   1.4047236442565918,
+   0.4342452585697174
+  ]
+ },
+ {
+  "id": "bookshelf_02",
+  "category": "bookshelf",
+  "abo_type": "SHELF",
+  "name": "AmazonBasics Modern 5-Tier Ladder Bookshelf Organizer with Solid Rubber Wood Fra",
+  "model_id": "B07PPNNCM2",
+  "model_path": "2/B07PPNNCM2.glb",
+  "image_id": "61ltyWPhrGL",
+  "image_path": "9c/9c1e8c8a.jpg",
+  "extent_xyz": [
+   0.6359989047050476,
+   1.7794554233551025,
+   0.34133994579315186
+  ]
+ },
+ {
+  "id": "dresser_01",
+  "category": "dresser",
+  "abo_type": "DRESSER",
+  "name": "Amazon Brand - Movian Kolva Chest of 6 Drawers, 40 x 160 x 76.5cm, Dark Grey/Whi",
+  "model_id": "B07GFL6W6N",
+  "model_path": "N/B07GFL6W6N.glb",
+  "image_id": "71aJoJW6fzL",
+  "image_path": "61/61e17ebe.jpg",
+  "extent_xyz": [
+   1.5346537828445435,
+   0.7904644012451172,
+   0.33340559899806976
+  ]
+ },
+ {
+  "id": "cabinet_01",
+  "category": "cabinet",
+  "abo_type": "CABINET",
+  "name": "AmazonBasics Multifunction Rolling Kitchen Cart Island with Open Shelves - Recla",
+  "model_id": "B07M6WY74L",
+  "model_path": "L/B07M6WY74L.glb",
+  "image_id": "81p2dIPPP1L",
+  "image_path": "2e/2e95116d.jpg",
+  "extent_xyz": [
+   0.8991267383098602,
+   0.9272357821464539,
+   0.4572066068649292
+  ]
+ },
+ {
+  "id": "ottoman_01",
+  "category": "ottoman",
+  "abo_type": "OTTOMAN",
+  "name": "Amazon Brand – Stone & Beam Janelle Button Tufted Ottoman, 37\"W, Dove",
+  "model_id": "B075X33QV4",
+  "model_path": "4/B075X33QV4.glb",
+  "image_id": "91h0MLgz-NL",
+  "image_path": "9a/9a24b581.jpg",
+  "extent_xyz": [
+   0.8910440504550934,
+   0.4390076696872711,
+   0.9013800621032715
+  ]
+ },
+ {
+  "id": "bench_01",
+  "category": "bench",
+  "abo_type": "BENCH",
+  "name": "Amazon Brand – Ravenna Home Haraden Modern Upholstered Bench, 40\"W, Beige",
+  "model_id": "B07QGWLB66",
+  "model_path": "6/B07QGWLB66.glb",
+  "image_id": "81SBP25zf1L",
+  "image_path": "f9/f940ab1b.jpg",
+  "extent_xyz": [
+   1.0125778317451477,
+   0.4563843011856079,
+   0.40725141763687134
+  ]
+ },
+ {
+  "id": "sectional_02",
+  "category": "sectional",
+  "abo_type": "SOFA",
+  "name": "Amazon Brand – Stone & Beam Dalton Sectional Sofa Couch, 91.5\"W, Stone",
+  "model_id": "B0717B4TLX",
+  "model_path": "X/B0717B4TLX.glb",
+  "image_id": "81tR9MjlxmL",
+  "image_path": "bf/bf1af9e2.jpg",
+  "extent_xyz": [
+   2.093134641647339,
+   0.861541748046875,
+   0.9356052279472351
+  ]
+ },
+ {
+  "id": "sofa_02",
+  "category": "sofa",
+  "abo_type": "SOFA",
+  "name": "Amazon Brand – Rivet Revolve Modern Upholstered Sofa with Reversible Sectional C",
+  "model_id": "B072FVHRZ1",
+  "model_path": "1/B072FVHRZ1.glb",
+  "image_id": "81dleBZ+GFL",
+  "image_path": "9e/9e2c860f.jpg",
+  "extent_xyz": [
+   2.054611086845398,
+   0.9571199417114258,
+   1.6665605306625366
+  ]
+ }
+]

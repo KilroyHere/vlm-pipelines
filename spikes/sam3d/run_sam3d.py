@@ -211,13 +211,24 @@ class Sam3D:
         self.torch = torch
         self.inference = Inference(str(config), compile=compile_model)
 
-    def run(self, rgb, mask, seed: int) -> tuple[dict, float, float | None]:
+    def run(self, rgb, mask, seed: int, textured: bool = False) -> tuple[dict, float, float | None]:
         torch = self.torch
         if torch.cuda.is_available():
             torch.cuda.reset_peak_memory_stats()
             torch.cuda.synchronize()
         t0 = time.perf_counter()
-        output = self.inference(rgb, mask, seed=seed)
+        if textured:
+            # The public wrapper turns texture baking off; the pipeline's own defaults turn
+            # it on (inference_pipeline.py run(): with_mesh_postprocess=True,
+            # with_texture_baking=True, use_vertex_color=False). Same call otherwise.
+            rgba = self.inference.merge_mask_to_rgba(rgb, mask)
+            output = self.inference._pipeline.run(
+                rgba, None, seed, stage1_only=False, with_mesh_postprocess=True,
+                with_texture_baking=True, with_layout_postprocess=False,
+                use_vertex_color=False, stage1_inference_steps=None, pointmap=None,
+            )  # fmt: skip
+        else:
+            output = self.inference(rgb, mask, seed=seed)
         if torch.cuda.is_available():
             torch.cuda.synchronize()
         dt = time.perf_counter() - t0
@@ -259,7 +270,14 @@ def generate(items: list[Item], args, summaries: dict[str, Summary]) -> None:
         out_dir = args.out / item.item_id
         try:
             rgb, mask = load_rgb_and_mask(item)
-            output, dt, vram = model.run(rgb, mask, args.seed)
+            try:
+                output, dt, vram = model.run(rgb, mask, args.seed, textured=args.textured)
+            except Exception as exc:
+                if not args.textured or "out of memory" in str(exc).lower():
+                    raise
+                print(f"[sam3d] {item.item_id}: textured run failed ({exc}); vertex colours",
+                      flush=True)  # fmt: skip
+                output, dt, vram = model.run(rgb, mask, args.seed, textured=False)
             s.generation_s = round(dt, 3)
             s.vram_peak_gb = round(vram, 2) if vram is not None else None
             s.raw_faces, s.raw_vertices = save_generation(output, out_dir, args.save_splat)
@@ -393,6 +411,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--compile", action="store_true", help="Inference(compile=True)")
     p.add_argument("--save-splat", action="store_true")
+    p.add_argument("--textured", action="store_true", help="bake a texture (else vertex colours)")
     p.add_argument("--items", help="comma-separated item ids (default: all)")
     p.add_argument("--roomlayout-python", default=sys.executable)
     p.add_argument("--normalize-timeout", type=int, default=300)
