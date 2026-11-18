@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: uv venv && uv pip install -e ".[solver,assets,vlm,dev]"
+      - name: Lint
+        run: .venv/bin/ruff check . && .venv/bin/ruff format --check .
+      - name: Schemas are up to date
+        run: |
+          .venv/bin/python -m roomlayout.schema.export
+          git diff --exit-code schemas/ || (echo "schemas/ is stale: run python -m roomlayout.schema.export" && exit 1)
+      - name: Tests (fast suite, no API key needed)
+        run: .venv/bin/pytest

@@ -272,6 +272,7 @@ them.
   - Mesh cleanup for display (`assets/display.py`): holes filled, light Taubin smoothing
     on dense meshes, flat base, same bounding box. Written to the GLB only; the
     footprint is unchanged.
+  - CI: `.github/workflows/ci.yml` (ruff, schema staleness, fast tests).
   - Web viewer (`roomlayout.viewer`, docs/viewer.md): three.js room from the scan,
     procedural furniture or GLBs (fade-in), soft shadows, animated layout switching,
     measured "why" per layout (`roomlayout.explain`), and served editing (drag, rotate,
