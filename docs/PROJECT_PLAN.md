@@ -86,7 +86,7 @@ ties, exact single-pass walkway check. Minimal variants: 261/263 returned layout
 - [x] Fully tested without credentials (recorded responses); live eval script over
       ≥ 50 realistic requests with expected constraints, runnable when credentials exist.
 
-Result: 73-case eval set; schema verified offline against the documented limits (anyOf, no
+Result: 73-case eval set, **run live 2026-11-18** (see status log). Earlier note: schema verified offline (anyOf, no
 oneOf). **Not yet verified live** (no credentials): schema acceptance by the API, cache hits,
 real cost (estimated ~$0.03/call warm, ~$0.07 cold), extraction accuracy. Details: [vlm.md](vlm.md).
 
@@ -126,8 +126,8 @@ them.
 ## Backlog
 - **Vocabulary growth (ADR-0006 amendment), decide from live-eval `out_of_vocabulary` counts:**
   `faces`/`near` to openings (top candidate), obstacles as targets, corner/centred placement.
-- First live VLM eval run (needs credentials): schema acceptance, cache hits, effort low vs
-  medium, per-tag accuracy. See docs/vlm.md.
+- VLM eval: harder cases (Haiku 5.5 scores 73/73), effort sweep, then pick the default
+  model. See docs/vlm.md.
 - Line of sight for `faces` (only tall assets block view): WS-A request, deferred.
 - Even distribution of chairs around a table: deferred.
 - Height-banded footprints (chair tucked under desk): ADR-0003, deferred. **Now evidenced by
@@ -241,4 +241,9 @@ them.
     without the desk does fit (6/6).
   - Next: product-photo intake (listing parser + manual photo/size), hosted SAM 3D, web viewer
     MVP; the owner's own-room scan is still the real-capture test.
-
+- 2026-11-18: **First live VLM eval** (73 cases; docs/vlm.md). The API rejected the output
+  schema ("compiled grammar is too large": an `anyOf` of 8 typed items); replaced by one
+  flat wire item (`vlm-prompt-2`), mapped to typed items before validation. Then all 73 ok
+  on all three models: exact Opus 5.5 70, Sonnet 5.5 72, Haiku 5.5 73; cost for 73 cases
+  $0.69 / $0.31 / $0.02; cache hits 72/73. Haiku runs without `fallbacks`. Next: public
+  RoomPlan scans and 5 test products, box-first fast path, web viewer.

@@ -19,6 +19,8 @@ from typing import Any
 import anthropic
 import httpx2  # the SDK's HTTP library (anthropic 1.x); provides the mock transport
 
+from .output import wire_output
+
 Responder = Callable[[dict[str, Any]], dict[str, Any]]
 
 
@@ -74,6 +76,8 @@ def synthetic_response(
     """Hand-authored Messages API response JSON (thinking block + JSON text block).
 
     ``output`` is the structured-output object (or raw text, or None for no text block).
+    A dict may use the typed field names (``max_distance`` ...); it is flattened to the
+    wire shape with ``wire_output``.
     ``fallback_from`` adds a leading ``fallback`` block as when a server-side fallback
     served the request from ``model``.
     """
@@ -84,7 +88,7 @@ def synthetic_response(
         )
     content.append({"type": "thinking", "thinking": "", "signature": f"synthetic-signature-{tag}"})
     if output is not None:
-        text = output if isinstance(output, str) else json.dumps(output)
+        text = output if isinstance(output, str) else json.dumps(wire_output(output))
         content.append({"type": "text", "text": text})
     return {
         "id": f"msg_synthetic_{tag}",

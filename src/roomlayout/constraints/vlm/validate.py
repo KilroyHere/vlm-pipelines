@@ -38,6 +38,8 @@ from .output import (
     NearItem,
     ParallelItem,
     WalkwayWidthItem,
+    WireItem,
+    WireOutput,
 )
 
 _CONSTRAINT = TypeAdapter(Constraint)
@@ -74,8 +76,10 @@ def _room_extent(problem: LayoutProblem) -> float:
     return math.hypot(max(xs) - min(xs), max(ys) - min(ys))
 
 
-def _describe(item: LLMItem) -> str:
+def _describe(item: LLMItem | WireItem) -> str:
     d = item.model_dump(exclude={"source_text", "restatement", "hard", "type"})
+    if isinstance(item, WireItem):
+        d = {k: v for k, v in d.items() if v is not None}
     args = ", ".join(f"{k}={v!r}" for k, v in d.items())
     return f"{item.type}({args})"
 
@@ -209,7 +213,7 @@ def to_constraint(item: LLMItem, cid: str) -> Constraint:
 
 
 def convert(
-    output: LLMOutput, problem: LayoutProblem
+    output: LLMOutput | WireOutput, problem: LayoutProblem
 ) -> tuple[list[Accepted], list[Dropped], list[str]]:
     """Validate and convert. Returns (accepted, dropped, repair_errors).
 
@@ -222,14 +226,23 @@ def convert(
     dropped: list[Dropped] = []
     repair_errors: list[str] = []
 
-    def drop(i: int, item: LLMItem, code: str, reason: str, repairable: bool) -> None:
+    def drop(i: int, item: LLMItem | WireItem, code: str, reason: str, repairable: bool) -> None:
         dropped.append(
             Dropped(item=item.model_dump(), reason=reason, code=code, repairable=repairable)
         )
         if repairable:
             repair_errors.append(f"constraints[{i}] {_describe(item)}: {reason}")
 
-    for i, item in enumerate(output.constraints):
+    for i, raw in enumerate(output.constraints):
+        if isinstance(raw, WireItem):
+            try:
+                item = raw.to_typed()
+            except (ValueError, ValidationError) as e:
+                reason = _first_error(e) if isinstance(e, ValidationError) else str(e)
+                drop(i, raw, "missing_field", reason, True)
+                continue
+        else:
+            item = raw
         problem_found = checker.check(item)
         if problem_found:
             drop(i, item, *problem_found)

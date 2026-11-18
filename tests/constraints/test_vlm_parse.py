@@ -254,6 +254,32 @@ def test_invalid_items_dropped_with_reason(item, code):
     assert d.item["type"] == item["type"]
 
 
+@pytest.mark.parametrize(
+    "item,reason",
+    [
+        ({"type": "near", "a": "sofa", "b": "tv_stand", "value": None}, "needs a value"),
+        ({"type": "faces", "a": "sofa", "b": None, "value": None}, "needs b"),
+        ({"type": "keep_clear", "opening_id": None, "value": 0.6}, "needs opening_id"),
+    ],
+)
+def test_wire_item_missing_required_field_is_repairable_drop(item, reason):
+    wire = {"source_text": "x", "hard": True, "restatement": "x", **item}
+    result, _ = run(
+        load("living_room_basic"), "...", [R(out(wire, faces("sofa", "tv_stand")))], repair=False
+    )
+    assert [c.id for c in result.constraints] == ["vlm_faces_sofa_tv_stand"]
+    [d] = result.dropped
+    assert d.code == "missing_field" and d.repairable and reason in d.reason
+
+
+def test_haiku_requests_carry_no_fallbacks():
+    """Haiku 5.5 has no server-side refusal fallback (claude-api skill)."""
+    _, reqs = run(load("living_room_basic"), "x", [R(out())], model="claude-haiku-5-5")
+    body = reqs[0]["body"]
+    assert "fallbacks" not in body and body["model"] == "claude-haiku-5-5"
+    assert "anthropic-beta" not in reqs[0]["headers"]
+
+
 def test_fixed_needs_current_position():
     fixed = {"source_text": "keep it", "type": "fixed", "a": "sofa", "hard": True}
     fixed["restatement"] = "x"

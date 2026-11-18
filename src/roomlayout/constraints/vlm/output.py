@@ -1,6 +1,18 @@
 """LLM-facing output model (what Claude returns), separate from the contract.
 
-Why a separate model (ADR-0006):
+Two layers:
+
+- **Wire** (``WireItem``, ``WireOutput``; ``OUTPUT_SCHEMA``): what the API constrains the
+  model to. One flat item object for every constraint type: ``type`` is an enum, the
+  references (``a``, ``b``, ``wall_id``, ``opening_id``) are nullable, and the type's one
+  number is ``value``. The first live run (2026-11-18) showed why: an ``anyOf`` of eight
+  typed item objects is rejected by the API with "The compiled grammar is too large",
+  on Opus 5.5 and Haiku 5.5 alike; the flat item is accepted.
+- **Typed** (``FacesItem`` ...; ``LLMOutput``): one model per constraint type, used inside
+  ``validate.py``. ``WireItem.to_typed()`` maps a wire item onto it, or says which field
+  the type needs and didn't get (a repairable drop).
+
+Why separate from the contract (ADR-0006):
 
 - ``roomlayout.schema.Constraint`` is a *discriminated* union, which Pydantic renders as
   ``oneOf``. Structured outputs accept ``anyOf`` but not ``oneOf``. Here every item type
@@ -149,9 +161,119 @@ class LLMOutput(BaseModel):
     unexpressed: list[UnexpressedItem]
 
 
+ConstraintType = Literal[
+    "faces",
+    "against_wall",
+    "near",
+    "distance_at_least",
+    "parallel",
+    "keep_clear",
+    "walkway_width",
+    "fixed",
+]
+
+# Which typed field ``WireItem.value`` maps to, and whether the type requires it.
+VALUE_FIELD: dict[str, tuple[str, bool] | None] = {
+    "faces": ("max_angle_deg", False),
+    "against_wall": ("max_gap", False),
+    "near": ("max_distance", True),
+    "distance_at_least": ("min_distance", True),
+    "parallel": ("max_angle_deg", False),
+    "keep_clear": ("distance", False),
+    "walkway_width": ("min_width", False),
+    "fixed": None,
+}
+_TYPED: dict[str, type[_Item]] = {
+    t.model_fields["type"].annotation.__args__[0]: t  # type: ignore[union-attr]
+    for t in ITEM_TYPES
+}
+
+
+class WireItem(BaseModel):
+    """One constraint as the model writes it (flat: every field present, unused = null)."""
+
+    model_config = _ITEM_CONFIG
+
+    type: ConstraintType
+    source_text: str = Field(
+        description="The user's own words this item comes from, quoted as written."
+    )
+    a: str | None = Field(description="First asset id; null for keep_clear/walkway_width.")
+    b: str | None = Field(description="Second asset id for faces/near/distance/parallel.")
+    wall_id: str | None = Field(description="against_wall only: wall id, or null = any wall.")
+    opening_id: str | None = Field(description="keep_clear only: door/window/passage id.")
+    value: float | None = Field(
+        description="The type's number (meters or degrees), or null for the default."
+    )
+    hard: bool
+    restatement: str
+
+    def to_typed(self) -> _Item:
+        """The typed item. Raises ``ValueError`` naming a missing required field."""
+        cls = _TYPED[self.type]
+        data: dict[str, Any] = {
+            "type": self.type,
+            "source_text": self.source_text,
+            "hard": self.hard,
+            "restatement": self.restatement,
+        }
+        vf = VALUE_FIELD[self.type]
+        if vf is not None:
+            field, required = vf
+            if required and self.value is None:
+                raise ValueError(f"{self.type} needs a value ({field})")
+            data[field] = self.value
+        for ref in ("a", "b", "wall_id", "opening_id"):
+            if ref not in cls.model_fields:
+                continue
+            v = getattr(self, ref)
+            if v is None and ref != "wall_id":
+                raise ValueError(f"{self.type} needs {ref}")
+            data[ref] = v
+        return cls.model_validate(data)
+
+
+_WIRE_FIELDS = ("a", "b", "wall_id", "opening_id")
+_VALUE_NAMES = {v[0] for v in VALUE_FIELD.values() if v is not None}
+
+
+def wire_item(item: dict[str, Any]) -> dict[str, Any]:
+    """Flatten a typed item dict (``FacesItem`` field names) into the wire shape.
+
+    Used for hand-authored test responses and the eval's oracle answers. Wire-shaped
+    dicts pass through unchanged; unknown keys are kept so validation still sees them.
+    """
+    if "value" in item and not (_VALUE_NAMES & item.keys()):
+        return {**{k: None for k in _WIRE_FIELDS}, **item}
+    out = {k: v for k, v in item.items() if k not in _VALUE_NAMES}
+    out.setdefault("value", None)
+    for name in _VALUE_NAMES & item.keys():
+        out["value"] = item[name]
+    for k in _WIRE_FIELDS:
+        out.setdefault(k, None)
+    return out
+
+
+def wire_output(output: dict[str, Any]) -> dict[str, Any]:
+    """``wire_item`` applied to every constraint of an output dict."""
+    if not isinstance(output.get("constraints"), list):
+        return output
+    items = [wire_item(c) if isinstance(c, dict) else c for c in output["constraints"]]
+    return {**output, "constraints": items}
+
+
+class WireOutput(BaseModel):
+    """Root object of the structured output, as sent by the API."""
+
+    model_config = _ITEM_CONFIG
+
+    constraints: list[WireItem]
+    unexpressed: list[UnexpressedItem]
+
+
 def output_json_schema() -> dict[str, Any]:
     """The JSON Schema sent as ``output_config.format.schema``. Static across requests."""
-    return LLMOutput.model_json_schema()
+    return WireOutput.model_json_schema()
 
 
 # Computed once; identical bytes on every request (schema compilation is cached by the API).

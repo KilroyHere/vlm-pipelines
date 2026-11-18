@@ -89,11 +89,20 @@ position"; existing constraints. That's enough to resolve "the couch", "the big 
 
 ## Output model (`output.py`)
 
-`LLMOutput = {constraints: list[FacesItem | AgainstWallItem | ...], unexpressed: [...]}`.
+Two layers (prompt `vlm-prompt-2`):
 
-- A **plain `Union`** of eight item models, each with a `Literal` `type` tag. Pydantic
-  renders this as `anyOf` with `const` tags. The contract's `Constraint` is a
-  *discriminated* union, which renders as `oneOf`. Structured outputs reject that.
+- **Wire** (`OUTPUT_SCHEMA` = `WireOutput`): `{constraints: list[WireItem], unexpressed:
+  [...]}`. One **flat** item for every type: `type` (enum), `source_text`, `a`, `b`,
+  `wall_id`, `opening_id`, `value`, `hard`, `restatement`; unused fields are null and
+  `value` is the type's one number (max angle, max gap, max/min distance, clear depth,
+  walkway width). The first live run (2026-11-18) showed that the earlier form, an `anyOf`
+  of eight typed item objects, is rejected by the API ("The compiled grammar is too
+  large"), on Opus 5.5 and Haiku 5.5 alike. The flat form is accepted.
+- **Typed** (`LLMOutput`, `FacesItem` ...): `WireItem.to_typed()` maps each wire item
+  onto its typed model; a type that misses a field it needs (`near` without a value,
+  `faces` without `b`) is dropped as `missing_field`, repairable.
+- The contract's `Constraint` is a *discriminated* union, which renders as `oneOf`.
+  Structured outputs reject that, so neither layer uses it.
 - Every object has `additionalProperties: false`; every field is required (optional
   values are `X | None` → `anyOf [T, null]`), so the model never silently omits a field.
 - **No numeric constraints** in the schema: the API doesn't support them, and the SDK
@@ -113,6 +122,7 @@ Each item is checked on its own, so one bad item never costs the rest:
 
 | Check | Drop code | Sent back for repair |
 |---|---|---|
+| the type's required fields are present (wire → typed) | `missing_field` | yes |
 | `a`/`b` is an asset id in the problem | `unknown_asset` | yes |
 | `opening_id` / `wall_id` exists | `unknown_opening` / `unknown_wall` | yes |
 | `a != b` | `same_asset` | yes |
@@ -142,9 +152,24 @@ against two different walls.
 `"truncated"`, nothing used (partial JSON is never trusted); unparseable text →
 `"invalid_output"`. None of these trigger a repair round.
 
-## Cost estimate per call
+## Live results (2026-11-18, `vlm-prompt-2`, effort `medium`, 73 cases)
 
-Not measured: there are no credentials in the dev environment. These are estimates
+| Model | Exact | Precision | Recall | Unexpressed recall | Cost (73) | Mean/req | p50 / p95 latency |
+|---|---|---|---|---|---|---|---|
+| `claude-opus-5-5` | 70 | 0.969 | 1.000 | 0.960 | $0.689 | $0.0094 | 2.1 / 5.1 s |
+| `claude-sonnet-5-5` | 72 | 1.000 | 0.989 | 1.000 | $0.307 | $0.0042 | 1.9 / 3.5 s |
+| `claude-haiku-5-5` | 73 | 1.000 | 1.000 | 1.000 | $0.022 | $0.0003 | 1.4 / 3.6 s |
+
+All: 73/73 status `ok`, hard agreement 1.0, hallucinated ids 0, no repair rounds, cache
+read on 72/73 (mean 6.2k cached input tokens, ~0.76k uncached). Haiku 5.5 runs without
+`fallbacks` (it has no server-side refusal fallback; `build_request` leaves it out).
+Haiku's perfect score says the set is too easy to separate the models: harder cases come
+before changing the default model. Raw responses: `out/vlm_eval/` (not committed);
+re-score offline with `--replay`.
+
+## Cost estimate per call (pre-live, superseded by the table above)
+
+These were estimates
 from character counts (≈ 4 chars/token for English prose; the skill notes the current
 tokenizer can use up to ~1.35× more), so treat the low end as optimistic.
 
@@ -223,8 +248,8 @@ writes the cache before the parallel workers read it.
 
 ## Limitations
 
-- **Never run against the API.** Prompt, defaults and the eval expectations are
-  untested against real model behaviour; the first live run is the real test.
+- One live run per model so far (above); no effort sweep yet, and the eval set is too
+  easy to rank the models.
 - Compass names come from our frame (+Y = north), not true north. The app must label
   the plan the same way, or the user's "north wall" means something else.
 - `faces` and `near` only relate furniture: "facing the window", "near the radiator", "in

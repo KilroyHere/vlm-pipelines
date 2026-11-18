@@ -2,7 +2,7 @@
  "case_id": "lr-06",
  "synthetic": true,
  "note": "SYNTHETIC: hand-authored to exercise the scorer, not recorded from the API. Wire shape follows the Messages API (thinking + JSON text block).",
- "prompt_version": "vlm-prompt-1",
+ "prompt_version": "vlm-prompt-2",
  "model": "claude-opus-5-5",
  "effort": "medium",
  "responses": [
@@ -19,7 +19,7 @@
     },
     {
      "type": "text",
-     "text": "{\"constraints\": [{\"source_text\": \"Put the floor lamp beside the armchair\", \"type\": \"near\", \"a\": \"floor_lamp\", \"b\": \"armchair\", \"max_distance\": 0.1, \"hard\": true, \"restatement\": \"The floor lamp must be next to the armchair.\"}], \"unexpressed\": []}"
+     "text": "{\"constraints\": [{\"source_text\": \"Put the floor lamp beside the armchair\", \"type\": \"near\", \"a\": \"floor_lamp\", \"b\": \"armchair\", \"hard\": true, \"restatement\": \"The floor lamp must be next to the armchair.\", \"value\": 0.1, \"wall_id\": null, \"opening_id\": null}], \"unexpressed\": []}"
     }
    ],
    "stop_reason": "end_turn",

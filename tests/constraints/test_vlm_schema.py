@@ -12,12 +12,16 @@ from roomlayout.constraints.vlm import (
     OUTPUT_SCHEMA,
     PROMPT_VERSION,
     SYSTEM_PROMPT,
-    LLMOutput,
     build_request,
     schema_problems,
     summarize_problem,
 )
-from roomlayout.constraints.vlm.output import ITEM_TYPES, output_json_schema
+from roomlayout.constraints.vlm.output import (
+    ITEM_TYPES,
+    VALUE_FIELD,
+    WireOutput,
+    output_json_schema,
+)
 from roomlayout.constraints.vlm.summary import wall_names
 from roomlayout.schema import LayoutProblem
 
@@ -46,30 +50,23 @@ def test_schema_has_no_oneof_anywhere():
     assert "oneOf" not in json.dumps(OUTPUT_SCHEMA)
 
 
-def test_constraint_items_are_anyof_with_one_branch_per_type():
-    items = OUTPUT_SCHEMA["properties"]["constraints"]["items"]
-    assert set(items) == {"anyOf"}
-    assert len(items["anyOf"]) == len(ITEM_TYPES) == 8
-    tags = set()
-    for branch in items["anyOf"]:
-        name = branch["$ref"].removeprefix("#/$defs/")
-        tags.add(OUTPUT_SCHEMA["$defs"][name]["properties"]["type"]["const"])
-    assert tags == {
-        "faces",
-        "against_wall",
-        "near",
-        "distance_at_least",
-        "parallel",
-        "keep_clear",
-        "walkway_width",
-        "fixed",
+def test_constraint_items_are_one_flat_object_with_a_type_enum():
+    """One flat item object, not an anyOf of typed items: the API rejected the anyOf form
+    with "The compiled grammar is too large" (first live run, 2026-11-18)."""
+    ref = OUTPUT_SCHEMA["properties"]["constraints"]["items"]["$ref"]
+    item = OUTPUT_SCHEMA["$defs"][ref.removeprefix("#/$defs/")]
+    assert "anyOf" not in item
+    assert set(item["properties"]["type"]["enum"]) == {
+        t.model_fields["type"].annotation.__args__[0] for t in ITEM_TYPES
     }
+    assert len(ITEM_TYPES) == 8
+    assert set(VALUE_FIELD) == set(item["properties"]["type"]["enum"])
 
 
 def test_every_object_forbids_additional_properties_and_requires_all_fields():
     objects = []
     _walk(OUTPUT_SCHEMA, lambda n: objects.append(n) if n.get("type") == "object" else None)
-    assert len(objects) >= 10  # root + 8 items + unexpressed
+    assert len(objects) == 3  # root + wire item + unexpressed
     for obj in objects:
         assert obj["additionalProperties"] is False
         assert set(obj["required"]) == set(obj["properties"])
@@ -131,13 +128,15 @@ def test_worked_examples_are_valid_output():
     blobs = _example_outputs()
     assert len(blobs) == 3
     for blob in blobs:
-        out = LLMOutput.model_validate_json(blob)
+        out = WireOutput.model_validate_json(blob)
         assert out.constraints or out.unexpressed
+        for item in out.constraints:
+            item.to_typed()  # every example item converts to its typed form
 
 
 def test_worked_examples_do_not_add_rule_library_defaults():
-    ex1 = LLMOutput.model_validate_json(_example_outputs()[0])
-    pairs = {(c.type, getattr(c, "a", None), getattr(c, "b", None)) for c in ex1.constraints}
+    ex1 = WireOutput.model_validate_json(_example_outputs()[0])
+    pairs = {(c.type, c.a, c.b) for c in ex1.constraints}
     assert ("faces", "couch", "tv") in pairs
     assert ("faces", "tv", "couch") not in pairs
 

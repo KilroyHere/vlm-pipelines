@@ -2,7 +2,7 @@
  "case_id": "lr-02",
  "synthetic": true,
  "note": "SYNTHETIC: hand-authored to exercise the scorer, not recorded from the API. Wire shape follows the Messages API (thinking + JSON text block).",
- "prompt_version": "vlm-prompt-1",
+ "prompt_version": "vlm-prompt-2",
  "model": "claude-opus-5-5",
  "effort": "medium",
  "responses": [

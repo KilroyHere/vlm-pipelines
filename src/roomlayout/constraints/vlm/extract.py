@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from roomlayout.schema import Constraint, LayoutProblem
 
-from .output import OUTPUT_SCHEMA, LLMOutput
+from .output import OUTPUT_SCHEMA, WireOutput
 from .prompt import IMAGE_NOTE, PROMPT_VERSION, SYSTEM_PROMPT, repair_text, user_text
 from .summary import summarize_problem
 from .validate import Dropped, conflicts, convert
@@ -43,13 +43,21 @@ EFFORTS = ("low", "medium", "high", "xhigh", "max")
 _PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
 # USD per million tokens: (input, output, 5-minute cache write, cache read).
-# claude-opus-5-5 from the claude-api skill (cached 2026-10-06); others are fallback
-# targets, used only when a fallback served the request.
+# Input/output/cache-read from the claude-api skill (cached 2026-11-03); cache writes are
+# 1.25x input. Opus 5 / 4.8 / Sonnet 5 are fallback targets, used only when a fallback
+# served the request. Haiku 5.5's cache read assumed at 0.1x input (not listed).
 PRICING: dict[str, tuple[float, float, float, float]] = {
     "claude-opus-5-5": (4.00, 20.00, 5.00, 0.20),
+    "claude-sonnet-5-5": (2.00, 10.00, 2.50, 0.10),
+    "claude-haiku-5-5": (0.10, 0.50, 0.125, 0.01),
+    "claude-sonnet-5": (2.00, 10.00, 2.50, 0.20),
     "claude-opus-5": (5.00, 25.00, 6.25, 0.50),
     "claude-opus-4-8": (5.00, 25.00, 6.25, 0.50),
 }
+
+# Models that accept server-side refusal fallbacks (claude-api skill). Haiku 5.5 has
+# none: sending `fallbacks` to it would be rejected, so build_request leaves it out.
+FALLBACK_MODELS = frozenset({"claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"})
 
 # "error" is only produced by callers that catch API exceptions (the eval); parse_request
 # itself lets SDK exceptions propagate.
@@ -163,7 +171,7 @@ def build_request(
             "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA},
         },
     }
-    if fallbacks:
+    if fallbacks and model in FALLBACK_MODELS:
         kwargs["betas"] = [FALLBACK_BETA]
         kwargs["fallbacks"] = "default"
     return kwargs
@@ -215,7 +223,7 @@ def _final_text(resp: Any) -> str:
 
 def _call(
     client: Any, kwargs: dict[str, Any], kind: Literal["initial", "repair"]
-) -> tuple[Any, Attempt, LLMOutput | None, str | None]:
+) -> tuple[Any, Attempt, WireOutput | None, str | None]:
     """Make one call. Returns (response, attempt, parsed output or None, message)."""
     t0 = time.perf_counter()
     resp = client.beta.messages.create(**kwargs)
@@ -245,7 +253,7 @@ def _call(
         return resp, attempt, None, "The answer hit max_tokens and is incomplete; nothing used."
     text = _final_text(resp)
     try:
-        out = LLMOutput.model_validate_json(text)
+        out = WireOutput.model_validate_json(text)
     except ValidationError as e:
         attempt.status = "invalid_output"
         return resp, attempt, None, f"Output did not match the schema ({e.error_count()} errors)."

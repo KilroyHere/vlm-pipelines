@@ -22,7 +22,7 @@ from .extract import (
     build_request,
     parse_request,
 )
-from .output import OUTPUT_SCHEMA, LLMOutput, schema_problems
+from .output import OUTPUT_SCHEMA, LLMOutput, WireOutput, schema_problems
 from .prompt import PROMPT_VERSION, SYSTEM_PROMPT
 from .summary import summarize_problem
 from .validate import Dropped
@@ -38,6 +38,7 @@ __all__ = [
     "Attempt",
     "Dropped",
     "LLMOutput",
+    "WireOutput",
     "ParseResult",
     "Unexpressed",
     "Usage",
