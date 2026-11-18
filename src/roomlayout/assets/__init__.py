@@ -10,6 +10,7 @@ Imports ``roomlayout.schema`` only (never the solver or any generator code).
 
 from .categories import ROOMPLAN_CATEGORIES, CategoryProfile, lookup, profile_for
 from .footprint import FootprintOptions, extract_footprint
+from .listing import LShape, ProductSpec, box_assets, l_footprint, load_products
 from .meshio import MeshLoadError, export_glb, load_mesh
 from .pipeline import NormalizeOptions, NormalizeResult, normalize, write_outputs
 from .zones import with_default_zones
@@ -18,11 +19,16 @@ __all__ = [
     "ROOMPLAN_CATEGORIES",
     "CategoryProfile",
     "FootprintOptions",
+    "LShape",
     "MeshLoadError",
     "NormalizeOptions",
     "NormalizeResult",
+    "ProductSpec",
+    "box_assets",
     "export_glb",
     "extract_footprint",
+    "l_footprint",
+    "load_products",
     "load_mesh",
     "lookup",
     "normalize",

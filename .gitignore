@@ -13,3 +13,6 @@ spikes/sam3d/outputs/
 !tests/fixtures/**/*.glb
 spikes/e2e_arkitscenes/data/
 spikes/e2e_arkitscenes/out/
+
+# Downloaded public datasets (see datasets/*/manifest.json)
+data/

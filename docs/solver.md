@@ -110,6 +110,13 @@ into its wall, abutting kitchen cabinets, wall cabinets above base cabinets) wou
 otherwise make every real kitchen infeasible. Movable assets still respect pinned ones
 fully, and pinned assets still count for the walkway check and user constraints.
 
+**Walkway targets the room itself cuts off.** When the problem is compiled, each
+`walkway_width` term is evaluated once with only the pinned assets in place. Targets
+that a walker of that width can't reach even then (a door into a 0.4 m sliver behind a
+partition, a passage in a nook beside the stairs) are left out of that term, and a model
+note names them. No furniture placement could fix them, so they would otherwise make
+every layout of a real scan infeasible (found on public RoomPlan exports, 2026-11-18).
+
 ### Elevation (contract v0.3.0)
 
 Each asset occupies the vertical extent `[elevation, elevation + height]`.

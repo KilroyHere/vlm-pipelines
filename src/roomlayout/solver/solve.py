@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import multiprocessing as mp
 import os
+import threading
 import time
 from collections import Counter
 from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
@@ -73,8 +74,13 @@ def _worker_run(seed: int, index: int, iterations: int, deadline: float, use_ini
 
 
 def _mp_context():
+    """``fork`` (fastest) from a single-threaded caller. A threaded caller (the viewer's
+    HTTP server solves in a request thread) gets ``forkserver``: forking a process with
+    other threads running can deadlock the child."""
     methods = mp.get_all_start_methods()
-    return mp.get_context("fork" if "fork" in methods else "spawn")
+    if "fork" in methods and threading.active_count() == 1:
+        return mp.get_context("fork")
+    return mp.get_context("forkserver" if "forkserver" in methods else "spawn")
 
 
 # ---------------------------------------------------------------------------- solve

@@ -72,6 +72,14 @@ class FootprintSection(BaseModel):
     max_deviation_m: float
 
 
+class DisplaySection(BaseModel):
+    """Viewer-only cleanup after the footprint (assets/display.py)."""
+
+    holes_filled: bool
+    base_vertices: int
+    max_shift_m: float
+
+
 class NormalizationReport(BaseModel):
     report_version: str = REPORT_VERSION
     asset_id: str
@@ -89,6 +97,7 @@ class NormalizationReport(BaseModel):
     up_check: UpCheckSection
     footprint: FootprintSection
     clearance_zones: list[str]
+    display: DisplaySection | None = None
     warnings: list[str]
     timings_s: dict[str, float]
     outputs: dict[str, str] = {}

@@ -30,7 +30,7 @@ photo per item (scan frame or product photo) ─► SAM 3D Objects ─► mesh
                                     │
               fit mesh to its RoomPlan box (or listing dims) ─► metric, oriented asset
                                     │
-user rules ─► VLM (one call) ─► constraint JSON ─► simulated annealing ─► ~10 layouts
+user rules ─► VLM (one call) ─► constraint JSON ─► simulated annealing ─► top-k layouts (k=3 in the pipeline)
                                     │
                     3D dollhouse view with generated meshes + top-down plan
 ```

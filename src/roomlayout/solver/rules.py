@@ -239,6 +239,7 @@ def walkway(
     templates: list[AssetTemplate],
     geoms: list[Posed],
     min_width: float,
+    skip: frozenset[str] = frozenset(),
 ) -> WalkwayEval:
     """Free floor = floor - footprints - obstacles, eroded by r = min_width / 2, computed
     as ``erode(floor, r) - union(dilate(footprint, r), dilate(obstacle, r))`` (dilations are
@@ -249,9 +250,10 @@ def walkway(
     without an access zone, e.g. a nightstand) also counts as reached if it lies within
     ``WALKWAY_EPS`` of a *reached* access zone of another asset (e.g. the bed's side
     zone), since access zones are themselves guaranteed-free standing space.
-    Each target still missed adds ``0.1 + min(distance - r - eps, 3)``."""
+    Each target still missed adds ``0.1 + min(distance - r - eps, 3)``. Targets whose
+    label is in ``skip`` are left out (see ``Model._skip_static_unreachable``)."""
     r = min_width / 2
-    targets = walkway_targets(room, templates, geoms)
+    targets = [t for t in walkway_targets(room, templates, geoms) if t.label not in skip]
     blockers = [g.buffered(r) for g in geoms if g.z0 < WALKER_HEIGHT] + room.obstacle_buffers(r)
     floor_er = room.eroded_floor(r)
     free = floor_er.difference(shapely.union_all(blockers)) if blockers else floor_er

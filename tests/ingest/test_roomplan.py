@@ -255,3 +255,19 @@ def test_partition_wall_keeps_a_gap_at_its_door():
     assert ys[0] == pytest.approx(1.5, abs=0.06)  # the lower piece stops at the door
     assert not res.problem.room.openings  # the door is a gap, not a boundary opening
     assert any("several rooms" in w for w in res.warnings)
+
+
+def test_opening_prefers_a_wall_long_enough_over_a_corner_sliver():
+    """Public scans had 1 m openings placed on 1-3 cm corner slivers (nearest edge) and
+    clipped to that width; the walkway rule then could never reach them."""
+    from roomlayout.ingest.roomplan.convert import _place_on_wall
+    from roomlayout.schema import Wall
+
+    sliver = Wall(id="sliver", start=(0.0, 4.0), end=(0.0, 3.98), height=2.5)
+    west = Wall(id="west", start=(0.05, 3.98), end=(0.05, 0.0), height=2.5)
+    wall, offset, width, dist = _place_on_wall(np.array([0.0, 3.6]), 1.0, [sliver, west])
+    assert wall.id == "west" and width == pytest.approx(1.0)
+    assert dist == pytest.approx(0.05)
+    # A sliver still wins for an opening that fits on it (nothing else changes).
+    wall, *_ = _place_on_wall(np.array([0.0, 3.99]), 0.01, [sliver, west])
+    assert wall.id == "sliver"

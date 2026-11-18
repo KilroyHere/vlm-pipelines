@@ -70,6 +70,7 @@ SUBTYPES = {
     ("StorageType", "cabinet"): "cabinet",
     ("SofaType", "lShaped"): "sectional",
 }
+MIN_OPENING = 0.3  # m: a door/opening clipped narrower than this is a scan artifact
 MIN_PASSAGE = 0.8  # m: narrower unwalled stretches are scan gaps: no walker fits (WALKWAY_MIN)
 ON_FLOOR = 0.15  # m: objects whose bottom is lower than this stand on the floor
 TV_WALL_HEIGHT = 0.6  # m: a TV this high with nothing under it is wall-mounted
@@ -243,8 +244,12 @@ def _place_on_wall(center_xy, width, walls: list[Wall], prefer=None):
         a, b = np.array(w.start), np.array(w.end)
         d, t = point_segment_distance(center_xy, a, b)
         bonus = 0.0 if prefer is None or not _parallel_near(prefer, a, b) else -0.5
-        if best is None or d + bonus < best[0]:
-            best = (d + bonus, w, t, d)
+        # A wall shorter than the opening can't hold it: count the shortfall as distance,
+        # so a nearby full-length wall wins over a sliver at a corner (public scans had
+        # 1 m openings clipped to 1-3 cm corner slivers).
+        short = max(0.0, width - w.length)
+        if best is None or d + bonus + short < best[0]:
+            best = (d + bonus + short, w, t, d)
     _, wall, t, dist = best
     length = wall.length
     width = min(width, length)
@@ -291,6 +296,12 @@ def _openings(cap: Capture, walls: list[Wall], segs: list[WallSeg], floor_z: flo
             if otype != OpeningType.window and sill < 0.1:
                 sill = 0.0
             offset, width = _fit(offset, width, wall.length)
+            if otype != OpeningType.window and width < MIN_OPENING:
+                res.warnings.append(
+                    f"{kind[:-1]} {e.identifier[:8]} is only {width:.2f} m wide on {wall.id} "
+                    "after clipping; dropped (nobody walks through it)"
+                )
+                continue
             counts[otype] += 1
             oid = f"{'passage' if otype == OpeningType.opening else otype.value}_{counts[otype]}"
             out.append(Opening(

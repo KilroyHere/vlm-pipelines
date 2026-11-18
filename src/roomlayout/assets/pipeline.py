@@ -22,6 +22,7 @@ from roomlayout.schema import Asset, AssetSource, Dimensions, MeshRef, Mount
 from . import categories
 from .canonical import align_principal_axes, extents, level, recenter
 from .cleanup import remove_debris
+from .display import DisplayOptions, display_cleanup
 from .fit import FitReport, fit_to_dimensions, up_check
 from .footprint import FootprintOptions, extract_footprint
 from .frames import UpAxis
@@ -29,6 +30,7 @@ from .front import LABELS, FrontDecision, apply_front, choose_front
 from .meshio import export_glb, load_mesh, to_ours
 from .report import (
     DebrisSection,
+    DisplaySection,
     FitSection,
     FootprintSection,
     FrontHypothesisOut,
@@ -59,6 +61,8 @@ class NormalizeOptions:
     footprint: FootprintOptions = field(default_factory=FootprintOptions)
     front_override: str | None = None  # "A".."D": a human/VLM pick, sets front_confirmed
     clearance: bool = True
+    # Viewer-only mesh cleanup after the footprint (assets/display.py); None disables it.
+    display: DisplayOptions | None = field(default_factory=DisplayOptions)
 
 
 @dataclass
@@ -68,6 +72,9 @@ class NormalizeResult:
     aligned_mesh: trimesh.Trimesh  # before the front choice; the renders show this
     decision: FrontDecision
     report: NormalizationReport
+    # Viewer copy of ``mesh`` (holes filled, smoothed, flat base, same bounding box);
+    # written as the GLB. None when NormalizeOptions.display is None.
+    display_mesh: trimesh.Trimesh | None = None
 
 
 def default_asset_id(path: str | Path) -> str:
@@ -209,6 +216,13 @@ def normalize(
     zones = build_zones(fp.polygon, profile.zones) if opt.clearance else []
     lap("zones")
 
+    display_section = None
+    display_mesh = None
+    if opt.display is not None:
+        display_mesh, drep = display_cleanup(fitted, opt.display)
+        display_section = DisplaySection(**drep.__dict__)
+    lap("display")
+
     asset = Asset(
         id=asset_id,
         category=profile.roomplan,
@@ -293,10 +307,11 @@ def normalize(
             max_deviation_m=round(fp.hausdorff, 6),
         ),
         clearance_zones=[z.name for z in zones],
+        display=display_section,
         warnings=warnings,
         timings_s=timings,
     )
-    return NormalizeResult(asset, fitted, aligned, decision, report)
+    return NormalizeResult(asset, fitted, aligned, decision, report, display_mesh)
 
 
 def _rounded(d: dict) -> dict:
@@ -320,7 +335,8 @@ def write_outputs(result: NormalizeResult, out_dir: str | Path, render: bool = T
     aid = result.asset.id
     t = time.perf_counter()
 
-    glb = export_glb(result.mesh, out_dir / f"{aid}.glb")
+    shown = result.display_mesh if result.display_mesh is not None else result.mesh
+    glb = export_glb(shown, out_dir / f"{aid}.glb")
     result.asset = result.asset.model_copy(update={"mesh": MeshRef(uri=glb.name, format="glb")})
     paths: dict[str, Path] = {"glb": glb}
 

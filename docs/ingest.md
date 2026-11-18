@@ -47,7 +47,10 @@ owner's phone is the real test (M4a "real-capture validation").
 - **Doors, windows, openings** go on the floor edge nearest their centre (their parent
   wall preferred), with offset, width, height and sill; clipped to the wall if wider
   (warned). Door swing isn't in the data: assumed into the room, hinge at the wall start.
-  Doors wider than 1.2 m are sliding/double/patio doors: no swing arc.
+  Doors wider than 1.2 m are sliding/double/patio doors: no swing arc. A wall shorter
+  than the opening counts its shortfall as extra distance, so a 1 m opening lands on the
+  long wall next to a corner sliver, not on the sliver. A door/opening still clipped below
+  0.3 m is a scan artifact and is dropped (warned).
 - **Objects** become box assets (`dimensions_from="roomplan"`, `geometry_from="box"`),
   ids `<subtype or category>_<n>`, subtype from attributes. Built-in fixtures (kitchen
   and bath appliances, fireplace) and built-in cabinetry (storage hung above 0.8 m, or

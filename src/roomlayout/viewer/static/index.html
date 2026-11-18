@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Room Layout Viewer</title>
+  <link rel="stylesheet" href="viewer.css">
+  <script type="importmap">
+    {"imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }}
+  </script>
+</head>
+<body>
+  <main id="stage" aria-label="3D view of the room"></main>
+  <aside id="panel">
+    <header>
+      <h1 id="title">Loading…</h1>
+      <p id="request" hidden></p>
+    </header>
+    <section id="verdict" class="card"></section>
+    <nav id="tabs" aria-label="Layouts"></nav>
+    <section id="why" class="card">
+      <h2>Why this layout</h2>
+      <ul id="lines"></ul>
+    </section>
+    <section id="edit" class="card">
+      <h2>Adjust</h2>
+      <p id="edit-help" class="muted">Drag a piece to move it. Lock the pieces you like, then re-arrange the rest.</p>
+      <div id="selection" class="muted">Nothing selected.</div>
+      <div class="buttons">
+        <button id="rot-l" title="Rotate left 15° (Q)" disabled>⟲ 15°</button>
+        <button id="rot-r" title="Rotate right 15° (E)" disabled>⟳ 15°</button>
+        <button id="lock" title="Lock in place (L)" disabled>Lock</button>
+      </div>
+      <button id="resolve" class="primary" disabled>Re-arrange around locked pieces</button>
+      <p id="edit-status" class="muted" role="status"></p>
+    </section>
+    <footer class="views">
+      <button id="view-3d" class="on">3D</button>
+      <button id="view-top">Top</button>
+    </footer>
+  </aside>
+  <script type="module" src="viewer.js"></script>
+</body>
+</html>

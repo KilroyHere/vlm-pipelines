@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from roomlayout.schema import (
     AgainstWall,
@@ -65,6 +65,10 @@ class WalkwayTerm:
     hard: bool
     weight: float
     min_width: float
+    # Targets no walker of this width reaches even with only the pinned assets in place
+    # (scan geometry: a door into a sliver behind a partition). Furniture can't fix them,
+    # so they are left out of this term; Model.notes says which.
+    skip: frozenset[str] = frozenset()
 
 
 def implicit_id(name: str) -> str:
@@ -112,6 +116,7 @@ class Model:
         self.prefers_initial = [False] * self.n  # soft `fixed`: search may jump back to it
         self._build_implicit()
         self._build_constraints()
+        self._skip_static_unreachable()
         for c in problem.constraints:
             strong = c.hard or c.weight >= GROUP_SOFT_WEIGHT if isinstance(c, Near) else False
             if isinstance(c, Near) and strong and c.max_distance <= GROUP_NEAR_MAX:
@@ -349,6 +354,22 @@ class Model:
             else:  # pragma: no cover - closed vocabulary
                 raise TypeError(f"unknown constraint type {type(c).__name__}")
 
+    def _skip_static_unreachable(self) -> None:
+        """Per walkway term: targets unreachable with no movable asset in the room."""
+        pinned = [t for t in self.templates if self.pinned[t.idx]]
+        if not self.walkways or any(self.initial[t.idx] is None for t in pinned):
+            return
+        geoms = [self.geom(t.idx, self.initial[t.idx]) for t in pinned]  # type: ignore[arg-type]
+        for k, wt in enumerate(self.walkways):
+            ev = rules.walkway(self.room, pinned, geoms, wt.min_width)
+            if ev.unreached:
+                self.walkways[k] = replace(wt, skip=frozenset(ev.unreached))
+                self.notes.append(
+                    f"{', '.join(sorted(ev.unreached))}: unreachable through "
+                    f"{wt.min_width:g} m of free floor even without movable furniture "
+                    f"(room shape or fixtures); left out of {wt.cid!r}"
+                )
+
     def _pair_or_unary(self, cid, hard, weight, a, b, fn, unit) -> None:
         ta, tb = self.templates[a], self.templates[b]
         if a == b:
@@ -369,16 +390,17 @@ class Model:
         the one for w, and the reach tolerance only shrinks by that amount, so every target
         reached at w is reached at w'; the same holds for the chained zone targets.)"""
         out: list[tuple[float, list[str]] | None] = [None] * len(self.walkways)
-        clear_width = None
+        clear: tuple[float, frozenset[str]] | None = None  # (width, skip) of a clear walkway
         for k in sorted(range(len(self.walkways)), key=lambda k: -self.walkways[k].min_width):
-            width = self.walkways[k].min_width
-            if clear_width is not None and width <= clear_width:
+            wt = self.walkways[k]
+            # The shortcut needs the narrower term to skip at least the same targets.
+            if clear is not None and wt.min_width <= clear[0] and wt.skip >= clear[1]:
                 out[k] = (0.0, [])
                 continue
-            ev = rules.walkway(self.room, self.templates, geoms, width)
+            ev = rules.walkway(self.room, self.templates, geoms, wt.min_width, skip=wt.skip)
             out[k] = (ev.violation, ev.unreached)
-            if ev.violation <= 0.0 and clear_width is None:
-                clear_width = width
+            if ev.violation <= 0.0 and clear is None:
+                clear = (wt.min_width, wt.skip)
         return out  # type: ignore[return-value]
 
     def report(self, poses: Sequence[Pose]) -> tuple[list[ConstraintResult], bool, float]:

@@ -23,6 +23,7 @@ assets = [
     "scipy>=1.11",
     "shapely>=2.0",
     "matplotlib>=3.8",
+    "networkx>=3.0",  # trimesh.repair.fill_holes (assets/display.py)
 ]
 vlm = [
     "anthropic>=1.0",

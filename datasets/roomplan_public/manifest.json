@@ -1,0 +1,231 @@
+{
+ "retrieved": "2026-11-18",
+ "source": "GitHub code search, raw.githubusercontent.com at HEAD",
+ "rooms": [
+  {
+   "id": "demo_bedroom_study",
+   "repo": "AndyYin06/ht6-2026",
+   "path": "AccessiRoom/RoomCapture/DemoRoomResources/DemoRoom.json",
+   "git_blob_sha1": "59bc572e766b1cb55a08964c3028a60ee98120de",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "bedroom",
+   "note": ""
+  },
+  {
+   "id": "kitchen_real_01",
+   "repo": "AvnehSBhatia/ExeaLabsNvidiaHacks",
+   "path": "tests/fixtures/roomplan/kitchen_real_01.json",
+   "git_blob_sha1": "d1c74f934b6db7af2a42a5e718086179edbcd55a",
+   "license": "Apache-2.0",
+   "kind": "kitchen",
+   "note": "fixture-heavy: 14 cabinets + appliances"
+  },
+  {
+   "id": "open_plan_kitchen_living",
+   "repo": "BaidetskyiYurii/RoomPlanDemo",
+   "path": "RoomPlanDemo/CapturedRoom.json",
+   "git_blob_sha1": "4180c7dffff8cf7667dfa0fcbd4f70eceaf895aa",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "open_plan",
+   "note": "8 walls, kitchen + 2 sofas"
+  },
+  {
+   "id": "classroom_13_chairs",
+   "repo": "Emily-hou1002/nwHacks2026",
+   "path": "FengShui/ios/ChiCheck/ChiCheck/Room.json",
+   "git_blob_sha1": "72dec1ed0f4147bf05bd56e7216f5a0f180a3618",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "meeting",
+   "note": "13 chairs, 1 table"
+  },
+  {
+   "id": "meeting_room_w01050",
+   "repo": "IlioTheG/roomplan_to_honeybee",
+   "path": "data/W01050/Room.json",
+   "git_blob_sha1": "ec47697ff8c0c15eadeb6a9d9f35faaeb11f4acb",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "meeting",
+   "note": "6 walls"
+  },
+  {
+   "id": "apartment_bedroom",
+   "repo": "Jake3231/Home-Evaluator",
+   "path": "Home-Evaluator/Scanned Apartment/Room-2DA4E699-B495-464B-AAA3-A7F1B291C4D3.json",
+   "git_blob_sha1": "7348ce8be4e26e3e8db82f43c274650ec759a0cf",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "bedroom",
+   "note": ""
+  },
+  {
+   "id": "long_living_fireplace",
+   "repo": "MatthewLones/soon2026",
+   "path": "data/demo-room/room.raw.json",
+   "git_blob_sha1": "f9ffce338bfe6324f25993e83ed0bd0af4cf18be",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "living",
+   "note": "12 walls, fireplace"
+  },
+  {
+   "id": "big_dining_hall",
+   "repo": "Michael-Lyon/moonscapes_backend",
+   "path": "media/uploads/json/Room_6a86c260259b405c86b879b81628d4b9.json",
+   "git_blob_sha1": "9ecfc987c569011eeb9215757c86d79ce7f35bea",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "dining",
+   "note": "3 tables, 4 chairs"
+  },
+  {
+   "id": "empty_kids_room",
+   "repo": "Se7en-RU/domik",
+   "path": "measurements/raw/детская.json",
+   "git_blob_sha1": "8acba845ec92a53bb7152fd6d6a39b2168db1aef",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "bedroom",
+   "note": "empty scan, 6 walls"
+  },
+  {
+   "id": "empty_upstairs_room",
+   "repo": "Se7en-RU/domik",
+   "path": "measurements/raw/комната-2этаж.json",
+   "git_blob_sha1": "5b0f4d339ea187fa67b5b72ec3b39a32d6a4a828",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "living",
+   "note": "empty scan, 6 openings"
+  },
+  {
+   "id": "empty_bedroom_10_walls",
+   "repo": "Se7en-RU/domik",
+   "path": "measurements/raw/спальня.json",
+   "git_blob_sha1": "e095e2523ff55cbcd10ee5b9af4573927520023f",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "bedroom",
+   "note": "empty scan, 10 walls"
+  },
+  {
+   "id": "small_office",
+   "repo": "Wayfindr10/WayfinderUser",
+   "path": "WayfinderUser/wayfindr/Ressources/DefaultScans/room2.json",
+   "git_blob_sha1": "7aa36f2ed83ecdc5105f017d14c1d00242491332",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "office",
+   "note": ""
+  },
+  {
+   "id": "barebones_room",
+   "repo": "aarush-narang/SceneItAll",
+   "path": "FurnitureRoomPlacement/FurnitureRoomPlacement/JSON_testfiles/BarebonesRoom.json",
+   "git_blob_sha1": "6b5705003f8e45ff8cb2517e362e058450e0b0b0",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "living",
+   "note": "empty scan"
+  },
+  {
+   "id": "dining_6_chairs",
+   "repo": "amal884/FormModuleBimProject",
+   "path": "src/jsonFiles/sortie.json",
+   "git_blob_sha1": "11acb8c1ec68b6204d19d58f805a9c5a6c26c159",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "dining",
+   "note": "6 chairs around a table"
+  },
+  {
+   "id": "living_sofa_room",
+   "repo": "asamu4921/KAVES-0.1",
+   "path": "open3dFloorplan-main/static/test-roomplan.json",
+   "git_blob_sha1": "0bdea84688e063d4cae50afd7830f8102c3524c6",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "living",
+   "note": ""
+  },
+  {
+   "id": "ipad_room_a",
+   "repo": "christianazinn/moove",
+   "path": "data/ipad-scans/2026-10-24T03-55-34/room.json",
+   "git_blob_sha1": "b2a9ade0cb91a5520e07742f660e4f6f1ae05a5e",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "living",
+   "note": "near-empty"
+  },
+  {
+   "id": "ipad_room_b",
+   "repo": "christianazinn/moove",
+   "path": "data/ipad-scans/2026-10-25T02-05-43/room.json",
+   "git_blob_sha1": "d5b1010ebc30a47b8e5a132fd0f866e5bc79de34",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "living",
+   "note": "empty, 6.7 x 8.0 m"
+  },
+  {
+   "id": "heyday_living_7_walls",
+   "repo": "edwardzke/heyday",
+   "path": "backend/media/scans/41e1d0c5-e79a-46d0-b644-f3b18edf3449/532dfa7443714f55a0b39cf851174097.json",
+   "git_blob_sha1": "94f2e02ce0b5adcabe27a9d02578e5eb4c13f899",
+   "license": "MIT",
+   "kind": "living",
+   "note": "9 walls"
+  },
+  {
+   "id": "heyday_tv_room",
+   "repo": "edwardzke/heyday",
+   "path": "backend/media/scans/719255a1-fb08-42bb-8222-e8a78133471f/e4545e9e71db494b8759f50a82b5cd62.json",
+   "git_blob_sha1": "b89b0b1a649c3e03131736f2fd41e43b61368638",
+   "license": "MIT",
+   "kind": "living",
+   "note": ""
+  },
+  {
+   "id": "heyday_small_tv_room",
+   "repo": "edwardzke/heyday",
+   "path": "backend/media/scans/b63ad569-4d08-4d3c-bc82-78442b48d589/015ff0f0908b41ee803eb2baa1b0fa25.json",
+   "git_blob_sha1": "dd83d7ba555dabb390ccc1a46009eb5b23ce575a",
+   "license": "MIT",
+   "kind": "bedroom",
+   "note": ""
+  },
+  {
+   "id": "heyday_tv_room_2",
+   "repo": "edwardzke/heyday",
+   "path": "backend/media/scans/e6fd56d1-048d-4a63-b460-170e6ada7444/b25411a359cb4a468cc0dd10b342f258.json",
+   "git_blob_sha1": "080f4e2dc78d15a7d47c118b3ef8cabfc7d03038",
+   "license": "MIT",
+   "kind": "bedroom",
+   "note": ""
+  },
+  {
+   "id": "apple_myhome_bedroom2",
+   "repo": "gromb57/ios-wwdc23__MergingMultipleScansIntoASingleStructure",
+   "path": "RoomPlanMultiscanMerging/MyHome/Bedroom2/capturedRoom.json",
+   "git_blob_sha1": "9457af37509ac9b895777f0c1049e4c8133e4094",
+   "license": "Apple sample code (WWDC23 'Merging multiple scans'), via a GitHub mirror",
+   "kind": "bedroom",
+   "note": "Apple WWDC23 sample capture"
+  },
+  {
+   "id": "apple_myhome_bedroom3",
+   "repo": "gromb57/ios-wwdc23__MergingMultipleScansIntoASingleStructure",
+   "path": "RoomPlanMultiscanMerging/MyHome/Bedroom3/capturedRoom.json",
+   "git_blob_sha1": "73fe91cd708709707dc72c77dca293717d92ec38",
+   "license": "Apple sample code (WWDC23 'Merging multiple scans'), via a GitHub mirror",
+   "kind": "bedroom",
+   "note": "Apple WWDC23 sample capture"
+  },
+  {
+   "id": "apple_myhome_livingroom",
+   "repo": "gromb57/ios-wwdc23__MergingMultipleScansIntoASingleStructure",
+   "path": "RoomPlanMultiscanMerging/MyHome/Livingroom/capturedRoom.json",
+   "git_blob_sha1": "02f7d31dc6980ede5095fd7bc25a342cfa53efed",
+   "license": "Apple sample code (WWDC23 'Merging multiple scans'), via a GitHub mirror",
+   "kind": "living",
+   "note": "Apple WWDC23 sample capture"
+  },
+  {
+   "id": "large_house_room",
+   "repo": "ryushen-tan/Mecha-Soonelians",
+   "path": "House/rooms/room-1.json",
+   "git_blob_sha1": "bc711aa7ef7ad30621d6aa614c5b8bfc14da3d7f",
+   "license": "none found (research use only, not redistributed)",
+   "kind": "open_plan",
+   "note": "14 walls, 11 x 9 m"
+  }
+ ]
+}

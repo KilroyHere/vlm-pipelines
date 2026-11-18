@@ -7,6 +7,7 @@ from solver_helpers import (
     FACE_E,
     FACE_N,
     FACE_S,
+    FACE_W,
     box,
     box_room,
     front_zone,
@@ -467,3 +468,26 @@ def test_movable_assets_still_may_not_overlap_pinned_ones():
     )
     by, feasible = results(p, {"chair": (1.0, 0.4, 0.0)})
     assert not feasible and not by["implicit:no_overlap"].satisfied
+
+
+def test_walkway_skips_targets_unreachable_without_furniture():
+    """A door into a 0.4 m sliver behind a partition can never be reached by a 0.8 m
+    walker; it is left out of the walkway rule (with a note) instead of making every
+    layout infeasible. A second door into the main room still counts."""
+    from roomlayout.solver.model import Model
+
+    sliver_door = {**door(offset=1.5, width=0.8, wall="w_w", swing=False), "id": "sliver"}
+    main_door = {**door(offset=2.0, width=0.8, wall="w_s", swing=False), "id": "main"}
+    partition = {"id": "partition", "label": "partition wall", "height": 2.5,
+                 "footprint": rect(0.4, 0.0, 0.5, 3.0)}  # fmt: skip
+    room = box_room(4.0, 3.0, openings=[sliver_door, main_door], obstacles=[partition])
+    wc = [{"type": "walkway_width", "id": "ww", "min_width": 0.8, "hard": True}]
+    ok_poses = {"cab": (3.5, 1.5, FACE_W)}
+    p = make_problem([box("cab", 0.5, 0.5)], wc, room=room)
+    assert any("sliver" in n and "left out of 'ww'" in n for n in Model(p).notes)
+    res, ok = results(p, ok_poses)
+    assert ok and res["ww"].satisfied
+    # The reachable door still counts: blocking it breaks the walkway.
+    blocked = make_problem([box("cab", 1.0, 0.6)], wc, room=room)
+    res, ok = results(blocked, {"cab": (2.0, 0.3, FACE_N)})
+    assert not ok and "main" in res["ww"].detail

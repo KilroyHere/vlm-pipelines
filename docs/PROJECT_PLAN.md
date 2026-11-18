@@ -128,9 +128,14 @@ them.
   `faces`/`near` to openings (top candidate), obstacles as targets, corner/centred placement.
 - VLM eval: harder cases (Haiku 5.5 scores 73/73), effort sweep, then pick the default
   model. See docs/vlm.md.
+- Rule library: seating should face a fireplace when there is no TV (viewer review: the
+  sectional floats mid-room with its back to the fireplace in the Apple sample living
+  room). Same for a window view? Decide with the owner.
+- Fit advice: two-change variants ("drop the desk *and* take the smaller sofa").
 - Line of sight for `faces` (only tall assets block view): WS-A request, deferred.
 - Even distribution of chairs around a table: deferred.
-- Height-banded footprints (chair tucked under desk): ADR-0003, deferred. **Now evidenced by
+- Height-banded footprints (chair tucked under desk): ADR-0003, deferred. Also the main
+  reason dining sets don't fit in the fit baseline (spikes/fit_baseline). **Now evidenced by
   real scans:** dining rooms with 10-13 chairs tucked under the table (public RoomPlan
   exports s2, s4) find no feasible layout even with 90 s, because chairs may not overlap
   the table footprint. Top solver item after the own-room test.
@@ -247,3 +252,27 @@ them.
   on all three models: exact Opus 5.5 70, Sonnet 5.5 72, Haiku 5.5 73; cost for 73 cases
   $0.69 / $0.31 / $0.02; cache hits 72/73. Haiku runs without `fallbacks`. Next: public
   RoomPlan scans and 5 test products, box-first fast path, web viewer.
+- 2026-11-18: **Phase 1 steps 2-5 (ADR-0010: web first, research-only data, box first).**
+  - Public scans: 25 single-room RoomPlan exports from GitHub (208 candidates surveyed),
+    listed with source and git blob hash in `datasets/roomplan_public/` and fetched into
+    the gitignored `data/` folder. Most sources have no license, so research use only.
+  - Test products: `examples/products/ikea_2026-11.json` (SÖDERHAMN L-sectional,
+    LISABO table + 4 chairs, MALM queen bed, MICKE desk, BILLY bookcase). IKEA US sizes;
+    one estimated value (chaise width).
+  - Box-first "will it fit?": `roomlayout.assets.listing` (boxes and L footprints from
+    listing sizes) + `roomlayout.fit` (advice: drop one product, widest version of the
+    biggest piece that fits). About 4 s for a "fits" answer. docs/fit.md.
+  - Fit baseline (`spikes/fit_baseline`, 25 rooms x 3 scenarios, rules only) found two
+    bugs, now fixed:
+    - ingest placed 1 m openings on 1-3 cm corner slivers;
+    - the walkway rule demanded paths to openings the empty room itself cuts off. The
+      solver now leaves those out, with a note.
+    Result: 47 -> 58 of 75 fit. The rest are small rooms (7-10 m²), a fixture-packed
+    kitchen and dining sets (chairs can't tuck).
+  - Mesh cleanup for display (`assets/display.py`): holes filled, light Taubin smoothing
+    on dense meshes, flat base, same bounding box. Written to the GLB only; the
+    footprint is unchanged.
+  - Web viewer (`roomlayout.viewer`, docs/viewer.md): three.js room from the scan,
+    procedural furniture or GLBs (fade-in), soft shadows, animated layout switching,
+    measured "why" per layout (`roomlayout.explain`), and served editing (drag, rotate,
+    lock, re-solve). Checked in a browser with Playwright.

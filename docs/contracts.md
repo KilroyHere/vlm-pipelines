@@ -21,7 +21,7 @@ Breaking changes bump `SCHEMA_VERSION`.
 | Walls | run CCW around the floor; interior is on the left of `start → end` |
 
 RoomPlan/ARKit use a Y-up frame. Conversion happens **only** at the ingest boundary
-(future `roomlayout.ingest.roomplan`); nothing downstream sees Y-up data.
+(`roomlayout.ingest.roomplan`, see ingest.md); nothing downstream sees Y-up data.
 
 ## Objects
 
@@ -84,9 +84,9 @@ zone (a nightstand is reachable via the bed's side zone).
 ```
 assets.normalize ──► Asset (footprint, dimensions, mesh in canonical frame)
                                      │
-ingest.roomplan (later) ──► Room ────┼──► LayoutProblem ──► solver ──► SolveResult
+ingest.roomplan ─────────► Room ─────┼──► LayoutProblem ──► solver ──► SolveResult
                                      │
-constraints.vlm (later) ──► Constraint[] (validated against this vocabulary)
+constraints (vlm + rules) ► Constraint[] (validated against this vocabulary)
 ```
 
 ## Changelog
