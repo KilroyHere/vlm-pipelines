@@ -7,8 +7,9 @@
 ``scene.json`` is the only interface between Python and the page. Coordinates stay in
 our frame (meters, Z-up, yaw CCW, front = local +Y; ADR-0001). The page converts to
 three.js's Y-up frame: (x, y, z)_ours -> (x, z, -y)_three, yaw -> rotation about +Y.
-GLBs written by ``roomlayout.assets`` are already in glTF's Y-up convention, in the
-asset's local frame, so they drop in with the same transform as the boxes.
+GLBs written by ``roomlayout.assets`` are glTF Y-up with front = +Z (ours (x, y, z) ->
+glTF (-x, z, y), assets/frames.py). The page's own boxes face -Z, so it turns loaded
+GLBs 180 degrees about Y to match.
 """
 
 from __future__ import annotations

@@ -63,8 +63,10 @@ CCW). The page maps (x, y, z) to three.js (x, z, -y).
   - 3D and top views of the Apple sample living room and bedroom;
   - the full edit loop: select, drag 0.4 m, "Your edit breaks a rule", lock, re-solve
     gives 3 layouts with the bed where it was dropped;
-  - a GLB from `normalize` replacing the procedural sectional at the same pose and
-    orientation.
+  - a GLB from `normalize` replacing the procedural sectional. Correction (Phase 2):
+    that check was wrong. Our GLBs face glTF +Z, and the page drew them 180° turned
+    relative to its boxes; on the synthetic L-sectional a wrong front guess hid it. The
+    page now turns GLBs 180° (`loadModel`), verified on an ABO chair.
 
 ## Not yet
 - Dragging doesn't snap to walls and can't collide. The check only runs on drop.

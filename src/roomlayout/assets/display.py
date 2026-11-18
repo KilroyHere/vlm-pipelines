@@ -31,6 +31,9 @@ class DisplayOptions:
     # Smooth only dense meshes (generator output). Low-poly CAD-like meshes are already
     # clean, and smoothing a 12-triangle box would round it into a blob.
     min_faces_to_smooth: int = 2000
+    # Smoothing only removes small noise: no vertex moves more than this fraction of the
+    # bbox diagonal (thin parts with long triangles, e.g. chair legs, otherwise shrink).
+    max_smooth_shift: float = 0.005
     smooth_lamb: float = 0.5
     smooth_nu: float = 0.53
     base_band: float = 0.01  # fraction of height treated as "the base"
@@ -42,6 +45,26 @@ class DisplayReport:
     holes_filled: bool
     base_vertices: int
     max_shift_m: float  # largest vertex movement from smoothing + base flattening
+
+
+def _smooth_welded(m: trimesh.Trimesh, opt: DisplayOptions) -> np.ndarray:
+    """Taubin-smoothed positions for ``m``'s vertices, computed on a position-welded copy
+    so coincident vertices (UV seams) get identical new positions."""
+    v = np.asarray(m.vertices, float)
+    scale = float(np.ptp(v, axis=0).max()) or 1.0
+    key = np.round(v / (scale * 1e-6)).astype(np.int64)
+    _, first, inverse = np.unique(key, axis=0, return_index=True, return_inverse=True)
+    inverse = inverse.reshape(-1)
+    welded = trimesh.Trimesh(v[first], inverse[np.asarray(m.faces)], process=False)
+    before = np.asarray(welded.vertices).copy()
+    trimesh.smoothing.filter_taubin(
+        welded, lamb=opt.smooth_lamb, nu=opt.smooth_nu, iterations=opt.smooth_iterations
+    )
+    delta = np.asarray(welded.vertices) - before
+    cap = opt.max_smooth_shift * float(np.linalg.norm(np.ptp(v, axis=0)))
+    norm = np.linalg.norm(delta, axis=1, keepdims=True)
+    delta *= np.minimum(1.0, cap / np.maximum(norm, 1e-12))
+    return (before + delta)[inverse]
 
 
 def display_cleanup(
@@ -56,14 +79,17 @@ def display_cleanup(
     m.remove_unreferenced_vertices()
     before = np.asarray(m.vertices).copy()
 
+    # A textured mesh duplicates vertices along UV seams. Hole filling would read every
+    # seam as a hole, so it only runs on untextured meshes, and smoothing runs on a copy
+    # welded by position so the two sides of a seam move together (an unwelded smooth
+    # opened white cracks and broke chair legs apart on ABO meshes, Phase 2).
+    textured = getattr(m.visual, "uv", None) is not None
     filled = False
-    if opt.fill_holes and not m.is_watertight:
+    if opt.fill_holes and not textured and not m.is_watertight:
         filled = bool(trimesh.repair.fill_holes(m))
 
     if opt.smooth_iterations > 0 and len(m.faces) >= opt.min_faces_to_smooth:
-        trimesh.smoothing.filter_taubin(
-            m, lamb=opt.smooth_lamb, nu=opt.smooth_nu, iterations=opt.smooth_iterations
-        )
+        m.vertices = _smooth_welded(m, opt)
 
     v = np.asarray(m.vertices).copy()
     # Restore the fitted box: per-axis affine map of the current bounds onto the original.

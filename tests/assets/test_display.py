@@ -59,3 +59,25 @@ def test_smoothing_can_be_turned_off():
     m = noisy_blob(1)
     out, _ = display_cleanup(m, DisplayOptions(smooth_iterations=0, fill_holes=False))
     assert roughness(out) == pytest.approx(roughness(m), rel=0.05)
+
+
+def test_textured_seams_stay_closed_and_moves_are_capped():
+    """UV seams duplicate vertices; an unwelded smooth tore them apart (Phase 2, ABO)."""
+    from trimesh.visual import TextureVisuals
+
+    m = noisy_blob(2)
+    m.visual = trimesh.visual.ColorVisuals()  # drop vertex colours
+    m.unmerge_vertices()  # every face gets its own vertices: a seam everywhere
+    m.visual = TextureVisuals(uv=np.random.default_rng(0).random((len(m.vertices), 2)))
+    out, rep = display_cleanup(m)
+    assert not rep.holes_filled  # textured: hole filling skipped
+    # Vertices that coincided before still coincide (no cracks along seams).
+    key = np.round(m.vertices / 1e-6).astype(np.int64)
+    _, inv = np.unique(key, axis=0, return_inverse=True)
+    inv = inv.reshape(-1)
+    for g in np.unique(inv)[:500]:
+        pts = out.vertices[inv == g]
+        assert np.ptp(pts, axis=0).max() < 1e-9
+    # No vertex moved more than the cap (+ the bbox restore).
+    diag = float(np.linalg.norm(np.ptp(m.vertices, axis=0)))
+    assert rep.max_shift_m < 0.02 * diag

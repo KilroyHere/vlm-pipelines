@@ -1,6 +1,7 @@
 // Room layout viewer: draws scene.json (written by roomlayout.viewer) with three.js.
 // Our frame: meters, Z-up, yaw CCW, asset front = local +Y.  three.js: Y-up.
 // Mapping: (x, y, z)_ours -> (x, z, -y)_three; yaw -> rotation.y; local front +Y -> -Z.
+// GLBs from roomlayout.assets face glTF +Z, so they get an extra 180-degree turn (loadModel).
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -362,6 +363,10 @@ function loadModel(a) {
   loader.load(a.mesh, (gltf) => {
     const o = state.objects[a.id], model = gltf.scene;
     model.position.y = a.elevation || 0;
+    // roomlayout GLBs are glTF with front = +Z: ours (x, y, z) -> glTF (-x, z, y)
+    // (assets/frames.py OURS_TO_GLTF). The proxies here use ours -> (x, z, -y), front -Z.
+    // The two differ by 180 degrees about Y.
+    model.rotation.y = Math.PI;
     model.traverse((m) => { if (m.isMesh) { m.castShadow = m.receiveShadow = true;
       m.material = m.material.clone(); m.material.transparent = true; m.material.opacity = 0; } });
     o.holder.add(model);

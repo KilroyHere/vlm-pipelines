@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image-to-3D Compare</title>
+<style>
+  :root { --bg: #f4f1ec; --ink: #2b2723; --muted: #7a726a; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px system-ui, sans-serif; }
+  #grid { display: grid; grid-template-columns: 1fr 1.4fr 1fr 1fr; height: 100vh; }
+  .cell { position: relative; border-right: 1px solid #e3ddd3; }
+  .cell canvas { width: 100%; height: 100%; display: block; }
+  .label { position: absolute; top: 10px; left: 12px; font-weight: 650; }
+  .sub { position: absolute; bottom: 10px; left: 12px; right: 12px; color: var(--muted); font-size: 12px; }
+  #photo { background: #fff; display: flex; align-items: center; justify-content: center; }
+  #photo img { max-width: 92%; max-height: 80%; }
+</style>
+<script type="importmap">
+  {"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<!-- ?item=ID&photo=URL&gt=URL&sam3d=URL&trellis=URL&gtsub=..&s3sub=..&trsub=..
+     All GLBs face glTF +Z: ABO's as shipped, and ours (assets/frames.py OURS_TO_GLTF). -->
+<div id="grid">
+  <div class="cell" id="photo"><span class="label" id="title">photo</span><img id="img" alt="input photo"></div>
+  <div class="cell" id="c-gt"><span class="label">Ground truth (ABO)</span><span class="sub" id="gtsub"></span></div>
+  <div class="cell" id="c-sam3d"><span class="label">SAM 3D</span><span class="sub" id="s3sub"></span></div>
+  <div class="cell" id="c-trellis"><span class="label">TRELLIS</span><span class="sub" id="trsub"></span></div>
+</div>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+const q = new URLSearchParams(location.search);
+document.getElementById("title").textContent = q.get("item") || "photo";
+if (q.get("photo")) document.getElementById("img").src = q.get("photo");
+for (const k of ["gtsub", "s3sub", "trsub"]) document.getElementById(k).textContent = q.get(k) || "";
+
+let pending = 0;
+function view(cellId, url, turn) {
+  const cell = document.getElementById(cellId);
+  if (!url) { cell.insertAdjacentHTML("beforeend", '<span class="sub" style="top:40px">no output</span>'); return; }
+  pending++;
+  const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  r.setPixelRatio(1); r.toneMapping = THREE.ACESFilmicToneMapping; r.outputColorSpace = THREE.SRGBColorSpace;
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+  cell.prepend(r.domElement);
+  const { clientWidth: w, clientHeight: h } = cell;
+  r.setSize(w, h, false);
+  const s = new THREE.Scene();
+  s.background = new THREE.Color(0xf4f1ec);
+  s.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(r), 0.04).texture;
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+  s.add(sun, new THREE.HemisphereLight(0xffffff, 0x887766, 0.4));
+  const cam = new THREE.PerspectiveCamera(30, w / h, 0.01, 100);
+  new GLTFLoader().load(url, (g) => {
+    const m = g.scene;
+    m.rotation.y = turn;
+    const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    m.position.sub(new THREE.Vector3(c.x, box.min.y, c.z));
+    m.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } });
+    s.add(m);
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(Math.max(size.x, size.z) * 1.2, 48), new THREE.ShadowMaterial({ opacity: 0.18 }));
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; s.add(ground);
+    const R = Math.max(size.x, size.y, size.z);
+    // front three-quarter view: every model faces +Z, so the camera sits on +Z
+    cam.position.set(R * 1.15, R * 0.85, R * 1.75);
+    cam.lookAt(0, size.y * 0.45, 0);
+    sun.position.set(-R * 2, R * 3, R * 2);
+    sun.shadow.camera.left = sun.shadow.camera.bottom = -R; sun.shadow.camera.right = sun.shadow.camera.top = R;
+    r.render(s, cam);
+    if (--pending === 0) window.__ready = true;
+  }, undefined, () => { cell.insertAdjacentHTML("beforeend", '<span class="sub" style="top:40px">failed to load</span>'); if (--pending === 0) window.__ready = true; });
+}
+view("c-gt", q.get("gt"), 0);
+view("c-sam3d", q.get("sam3d"), 0);
+view("c-trellis", q.get("trellis"), 0);
+if (pending === 0) window.__ready = true;
+</script>
+</body>
+</html>
