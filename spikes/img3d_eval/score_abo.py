@@ -152,6 +152,8 @@ def main() -> None:
         summ = args.results / method / "summary.json"
         if summ.exists():
             timing = json.loads(summ.read_text())
+            if "items" in timing:  # run_sam3d.py format: {"environment", "items": [...]}
+                timing = {r["item_id"]: r for r in timing["items"]}
         for item in sorted((args.abo / "eval").iterdir()):
             if (wanted and item.name not in wanted) or (item.name, method) in done:
                 continue

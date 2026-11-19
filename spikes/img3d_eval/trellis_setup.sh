@@ -23,6 +23,12 @@ if [ ! -f "$ENV_DIR/.ready" ]; then
     # torch 2.4.0 + cu121 matches the image's CUDA 12.1 toolkit (README: tested 11.8/12.2)
     pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu121
     cd "$TRELLIS_DIR"
+    # CUDA extensions (nvdiffrast, diff-gaussian-rasterization, ...) import torch in their
+    # setup.py: pip's build isolation hides it ("Cannot compile nvdiffrast", 2026-11-19).
+    # The image's pip config also names pypi.ngc.nvidia.com, which no longer resolves.
+    export PIP_NO_BUILD_ISOLATION=1
+    export PIP_EXTRA_INDEX_URL="https://pypi.nvidia.com"
+    pip install -q setuptools wheel ninja
     # xformers attention (no flash-attn compile); extensions needed for to_glb
     set +u
     . ./setup.sh --basic --xformers --diffoctreerast --spconv --mipgaussian --kaolin --nvdiffrast

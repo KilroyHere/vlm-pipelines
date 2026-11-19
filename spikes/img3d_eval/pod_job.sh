@@ -11,6 +11,7 @@
 # Stopping the pod is the operator's job (the pod's own key can't stop it).
 set -uo pipefail
 BRANCH=${1:-main}
+ONLY=${2:-all}   # all | trellis | sam3d
 WS=/workspace
 REPO=$WS/vlm-pipelines
 OUT=$WS/img3d_out
@@ -49,10 +50,13 @@ wait $SAM_PID $TRE_PID
 echo "sam3d setup rc=$(cat "$OUT/sam3d_setup.rc")  trellis setup rc=$(cat "$OUT/trellis_setup.rc")"
 
 set +u; source "$WS/miniforge3/bin/activate"; set -u
+# conda's (de)activate hooks read unset variables (CONDA_BACKUP_CXX): run them without -u
+act() { set +u; conda activate "$1"; set -u; }
+deact() { set +u; conda deactivate; set -u; }
 
 st bed_03_mask
 if [ ! -f "$DATA/eval/bed_03/mask.png" ]; then
-    set +u; conda activate "$WS/envs/trellis"; set -u
+    act "$WS/envs/trellis"
     python - "$DATA/eval/bed_03" <<'PY'
 import sys, numpy as np
 from pathlib import Path
@@ -65,25 +69,25 @@ alpha = np.asarray(cut)[:, :, 3] > 127
 Image.fromarray((alpha * 255).astype(np.uint8)).save(d / "mask.png")
 print(f"bed_03 mask: {alpha.mean():.1%} of the image")
 PY
-    conda deactivate
+    deact
 fi
 
 st sam3d
-if [ "$(cat "$OUT/sam3d_setup.rc")" = 0 ]; then
-    set +u; conda activate "$WS/envs/sam3d-objects"; set -u
+if [ "$ONLY" != trellis ] && [ "$(cat "$OUT/sam3d_setup.rc")" = 0 ]; then
+    act "$WS/envs/sam3d-objects"
     python "$REPO/spikes/sam3d/run_sam3d.py" --data "$DATA/eval" --out "$OUT/sam3d" \
         --sam3d-repo "$WS/sam-3d-objects" --textured --skip-normalize 2>&1 | tee "$OUT/sam3d_run.log"
-    conda deactivate
+    deact
 else
     echo "SAM 3D env failed: see sam3d_setup.log"
 fi
 
 st trellis
-if [ "$(cat "$OUT/trellis_setup.rc")" = 0 ]; then
-    set +u; conda activate "$WS/envs/trellis"; set -u
+if [ "$ONLY" != sam3d ] && [ "$(cat "$OUT/trellis_setup.rc")" = 0 ]; then
+    act "$WS/envs/trellis"
     python "$REPO/spikes/img3d_eval/run_trellis.py" --data "$DATA/eval" --out "$OUT/trellis" \
         --trellis-repo "$WS/TRELLIS" 2>&1 | tee "$OUT/trellis_run.log"
-    conda deactivate
+    deact
 else
     echo "TRELLIS env failed: see trellis_setup.log"
 fi

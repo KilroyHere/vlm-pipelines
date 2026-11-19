@@ -67,6 +67,11 @@ if [ ! -f "$ENV_DIR/.roomlayout_ready" ]; then
 else
     set +u; conda activate "$ENV_DIR"; set -u
 fi
+# Texture baking (run_sam3d.py --textured) needs nvdiffrast, which SAM 3D's own setup
+# doesn't install (Phase 2, 2026-11-19: every textured run fell back to vertex colours).
+if ! python -c "import nvdiffrast" 2>/dev/null; then
+    PIP_NO_BUILD_ISOLATION=1 pip install -q git+https://github.com/NVlabs/nvdiffrast.git
+fi
 python -c "import torch; print('torch', torch.__version__, 'cuda ok:', torch.cuda.is_available())"
 
 step "Checkpoints (facebook/sam-3d-objects, gated)"
