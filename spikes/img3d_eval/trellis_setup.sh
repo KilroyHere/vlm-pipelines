@@ -30,9 +30,14 @@ if [ ! -f "$ENV_DIR/.ready" ]; then
     export PIP_NO_BUILD_ISOLATION=0
     export PIP_EXTRA_INDEX_URL="https://pypi.nvidia.com"
     pip install -q setuptools wheel ninja
-    # xformers attention (no flash-attn compile); extensions needed for to_glb
+    # setup.sh matches torch.__version__ exactly ("2.4.0"), but the pip wheel reports
+    # "2.4.0+cu121" and it skips xformers/kaolin as unsupported: install those two here
+    # with the versions its 2.4.0/cu121 branch would pick.
+    pip install xformers==0.0.27.post2 --index-url https://download.pytorch.org/whl/cu121
+    pip install kaolin -f https://nvidia-kaolin.s3.us-east-2.amazonaws.com/torch-2.4.0_cu121.html
+    rm -rf /tmp/extensions  # a failed earlier run leaves clones that make git clone fail
     set +u
-    . ./setup.sh --basic --xformers --diffoctreerast --spconv --mipgaussian --kaolin --nvdiffrast
+    . ./setup.sh --basic --diffoctreerast --spconv --mipgaussian --nvdiffrast
     set -u
     python -c "import torch, xformers, spconv, nvdiffrast, kaolin; print('trellis env ok', torch.__version__)"
     touch "$ENV_DIR/.ready"

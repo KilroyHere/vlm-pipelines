@@ -92,7 +92,7 @@ if [ -f "$REPO_DIR/pyproject.toml" ]; then
     export PATH="$HOME/.local/bin:$PATH"
     # The pod image ships Python 3.10; roomlayout needs >= 3.11, so let uv fetch 3.12.
     # --python: with the SAM 3D conda env active, a bare `uv pip install` targets conda
-    (cd "$REPO_DIR" && uv venv -q -p 3.12 && uv pip install -q --python .venv/bin/python -e ".[assets]")
+    (cd "$REPO_DIR" && { [ -x .venv/bin/python ] || uv venv -q -p 3.12; } && uv pip install -q --python .venv/bin/python -e ".[assets]")
     echo "roomlayout ready: $REPO_DIR/.venv/bin/python"
 else
     echo "$REPO_DIR not found: clone or upload the repo there, then re-run." >&2
