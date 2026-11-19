@@ -49,7 +49,8 @@ st wait_envs
 wait $SAM_PID $TRE_PID
 echo "sam3d setup rc=$(cat "$OUT/sam3d_setup.rc")  trellis setup rc=$(cat "$OUT/trellis_setup.rc")"
 
-set +u; source "$WS/miniforge3/bin/activate"; set -u
+# activate reads "$@": clear the job arguments (already in BRANCH/ONLY) before sourcing
+set --; set +u; source "$WS/miniforge3/bin/activate"; set -u
 # conda's (de)activate hooks read unset variables (CONDA_BACKUP_CXX): run them without -u
 act() { set +u; conda activate "$1"; set -u; }
 deact() { set +u; conda deactivate; set -u; }

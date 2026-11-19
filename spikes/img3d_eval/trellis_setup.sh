@@ -26,7 +26,8 @@ if [ ! -f "$ENV_DIR/.ready" ]; then
     # CUDA extensions (nvdiffrast, diff-gaussian-rasterization, ...) import torch in their
     # setup.py: pip's build isolation hides it ("Cannot compile nvdiffrast", 2026-11-19).
     # The image's pip config also names pypi.ngc.nvidia.com, which no longer resolves.
-    export PIP_NO_BUILD_ISOLATION=1
+    # pip reads the "no-" env vars inverted: =0 turns isolation OFF (=1 kept it on).
+    export PIP_NO_BUILD_ISOLATION=0
     export PIP_EXTRA_INDEX_URL="https://pypi.nvidia.com"
     pip install -q setuptools wheel ninja
     # xformers attention (no flash-attn compile); extensions needed for to_glb

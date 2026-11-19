@@ -16,3 +16,4 @@ spikes/e2e_arkitscenes/out/
 
 # Downloaded public datasets (see datasets/*/manifest.json)
 data/
+.claude/settings.local.json
