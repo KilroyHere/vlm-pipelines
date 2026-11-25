@@ -292,3 +292,9 @@ them.
     that needs approval is not a safety stop.
   - CI: every push had failed at Install (setup-uv already creates `.venv`). Fixed with
     `uv venv --clear`.
+- 2026-11-25: Docs brought in line with ADR-0009/0010 (no code change). README: v1 product
+  tagline, "up to 3 layouts" (`--k 3` default, the quality gate can return fewer), full
+  layout incl. `constraints/`, `ingest/`, `pipeline.py`, `viewer/`, `spikes/e2e_arkitscenes/`,
+  `evals/`, and `python -m roomlayout.pipeline` usage. ARCHITECTURE: v1 diagram and stage
+  table rebuilt around listing sizes (box first) and product photos; scan frames are the
+  later own-furniture mode. contracts.md: `assets.listing` handoff added.

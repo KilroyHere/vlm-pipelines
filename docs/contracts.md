@@ -82,6 +82,7 @@ zone (a nightstand is reachable via the bed's side zone).
 ## Handoffs between stages
 
 ```
+assets.listing ────► Asset (box or L footprint from listing sizes; v1 answer)
 assets.normalize ──► Asset (footprint, dimensions, mesh in canonical frame)
                                      │
 ingest.roomplan ─────────► Room ─────┼──► LayoutProblem ──► solver ──► SolveResult

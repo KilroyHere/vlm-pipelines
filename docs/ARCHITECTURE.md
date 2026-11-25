@@ -1,7 +1,8 @@
 # Room Layout Pipeline — Architecture
 
-Goal: from photos/video of a user's room and photos of their furniture, produce a
-small set of furniture layouts that satisfy the user's functional and aesthetic
+Goal: from a scan of the user's room and the furniture they are considering (product
+photos plus listing sizes; their own furniture in a later mode), say whether it fits and
+produce a small set of furniture layouts that satisfy the user's functional and aesthetic
 rules, are physically valid (no interpenetration, stable), and can be viewed in a
 photoreal reconstruction of the room.
 
@@ -15,47 +16,60 @@ engine.
 ## v1 scope (build this first)
 
 **Product (ADR-0009): "will it fit, and how should I arrange it?"** The scanned room is
-emptied of its movable furniture (fixtures and built-ins stay), and the user adds new
-pieces from product photos plus listing sizes. Rearranging the user's own furniture
-(the flow below with scan frames) is a later mode; the pipeline supports both.
+emptied of its movable furniture (walls, doors, windows, fixtures and built-in cabinetry
+stay), and the user adds new pieces from product photos plus listing sizes. The answer
+comes from the listing sizes alone, as boxes, before any 3D model exists (ADR-0010).
+Rearranging the user's own furniture, with assets made from scan frames and sized by
+their RoomPlan boxes, is a later mode; the pipeline keeps that path.
 
-v1 keeps the novel part (**furniture generated in 3D from a photo**) and the core value
-(**good layouts**), and defers the hardest research pieces. The full pipeline below
-remains the long-term target.
+v1 keeps the core value (**an honest fit answer and good layouts**) and the novel part
+(**the new piece generated in 3D from its product photo**, for the picture), and defers
+the hardest research pieces. The full pipeline below remains the long-term target.
 
 ```
-RoomPlan scan ─► room (walls/doors/windows, meters) + labeled furniture boxes (meters)
+RoomPlan scan ─► room (walls/doors/windows, meters) + labeled furniture boxes
                                     │
-photo per item (scan frame or product photo) ─► SAM 3D Objects ─► mesh
+          empty_room: movable furniture removed; fixtures and built-ins stay
                                     │
-              fit mesh to its RoomPlan box (or listing dims) ─► metric, oriented asset
+listing size per new piece ─► box asset (W×D×H, L footprint for sectionals) ──┐
+  (typed in when a listing can't be read)                                     │
+user request ─► VLM (one call) + rule library ─► constraint JSON              │
+                                    │                                         │
+     simulated annealing on the box footprints ◄──────────────────────────────┘
                                     │
-user rules ─► VLM (one call) ─► constraint JSON ─► simulated annealing ─► top-k layouts (k=3 in the pipeline)
+   up to k layouts (k=3; the quality gate can return fewer), or "doesn't fit"
+   with the reason and advice (drop a product, the widest piece that fits)
                                     │
-                    3D dollhouse view with generated meshes + top-down plan
+                                    ▼
+   web viewer: the scanned room, boxes or fitted meshes, "why" per layout
+                                    ▲
+product photo ─► SAM 3D Objects ─► mesh fitted to the listing box (picture only)
 ```
 
 | Stage | v1 | Deferred to later |
 |---|---|---|
-| 0 + 1b Room | **Apple RoomPlan** (iOS, LiDAR): walls, doors, windows, and furniture as labeled boxes, all in meters | Video SfM, plane fitting, non-LiDAR devices |
-| 1a Photoreal room | Clean "dollhouse" render of the RoomPlan geometry | 3DGS + GOR-IS |
-| 2 Asset generation | **SAM 3D Objects** on a GPU server. v1 input: a product photo of the new piece (ADR-0009). Later mode (own furniture): the best scan frame, cropped by its RoomPlan box. | Object Capture, LGM |
-| 3 Asset processing | **Scale and orient the mesh to fit its RoomPlan box** (or the listing's dimensions). The front is chosen by VLM on renders and confirmed by the user. Cleanup + decimation. Footprint = the mesh projected onto the floor. | Convex decomposition, mass/inertia, height-banded footprints (chair-under-table) |
+| 0 + 1b Room | **Apple RoomPlan** (iOS, LiDAR): walls, doors, windows, and furniture as labeled boxes, all in meters. `pipeline.empty_room` removes the movable furniture; fixtures and built-ins stay as obstacles. Public RoomPlan exports stand in until the owner's own scan (ADR-0010). | Video SfM, plane fitting, non-LiDAR devices |
+| 1a Photoreal room | Clean 3D model of the scan (walls, floor, openings, fixtures) in the web viewer | 3DGS + GOR-IS (a photoreal view of the real room with its furniture erased) |
+| 2 Asset generation | **Product listing → box asset** (`assets.listing`, no GPU): this is what the answer uses. **Product photo → SAM 3D Objects** on a GPU server, for the picture (ADR-0009, ADR-0010). Photo and size are entered by hand when a listing can't be read. Later mode (own furniture): the best scan frame, cropped by its RoomPlan box. | Object Capture, LGM |
+| 3 Asset processing | **Size from the listing** (manufacturer's W×D×H). The mesh is scaled and oriented to the listing box; the front is chosen by VLM on renders and confirmed by the user. Cleanup + decimation for display. Footprint = the listing box, or an L for sectionals. Later mode: fit to the piece's RoomPlan box. | Convex decomposition, mass/inertia, height-banded footprints (chair-under-table) |
 | 4 Constraints | One VLM call → fixed-schema JSON + deterministic rule library | — |
-| 5 Search | Simulated annealing on (x, y, yaw) using mesh footprints, yaw snapped to 90°, many restarts, diverse top-k | CP-SAT, gradient refinement |
+| 5 Search | Simulated annealing on (x, y, yaw) over the footprints, yaw snapped to 90°, many restarts, diverse top-k (k=3) behind a quality gate. When nothing fits, `roomlayout.fit` runs variants (drop one product, narrower biggest piece) and says what would fit. | CP-SAT, gradient refinement |
 | 6 Validation | Footprint overlap + clearance check (part of search) | MuJoCo settle (needed only for stacking or a simulatable twin) |
-| 7 Present | Dollhouse 3D + floor plan, generated meshes placed in it | Splat compositing, relighting, VLM critic |
+| 7 Present | **Web viewer** (three.js, ADR-0010): the scanned room, procedural furniture in the listing boxes or fitted meshes, a measured "why" per layout, drag/rotate/lock and re-solve | Splat compositing, relighting, VLM critic; iOS capture app |
 
 Why it works:
-- **RoomPlan removes the scale risk.** A generated mesh is never trusted for size;
-  it is fitted to a measured box.
-- **Mesh footprints beat boxes** (L-sofas, round tables) at no extra cost.
-- **Only one GPU dependency** (SAM 3D inference, seconds per item). No research
-  training code.
+- **Listing sizes remove the scale risk.** A generated mesh is never trusted for size;
+  it is fitted to the manufacturer's dimensions (to a measured RoomPlan box in the
+  own-furniture mode).
+- **Box first:** "will it fit?" is answered in seconds with no GPU. Meshes improve the
+  picture, not the answer (ADR-0010).
+- **Only one GPU dependency** (SAM 3D inference, seconds per item), and it is off the
+  answer's critical path. No research training code.
 
-v1 costs: iOS + LiDAR only (a manual floor-plan entry is the fallback); the room
-isn't photoreal yet; SAM 3D guesses hidden sides (users see a turntable preview
-and can approve or retake).
+v1 costs: the scan needs iOS + LiDAR (a manual floor-plan entry is the fallback); the
+room isn't photoreal yet; many retail sites block scripted listing reads (12 of 20 in the
+pilot), so photo and size are often entered by hand; SAM 3D guesses hidden sides (users
+see a turntable preview and can approve or retake).
 
 ---
 
@@ -69,7 +83,7 @@ and can approve or retake).
 | 2 | Asset generation | Furniture photos | **SAM 3D Objects** (single image) · **Apple Object Capture** (multi-view) · LGM (fallback) | Textured visual mesh per item |
 | 3 | Asset processing | Visual meshes + real dimensions | Scale/orient, cleanup, **CoACD / V-HACD** | Metric, canonically oriented asset with convex collision parts, footprint, front vector, clearance zones, mass |
 | 4 | Constraint extraction | User rules (text) + asset list + room summary | **VLM**, one call, schema-constrained output + deterministic rule library | Validated, typed constraint graph (hard + weighted soft) |
-| 5 | Layout search | Constraint graph + room polygon + asset footprints | 2.5D oriented-footprint search: simulated annealing / CMA-ES (+ CP-SAT for discrete choices), gradient refinement | Top-k (≈10) *diverse* feasible layouts |
+| 5 | Layout search | Constraint graph + room polygon + asset footprints | 2.5D oriented-footprint search: simulated annealing / CMA-ES (+ CP-SAT for discrete choices), gradient refinement | Top-k *diverse* feasible layouts (k=3 in v1) |
 | 6 | Physics validation | Top-k layouts + collision parts | Static collision query, then short **MuJoCo** settle | Validated layouts; failures fed back to Stage 5 |
 | 7 | Render & rank | Validated layouts + splat + meshes | Composite render, optional VLM critic on ≤10 renders | Final ranked layouts for the user |
 
