@@ -1,0 +1,645 @@
+[
+ {
+  "item": "bed_01",
+  "method": "sam3d",
+  "category": "bed",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.170388,
+  "chamfer": 0.01218939504183263,
+  "fscore": {
+   "0.02": 0.7574562930106651,
+   "0.05": 0.9899497954545454
+  },
+  "chamfer_best": 0.01218939504183263,
+  "fscore_best": {
+   "0.02": 0.7574562930106651,
+   "0.05": 0.9899497954545454
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 0.9610995610447546,
+  "warnings": [
+   "generator proportions disagree with the measured box: aspect mismatch 17% > 15% (scale x/y/z = 2.566/2.155/1.907). The asset uses the measured size; the shape may look distorted"
+  ],
+  "raw_faces": 694880,
+  "generation_s": 15.812,
+  "vram_peak_gb": 19.28
+ },
+ {
+  "item": "bed_02",
+  "method": "sam3d",
+  "category": "bed",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.042494,
+  "chamfer": 0.009855569904299314,
+  "fscore": {
+   "0.02": 0.9234809265115272,
+   "0.05": 0.9996248593222459
+  },
+  "chamfer_best": 0.009855569904299314,
+  "fscore_best": {
+   "0.02": 0.9234809265115272,
+   "0.05": 0.9996248593222459
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 1.0,
+  "warnings": [],
+  "raw_faces": 819752,
+  "generation_s": 21.699,
+  "vram_peak_gb": 19.79
+ },
+ {
+  "item": "bed_03",
+  "method": "sam3d",
+  "category": "bed",
+  "condition": [
+   "in_room"
+  ],
+  "aspect_mismatch": 0.062513,
+  "chamfer": 0.013820452940995386,
+  "fscore": {
+   "0.02": 0.8406547773136436,
+   "0.05": 0.9981241427676895
+  },
+  "chamfer_best": 0.013820452940995386,
+  "fscore_best": {
+   "0.02": 0.8406547773136436,
+   "0.05": 0.9981241427676895
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.5629,
+  "footprint_iou": 0.9722214760638299,
+  "warnings": [],
+  "raw_faces": 553072,
+  "generation_s": 14.151,
+  "vram_peak_gb": 19.31
+ },
+ {
+  "item": "bench_01",
+  "method": "sam3d",
+  "category": "bench",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.024761,
+  "chamfer": 0.004857558001696053,
+  "fscore": {
+   "0.02": 0.9999249943745782,
+   "0.05": 1.0
+  },
+  "chamfer_best": 0.004857558001696053,
+  "fscore_best": {
+   "0.02": 0.9999249943745782,
+   "0.05": 1.0
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.0,
+  "footprint_iou": 0.9774966589642247,
+  "warnings": [
+   "unknown category 'bench': no clearance zones, generic front rule. RoomPlan categories: bathtub, bed, chair, dishwasher, fireplace, oven, refrigerator, sink, sofa, stairs, storage, stove, table, television, toilet, washerDryer",
+   "front guess A has low confidence (0.00); confirm it from the front-candidate renders"
+  ],
+  "raw_faces": 338568,
+  "generation_s": 11.518,
+  "vram_peak_gb": 18.58
+ },
+ {
+  "item": "bookshelf_01",
+  "method": "sam3d",
+  "category": "bookshelf",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.019617,
+  "chamfer": 0.011909342191351063,
+  "fscore": {
+   "0.02": 0.8530253834894613,
+   "0.05": 0.9864950464945398
+  },
+  "chamfer_best": 0.011909342191351063,
+  "fscore_best": {
+   "0.02": 0.8530253834894613,
+   "0.05": 0.9864950464945398
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 0.9367027178797569,
+  "warnings": [],
+  "raw_faces": 631256,
+  "generation_s": 16.738,
+  "vram_peak_gb": 19.44
+ },
+ {
+  "item": "bookshelf_02",
+  "method": "sam3d",
+  "category": "bookshelf",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.092277,
+  "chamfer": 0.017548137721085925,
+  "fscore": {
+   "0.02": 0.6261101452736318,
+   "0.05": 0.973821399050186
+  },
+  "chamfer_best": 0.017548137721085925,
+  "fscore_best": {
+   "0.02": 0.6261101452736318,
+   "0.05": 0.973821399050186
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 0.9417916512336295,
+  "warnings": [],
+  "raw_faces": 164820,
+  "generation_s": 11.782,
+  "vram_peak_gb": 18.43
+ },
+ {
+  "item": "cabinet_01",
+  "method": "sam3d",
+  "category": "cabinet",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.025014,
+  "chamfer": 0.011747358370311278,
+  "fscore": {
+   "0.02": 0.8251369179970313,
+   "0.05": 0.995782285599518
+  },
+  "chamfer_best": 0.011747358370311278,
+  "fscore_best": {
+   "0.02": 0.8251369179970313,
+   "0.05": 0.995782285599518
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.1219,
+  "footprint_iou": 0.9500149092668375,
+  "warnings": [
+   "front guess A has low confidence (0.12); confirm it from the front-candidate renders"
+  ],
+  "raw_faces": 611404,
+  "generation_s": 14.945,
+  "vram_peak_gb": 19.36
+ },
+ {
+  "item": "chair_01",
+  "method": "sam3d",
+  "category": "armchair",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.030263,
+  "chamfer": 0.0162233188170032,
+  "fscore": {
+   "0.02": 0.7456678962879566,
+   "0.05": 0.9653037485448197
+  },
+  "chamfer_best": 0.0162233188170032,
+  "fscore_best": {
+   "0.02": 0.7456678962879566,
+   "0.05": 0.9653037485448197
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 0.9690745820782237,
+  "warnings": [],
+  "raw_faces": 892844,
+  "generation_s": 22.82,
+  "vram_peak_gb": 19.85
+ },
+ {
+  "item": "chair_02",
+  "method": "sam3d",
+  "category": "dining_chair",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.041522,
+  "chamfer": 0.010687487242493783,
+  "fscore": {
+   "0.02": 0.8353661969724167,
+   "0.05": 0.9989739482970045
+  },
+  "chamfer_best": 0.010687487242493783,
+  "fscore_best": {
+   "0.02": 0.8353661969724167,
+   "0.05": 0.9989739482970045
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.8767,
+  "footprint_iou": 0.8411595554554403,
+  "warnings": [],
+  "raw_faces": 348864,
+  "generation_s": 11.686,
+  "vram_peak_gb": 18.68
+ },
+ {
+  "item": "chair_03",
+  "method": "sam3d",
+  "category": "armchair",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.043103,
+  "chamfer": 0.014524759884099191,
+  "fscore": {
+   "0.02": 0.7903282090213197,
+   "0.05": 0.9944978858722977
+  },
+  "chamfer_best": 0.014524759884099191,
+  "fscore_best": {
+   "0.02": 0.7903282090213197,
+   "0.05": 0.9944978858722977
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 0.9679227821362297,
+  "warnings": [],
+  "raw_faces": 1197264,
+  "generation_s": 21.95,
+  "vram_peak_gb": 19.8
+ },
+ {
+  "item": "chair_04",
+  "method": "sam3d",
+  "category": "office_chair",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.021027,
+  "chamfer": 0.022682865197716496,
+  "fscore": {
+   "0.02": 0.6019030436407424,
+   "0.05": 0.8969694010344252
+  },
+  "chamfer_best": 0.022682865197716496,
+  "fscore_best": {
+   "0.02": 0.6019030436407424,
+   "0.05": 0.8969694010344252
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.504,
+  "footprint_iou": 0.8031102332786441,
+  "warnings": [],
+  "raw_faces": 400828,
+  "generation_s": 12.574,
+  "vram_peak_gb": 18.86
+ },
+ {
+  "item": "desk_01",
+  "method": "sam3d",
+  "category": "desk",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.148234,
+  "chamfer": 0.012285994861417383,
+  "fscore": {
+   "0.02": 0.8638964550295173,
+   "0.05": 0.9702134961737652
+  },
+  "chamfer_best": 0.012285994861417383,
+  "fscore_best": {
+   "0.02": 0.8638964550295173,
+   "0.05": 0.9702134961737652
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.3433,
+  "footprint_iou": 0.953054430526823,
+  "warnings": [
+   "front guess A has low confidence (0.34); confirm it from the front-candidate renders"
+  ],
+  "raw_faces": 484228,
+  "generation_s": 15.13,
+  "vram_peak_gb": 19.17
+ },
+ {
+  "item": "desk_02",
+  "method": "sam3d",
+  "category": "desk",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.089207,
+  "chamfer": 0.007675098832689988,
+  "fscore": {
+   "0.02": 0.9739246851191545,
+   "0.05": 1.0
+  },
+  "chamfer_best": 0.007675098832689988,
+  "fscore_best": {
+   "0.02": 0.9739246851191545,
+   "0.05": 1.0
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.072,
+  "footprint_iou": 0.9762073791226502,
+  "warnings": [
+   "front guess A has low confidence (0.07); confirm it from the front-candidate renders"
+  ],
+  "raw_faces": 429708,
+  "generation_s": 13.804,
+  "vram_peak_gb": 19.06
+ },
+ {
+  "item": "dresser_01",
+  "method": "sam3d",
+  "category": "dresser",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.18856,
+  "chamfer": 0.009628503080718345,
+  "fscore": {
+   "0.02": 0.9246608364196697,
+   "0.05": 0.9827836126439997
+  },
+  "chamfer_best": 0.009628503080718345,
+  "fscore_best": {
+   "0.02": 0.9246608364196697,
+   "0.05": 0.9827836126439997
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.2434,
+  "footprint_iou": 0.9802791212792467,
+  "warnings": [
+   "front guess A has low confidence (0.24); confirm it from the front-candidate renders",
+   "generator proportions disagree with the measured box: aspect mismatch 19% > 15% (scale x/y/z = 1.533/1.111/1.507). The asset uses the measured size; the shape may look distorted"
+  ],
+  "raw_faces": 492154,
+  "generation_s": 16.422,
+  "vram_peak_gb": 19.47
+ },
+ {
+  "item": "ottoman_01",
+  "method": "sam3d",
+  "category": "ottoman",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.024524,
+  "chamfer": 0.010309074622192032,
+  "fscore": {
+   "0.02": 0.9527385699291525,
+   "0.05": 0.9896489895417572
+  },
+  "chamfer_best": 0.010284816925174151,
+  "fscore_best": {
+   "0.02": 0.9517885585206975,
+   "0.05": 0.9907492707544789
+  },
+  "front_ok": false,
+  "best_yaw_deg": 180,
+  "front_confidence": 0.0,
+  "footprint_iou": 0.9667400916097999,
+  "warnings": [
+   "unknown category 'ottoman': no clearance zones, generic front rule. RoomPlan categories: bathtub, bed, chair, dishwasher, fireplace, oven, refrigerator, sink, sofa, stairs, storage, stove, table, television, toilet, washerDryer",
+   "front guess B has low confidence (0.00); confirm it from the front-candidate renders"
+  ],
+  "raw_faces": 796136,
+  "generation_s": 22.36,
+  "vram_peak_gb": 19.74
+ },
+ {
+  "item": "sectional_01",
+  "method": "sam3d",
+  "category": "sectional",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.094675,
+  "chamfer": 0.011805220697105894,
+  "fscore": {
+   "0.02": 0.8536264454209065,
+   "0.05": 1.0
+  },
+  "chamfer_best": 0.011805220697105894,
+  "fscore_best": {
+   "0.02": 0.8536264454209065,
+   "0.05": 1.0
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 0.9794526767507522,
+  "warnings": [],
+  "raw_faces": 502588,
+  "generation_s": 13.7,
+  "vram_peak_gb": 19.06
+ },
+ {
+  "item": "sectional_02",
+  "method": "sam3d",
+  "category": "sectional",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.053513,
+  "chamfer": 0.01539982044248101,
+  "fscore": {
+   "0.02": 0.8194574803621755,
+   "0.05": 0.9380906870553255
+  },
+  "chamfer_best": 0.01539982044248101,
+  "fscore_best": {
+   "0.02": 0.8194574803621755,
+   "0.05": 0.9380906870553255
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 0.9748363874857531,
+  "warnings": [],
+  "raw_faces": 576416,
+  "generation_s": 15.98,
+  "vram_peak_gb": 19.24
+ },
+ {
+  "item": "sofa_01",
+  "method": "sam3d",
+  "category": "sofa",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.07835,
+  "chamfer": 0.01856663351123162,
+  "fscore": {
+   "0.02": 0.7347687188636057,
+   "0.05": 0.8982474583795782
+  },
+  "chamfer_best": 0.01856663351123162,
+  "fscore_best": {
+   "0.02": 0.7347687188636057,
+   "0.05": 0.8982474583795782
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 1.0,
+  "warnings": [],
+  "raw_faces": 739728,
+  "generation_s": 18.64,
+  "vram_peak_gb": 19.42
+ },
+ {
+  "item": "sofa_02",
+  "method": "sam3d",
+  "category": "sectional",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.081906,
+  "chamfer": 0.011211638875673835,
+  "fscore": {
+   "0.02": 0.8920219510156315,
+   "0.05": 0.9983725153374233
+  },
+  "chamfer_best": 0.011211638875673835,
+  "fscore_best": {
+   "0.02": 0.8920219510156315,
+   "0.05": 0.9983725153374233
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 1.0,
+  "footprint_iou": 0.9520506382433184,
+  "warnings": [],
+  "raw_faces": 660224,
+  "generation_s": 16.125,
+  "vram_peak_gb": 19.21
+ },
+ {
+  "item": "table_01",
+  "method": "sam3d",
+  "category": "console_table",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.081993,
+  "chamfer": 0.007835514818614515,
+  "fscore": {
+   "0.02": 0.9686279124336032,
+   "0.05": 1.0
+  },
+  "chamfer_best": 0.007835514818614515,
+  "fscore_best": {
+   "0.02": 0.9686279124336032,
+   "0.05": 1.0
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.0,
+  "footprint_iou": 0.9698648173858819,
+  "warnings": [
+   "unknown category 'console_table': no clearance zones, generic front rule. RoomPlan categories: bathtub, bed, chair, dishwasher, fireplace, oven, refrigerator, sink, sofa, stairs, storage, stove, table, television, toilet, washerDryer",
+   "front guess A has low confidence (0.00); confirm it from the front-candidate renders"
+  ],
+  "raw_faces": 413452,
+  "generation_s": 13.268,
+  "vram_peak_gb": 18.98
+ },
+ {
+  "item": "table_02",
+  "method": "sam3d",
+  "category": "tv_stand",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.136124,
+  "chamfer": 0.006817310429396057,
+  "fscore": {
+   "0.02": 0.9907227265845782,
+   "0.05": 1.0
+  },
+  "chamfer_best": 0.006817310429396057,
+  "fscore_best": {
+   "0.02": 0.9907227265845782,
+   "0.05": 1.0
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.8754,
+  "footprint_iou": 1.0,
+  "warnings": [],
+  "raw_faces": 394988,
+  "generation_s": 12.948,
+  "vram_peak_gb": 18.88
+ },
+ {
+  "item": "table_03",
+  "method": "sam3d",
+  "category": "coffee_table",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.003372,
+  "chamfer": 0.007708171673352502,
+  "fscore": {
+   "0.02": 0.9897224509382972,
+   "0.05": 1.0
+  },
+  "chamfer_best": 0.007708171673352502,
+  "fscore_best": {
+   "0.02": 0.9897224509382972,
+   "0.05": 1.0
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.0,
+  "footprint_iou": 0.973203570826419,
+  "warnings": [
+   "front guess B has low confidence (0.00); confirm it from the front-candidate renders"
+  ],
+  "raw_faces": 692712,
+  "generation_s": 19.582,
+  "vram_peak_gb": 19.66
+ },
+ {
+  "item": "table_04",
+  "method": "sam3d",
+  "category": "nightstand",
+  "condition": [
+   "product"
+  ],
+  "aspect_mismatch": 0.023993,
+  "chamfer": 0.011262203852690524,
+  "fscore": {
+   "0.02": 0.8884125822970007,
+   "0.05": 1.0
+  },
+  "chamfer_best": 0.011262203852690524,
+  "fscore_best": {
+   "0.02": 0.8884125822970007,
+   "0.05": 1.0
+  },
+  "front_ok": true,
+  "best_yaw_deg": 0,
+  "front_confidence": 0.8917,
+  "footprint_iou": 0.9768617762696223,
+  "warnings": [],
+  "raw_faces": 1339352,
+  "generation_s": 28.381,
+  "vram_peak_gb": 20.29
+ }
+]

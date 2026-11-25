@@ -277,3 +277,18 @@ them.
     procedural furniture or GLBs (fade-in), soft shadows, animated layout switching,
     measured "why" per layout (`roomlayout.explain`), and served editing (drag, rotate,
     lock, re-solve). Checked in a browser with Playwright.
+- 2026-11-25: **Phase 2 (image-to-3D on ABO ground truth), docs/img3d_eval.md.**
+  - SAM 3D scored on 23 ABO items. Fitted to the true box, the median footprint IoU is 0.97
+    (worst 0.80, an office chair) and the median F@2 % is 0.85. The front was right on
+    22/23 items. Generation takes 16 s median on an A40, 20 GB VRAM. Go for layout use.
+    Display is vertex colours only, because texture baking failed (missing gaussian
+    rasterizer).
+  - TRELLIS: no output (open3d needs libEGL, which the image lacks), so no verdict.
+    Fixes are listed in the doc.
+  - Overspend: $13.62 in total ($10.46 GPU, $3.16 disk) against the $8 cap. The 04:00
+    safety stop waited ~13 h on a permission prompt, and the pod idled at $0.59/h.
+  - Lesson: GPU jobs stop their own pod from inside the container (`runpodctl stop pod`
+    at the end of the job, plus a max-runtime guard started first). An agent check-in
+    that needs approval is not a safety stop.
+  - CI: every push had failed at Install (setup-uv already creates `.venv`). Fixed with
+    `uv venv --clear`.

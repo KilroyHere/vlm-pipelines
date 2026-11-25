@@ -14,7 +14,8 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install
-        run: uv venv && uv pip install -e ".[solver,assets,vlm,dev]"
+        # setup-uv with python-version already creates .venv; --clear keeps this idempotent
+        run: uv venv --clear && uv pip install -e ".[solver,assets,vlm,dev]"
       - name: Lint
         run: .venv/bin/ruff check . && .venv/bin/ruff format --check .
       - name: Schemas are up to date
